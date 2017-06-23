@@ -1,0 +1,6 @@
+*.pyc
+cache
+targets
+bootstrap/*.deb
+bootstrap/*.sha1
+.DS_Store

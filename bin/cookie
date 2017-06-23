@@ -1,0 +1,263 @@
+#!/usr/bin/env python
+
+import subprocess
+import cookie
+
+class cookie_cmd(cookie.command):
+
+	"""
+	Cookie command line tool. The entry point to the cookie framework.
+	"""
+
+	def __init__(self):
+		"""
+		Initialize the cookie command
+		"""
+		cookie.command.__init__(self, 'help')
+
+	def do_fetch(self, args):
+		"""
+		Fetch a plain archive from a remote server then store it in the cache of the cookie
+		environment for further use.
+		"""
+		if len(args) not in [1, 2]:
+			cookie.logger.abort('syntax: %s fetch archive_url [destname]' % self.name())
+		else:
+			try:
+				cookie.distfiles().fetch(args[0], args[1] if len(args) == 2 else None)
+			except Exception, e:
+				cookie.logger.abort('%s fetch failed: %s' % (self.name(), str(e)))
+
+	def do_extract(self, args):
+		"""
+		Extract an archive from the cookie cache to the given directory.
+		"""
+		if len(args) != 2:
+			cookie.logger.abort('Syntax: %s extract archive_name destdir' % self.name())
+		else:
+			try:
+				cookie.distfiles().extract(args[0], args[1])
+			except Exception, e:
+				cookie.logger.abort(e)
+
+	def do_bootstrap(self, args):
+		"""
+		The bootstrap command is used to initialize or update the docker image that is used by the
+		cookie environment. It can also be used to delete the existing environment if needed.
+		"""
+		if len(args) > 1 or (len(args) == 1 and args[0] != 'update' and args[0] != 'delete'):
+			cookie.logger.abort('Syntax: %s bootstrap [update|delete]' % self.name())
+		else:
+			try:
+				s = cookie.shell()
+				a = args[0] if len(args) == 1 else 'update'
+				if a == 'update':
+					cookie.logger.info('Creating or updating cookie docker image')
+					(status, out, err) = s.run('docker build -t cookie %s' % self.mkpath('bootstrap'))
+					if status != 0:
+						cookie.logger.abort(' '.join(err))
+					else:
+						cookie.logger.info('Cookie docker image was updated')
+				elif a =='delete':
+					cookie.logger.info('Deleting cookie docker image')
+					(status, out, err) = s.run('docker rmi -f cookie')
+					if status != 0:
+						cookie.logger.abort(' '.join(err))
+					else:
+						cookie.logger.info('Cookie docker image was deleted')
+				else:
+					cookie.logger.abort('Unknown subcommand "%s"' % a)
+			except Exception, e:
+					cookie.logger.abort(e)
+
+	def do_shell(self, args):
+		"""
+		Log into the docker environment. This will provide the caller with a functionnal shell
+		within the cookie docker image with everything properly setup. This environment can be
+		used to test the compilation of various elements or to work on the targets manually. Note
+		any modification outside of the /opt/cookie done in the image will be erased once the shell
+		is exited.
+		"""
+		if len(args) != 0:
+			cookie.logger.abort('Syntax: %s shell' % self.name())
+		else:
+			try:
+				# TODO: RUN if not yet running, else start only
+				cmd = 'docker run -it --rm --privileged --cap-add=SYS_ADMIN --cap-add=MKNOD --cap-add=SYS_PTRACE --volume %s:/opt/cookie cookie' % cookie.layout.root()
+				#cmd = 'docker start --privileged --cap-add=SYS_ADMIN --cap-add=MKNOD --cap-add=SYS_PTRACE --volume %s:/opt/cookie cookie' % cookie.layout.root()
+				subprocess.call(cmd.split())
+			except Exception, e:
+				cookie.logger.abort(e)
+
+	def do_host(self, args):
+		"""
+		Create debian packages from cookie packages and install them in the host part of the
+		bootstrap environment. Creating and installing .deb packages ensure that the host part
+		remain consistant and only use a single package manager. This command does not allow
+		to create and install .deb on the target.
+		"""
+		try:
+			if len(args) != 2 or args[0] not in ['add', 'rm']:
+				cookie.logger.abort('Syntax: %s dpkg add|rm selector' % self.name())
+			elif args[0] == 'rm':
+				cookie.logger.info('Removing previously installed package %s' % args[1])
+				pkg = cookie.package(args[1], '/', '/tmp/workdir')
+				pkg.uninstall()
+			else:
+				cookie.logger.info('Adding package package %s' % args[1])
+				pkg = cookie.package(args[1], '/tmp', '/opt/cookie/bootstrap', '/')
+				pkg.clean()
+				pkg.build()
+				pkg.install()
+		except Exception, e:
+			cookie.logger.abort('%s host failed: %s' % str(e))
+
+	def do_profile(self, args):
+		"""
+		List and manage cookie profiles. The main command is 'list' which output all the profiles
+		that currently exists. Other action allow to get detail about a single profile
+		"""
+		try:
+			if len(args) < 1 or  args[0] not in ['list', 'packages', 'buildenv', 'arch']:
+				cookie.logger.abort('Syntax: %s profiles list|packages|buildenv|arch' % self.name())
+			elif args[0] == 'packages' and len(args) != 2:
+				cookie.logger.abort('Syntax: %s profiles package profile_name' % self.name())
+			elif args[0] == 'list':
+				cookie.logger.info('Profiles List:')
+				for pname in cookie.profiles.list(): cookie.logger.debug('%s' % pname)
+			elif args[0] == 'packages':
+				profile = cookie.profiles.get(args[1])
+				cookie.logger.info('%s base packages' % args[1])
+				for p in profile.packages(): cookie.logger.debug(p)
+			elif args[0] == 'buildenv':
+				profile = cookie.profiles.get(args[1])
+				cookie.logger.info('%s build environment:' % args[1])
+				for k, v in profile.buildenv().items(): cookie.logger.debug('%s: %s' % (k, v))
+			elif args[0] == 'arch':
+				profile = cookie.profiles.get(args[1])
+				cookie.logger.info('%s architecture:' % args[1])
+				cookie.logger.debug('%s' % (profile.arch()))
+		except Exception, e:
+			cookie.logger.abort('%s profiles failed: %s' (self.name(), e.message))
+
+	def do_git(self, args):
+		"""
+		Manage git source within the cookie environment. It allow to clone, update and checkout
+		repositories from any git server. This action work closely with the envrionment cache as to
+		ensure optimum efficienty.
+		"""
+		try:
+			if len(args) < 1 or args[0] not in [ 'clone', 'checkout', 'rm', 'deps' ]:
+				cookie.logger.abort('Syntax: %s git clone|checkout|rm ...' % (self.name()))
+			elif args[0] == 'clone' and len(args) != 3:
+				cookie.logger.abort('Syntax: %s git clone <url> <reponame>' % (self.name()))
+			elif args[0] == 'checkout' and len(args) != 4:
+				cookie.logger.abort('Syntax: %s git checkout <reponame> <revision> <destdir>' % (self.name()))
+			elif args[0] == 'rm' and len(args) != 2:
+				cookie.logger.abort('Syntax: %s git rm <reponame>' % (self.name()))
+			elif args[0] == 'clone':
+				cookie.gitsources().clone(args[1], args[2])
+			elif args[0] == 'checkout':
+				cookie.gitsources().checkout(args[1], args[2], args[3])
+			elif args[0] == 'rm':
+				cookie.gitsources().remove(args[1])
+			elif args[0] == 'deps':
+				cookie.gitsources().deps(args[1])
+		except Exception, e:
+			cookie.logger.abort('%s git failed: %s' % (self.name(), e.message))
+		pass
+
+	def do_target(self, args):
+		"""
+		Manage targets within the cookie environment.
+		"""
+		try:
+			if len(args) < 1 or args[0] not in [ 'create', 'list', 'select', 'delete', 'add', 'remove']:
+				cookie.logger.abort('syntax: %s target create|list|delete|merge' % (self.name()))
+			elif args[0] in ['list'] and len(args) != 1:
+				cookie.logger.abort('syntax: %s target %s' % (self.name(), args[0]))
+			elif args[0] in ['select', 'delete'] and len(args) != 2:
+				cookie.logger.abort('syntax: %s target %s <target_name>' % (self.name(), args[0]))
+			elif args[0] == 'create' and len(args) not in [2, 3]:
+				cookie.logger.abort('syntax: %s target %s <profile> [name]' % (self.name(), args[0]))
+			elif args[0] == 'add' and len(args) != 2:
+				cookie.logger.abort('syntax: %s target add <package_selector>' % (self.name()))
+			elif args[0] == 'remove' and len(args) != 2:
+				cookie.logger.abort('syntax: %s target remove <package_name>' % (self.name()))
+			elif args[0] == 'list':
+				cookie.logger.info('list of existing targets:')
+				for t in cookie.targets.list():
+					cookie.logger.debug('%s%s' % (t, (' (current)' if cookie.targets.current() == t else '')))
+			elif args[0] == 'select':
+				cookie.targets.select(args[1])
+			elif args[0] == 'delete':
+				cookie.targets.delete(args[1])
+			elif args[0] == 'create':
+				cookie.targets.create(args[1], args[2] if len(args) == 3 else None)
+			elif args[0] == 'add':
+				cookie.targets.get(cookie.targets.current()).add(args[1])
+			elif args[0] == 'remove':
+				cookie.targets.get(cookie.targets.current()).remove(args[1])
+		except Exception, e:
+			cookie.logger.abort('%s target failed: %s' % (self.name(), str(e)))
+
+	def do_search(self, args):
+		"""
+		Search for all packages that match the given selector and display the resulting list to the
+		caller. A selector always contains a package name, and might contains an optional overlay
+		and/or a version. When no version is specified, the system will select the latest available
+		one.
+		"""
+		try:
+			if len(args) != 1:
+				cookie.logger.abort('syntax: %s search <selector>' % self.name())
+			else:
+				cookie.logger.info('list of packages matching with "%s":' % args[0])
+				for (o,n,v) in cookie.packages.candidates(args[0]):
+					cookie.logger.debug('%s/%s-%s' % (o, n, v))
+		except Exception, e:
+			cookie.logger.abort('%s search failed: %s' % (self.name(), str(e)))
+
+	def do_build(self, args):
+		"""
+		Perform build operations on the current target. This take a package selector has a first
+		argument that is used to determine which package to work on. In addition, the operation to
+		perform is given as a second argument and is expected to be one of: clean, fetch, setup,
+		compile, install, check, mkdev, merge, unmerge.
+		"""
+		try:
+			if len(args) != 2 or args[1] not in [ 'clean', 'fetch', 'setup', 'compile', 'install', 'check', 'mkdeb', 'merge', 'unmerge' ]:
+				cookie.logger.abort('syntax: %s build selector clean|fetch|setup|compile|install|check|mkdeb|merge|unmerge' % self.name())
+			else:
+				pkg = cookie.packages.elect(args[0])
+				pkg.attach(cookie.targets.current())
+				if		args[1] == 'clean'		: pkg.clean()
+				elif	args[1] == 'fetch'		: pkg.fetch()
+				elif	args[1] == 'setup'		: pkg.setup()
+				elif	args[1] == 'compile'	: pkg.compile()
+				elif	args[1] == 'install'	: pkg.install()
+				elif	args[1] == 'check'		: pkg.check()
+				elif	args[1] == 'mkdeb'		: pkg.mkdeb()
+				elif	args[1] == 'merge'		: pkg.merge()
+				elif	args[1] == 'unmerge'	: pkg.unmerge()
+		except Exception, e:
+			cookie.logger.abort('%s build failed: %s' % (self.name(), str(e)))
+
+	def do_depends(self, args):
+		try:
+			if len(args) != 1:
+				cookie.logger.abort('syntax: %s depends <selector>' % self.name())
+			else:
+				def do_one(d, l):
+					for k, v in d.items():
+						cookie.logger.debug('%s%s' % (' ' * l, k))
+						do_one(v, l + 4)
+				pkg = cookie.packages.elect(args[0])
+				cookie.logger.info('Dependencies for %s' % pkg.selector())
+				do_one(pkg.depends_r(), 0)
+		except Exception, e:
+			cookie.logger.abort('%s depends failed: %s' % (self.name(), str(e)))
+
+
+cmd = cookie_cmd()
+cmd.run()

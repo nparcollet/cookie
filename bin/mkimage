@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+echo "Defining locales"
+ROOTFS=/opt/cookie/targets/current/rootfs
+IMG_FILE=/tmp/cookie.img
+BOOT_START=0
+BOOT_SIZE=32
+BOOT_END=$((${BOOT_START} + ${BOOT_SIZE} * 1024 * 1024 / 512 - 1))
+ROOTFS_START=$((${BOOT_END} + 1))
+ROOTFS_SIZE=224
+ROOTFS_END=$((${ROOTFS_START} + ${ROOTFS_SIZE} * 1024 * 1024 / 512 - 1))
+TOTAL_SIZE=$((${BOOT_SIZE}+${ROOTFS_SIZE}))
+LOOP_BOOT=/tmp/loop_boot
+LOOP_ROOTFS=/tmp/loop_rootfs
+
+echo "Removing previous artifacts"
+mountpoint -q /mnt/boot && umount /mnt/boot
+mountpoint -q /mnt && umount /mnt
+losetup -d ${LOOP_BOOT}
+losetup -d ${LOOP_ROOTFS}
+[ -e ${LOOP_BOOT} ] && rm ${LOOP_BOOT}
+[ -e ${LOOP_ROOTFS} ] && rm ${LOOP_ROOTFS}
+[ -e ${IMG_FILE} ] && rm -f ${IMG_FILE}
+
+echo "Preparing image"
+echo "  ... boot size: ${BOOT_SIZE}"
+echo "  ... rootfs size: ${ROOTFS_SIZE}"
+echo "  ... total size: ${TOTAL_SIZE}"
+
+echo "Creating image file"
+#fallocate -l ${TOTAL_SIZE}M ${IMG_FILE}
+fallocate -l $((${TOTAL_SIZE} * 1024 * 1024)) ${IMG_FILE}
+fdisk ${IMG_FILE} > /dev/null 2>&1 <<EOF
+o
+n
+
+
+${BOOT_START}
++ ${BOOT_SIZE}M
+p
+t
+c
+n
+
+
+${BOOT_START}
+
+
+p
+w
+EOF
+
+
+echo "Preparing BOOT partition"
+[ ! -e ${LOOP_BOOT} ] && mknod -m 660 ${LOOP_BOOT} b 7 10
+losetup -o $((${BOOT_START}*512)) --sizelimit $((${BOOT_END}*512)) ${LOOP_BOOT} ${IMG_FILE}
+mkdosfs -n BOOT -S 512 -s 16 -v ${LOOP_BOOT} > /dev/null
+
+echo "Preparing ROOTFS partition"
+[ ! -e ${LOOP_ROOTFS} ] && mknod -m 660 ${LOOP_ROOTFS} b 7 11
+losetup -o $((${ROOTFS_START}*512)) --sizelimit $((${ROOTFS_END}*512)) ${LOOP_ROOTFS} ${IMG_FILE}
+mkfs.ext4 -O ^huge_file ${LOOP_ROOTFS} > /dev/null
+
+echo "Syncing data to the image"
+mount -v -t ext4 /tmp/loop_rootfs /mnt
+mkdir /mnt/boot
+mount -v -t vfat /tmp/loop_boot /mnt/boot
+rsync -aHAXx ${ROOTFS}/ /mnt/
