@@ -41,25 +41,18 @@ directly without an object. The complete list of modules is provided below:
 
 - command
 - distfiles
-- logger
-- layout
 - gitsources
+- layout
+- logger
+- profiles
+- shell
 
 TO DOCUMENT:
 
 - packages
-- profiles
-- shell
 - targets
 
 Each of these modules can be accessed using the **cookie.<module>** route within python.
-
-# Roadmap
-
-Before describing all the module, below is a list of changes that are to be expected on these
-different modules:
-
-- **gitsources**: Dont pull if already up to date. Do a sparse Checkout?
 
 # Command module
 
@@ -144,15 +137,41 @@ class methods:
 Note: it is recommended to avoid using the **abort** method and properly cleanup in the execution
 flow once an error is encountered.
 
-# Packages module
+# Shell module
 
-TODO
+The shell module provide a way to conveniently execute shell command from within the cookie
+environment. Shell object are created from the **cookie.shell** constructor that returns a shell
+instance. Various configuration methods are available on the object as listed below:
+
+- **setpath**: update the working directory
+- **setenv**: add a new environment variable
+- **clearenv**: clear all environment variable
+- **loadenv**: load the current environment into the shell one
+- **addenv**: add several environment variable from the given dict
+
+Once the configuration is complete, implementers then call the **shell.run(cmd)** function to start
+the execution. An exception will be raised in case of error. A successful call to run will return a
+tuple with (status, output, error_output). Status will be 0 since exception are raise in case of
+errors. output and error_output are 2 array containing the command output that can be used for
+further processing.
 
 # Profiles module
 
-TODO
+The profile module is in charge of managing the different profile of the cookie environment. It is
+a static module with 2 class methods accessible throu the **cookie.profiles** prefix:
 
-# Shell module
+- **list**: list all profiles
+- **get**: access a single profile
+
+When accessing a profile, additional functions are available to work on this specific profile:
+
+- **name**: retrieve the name of the profile
+- **path**: retrieve the path to the profile
+- **buildenv**: retrieve a dict of the build environment for the profile
+- **arch**: retrieve the architecture of a profile, as defined in its env
+- **packages**: retrieve the list of package and version that made up a profile
+
+# Packages module
 
 TODO
 
