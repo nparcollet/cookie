@@ -1,20 +1,18 @@
 import os
+import shutil
 import cookie
 
 class gitsources:
 
-	"""
-	TODO: Dont pull if already up to date
-	TODO: Sparse Checkout ?
-	"""
+	@classmethod
+	def path(self):
+		return cookie.layout.gitsources()
 
-	def __init__(self):
-		pass
-
+	@classmethod
 	def clone(self, url, reponame):
 		try:
 			shell = cookie.shell()
-			path = '%s/%s' % (cookie.layout.gitsources(), reponame)
+			path = cookie.layout.gitsource(reponame)
 			if os.path.isdir(path):
 				cookie.logger.debug('repository %s already exists' % reponame)
 			else:
@@ -23,10 +21,11 @@ class gitsources:
 		except Exception, e:
 			raise Exception('could not clone or update %s: %s' % (reponame, e.message))
 
+	@classmethod
 	def checkout(self, reponame, revision, destdir):
 		try:
 			shell = cookie.shell()
-			local = '%s/%s' % (cookie.layout.gitsources(), reponame)
+			local = cookie.layout.gitsource(reponame)
 			shell.run('mkdir -p %s' % destdir)
 			try:
 				(status, out, err) = shell.run('cd %s && git cat-file -t %s' % (local, revision))
@@ -41,5 +40,22 @@ class gitsources:
 		except Exception, e:
 			raise Exception('could not checkout repositoriy %s: %s' % (reponame, e.message))
 
+	@classmethod
+	def list(self):
+		res = []
+		if os.path.isdir(cookie.layout.gitsources()):
+			for e in os.listdir(cookie.layout.gitsources()):
+				res.append(e)
+		return res
+
+	@classmethod
 	def remove(self, name):
-		raise Exception('not implemented')
+		path = cookie.layout.gitsource(reponame)
+		if os.path.isdir(path):
+			shutil.rmtree(path)
+
+	@classmethod
+	def clear(self):
+		if os.path.isdir(cookie.layout.gitsources()):
+			for e in os.listdir(cookie.layout.gitsources()):
+				self.remove(e)

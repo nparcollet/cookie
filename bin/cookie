@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import subprocess
+import os
 import cookie
 
 class cookie_cmd(cookie.command):
@@ -24,7 +25,7 @@ class cookie_cmd(cookie.command):
 			cookie.logger.abort('syntax: %s fetch archive_url [destname]' % self.name())
 		else:
 			try:
-				cookie.distfiles().fetch(args[0], args[1] if len(args) == 2 else None)
+				cookie.distfiles.fetch(args[0], args[1] if len(args) == 2 else None)
 			except Exception, e:
 				cookie.logger.abort('%s fetch failed: %s' % (self.name(), str(e)))
 
@@ -36,7 +37,7 @@ class cookie_cmd(cookie.command):
 			cookie.logger.abort('Syntax: %s extract archive_name destdir' % self.name())
 		else:
 			try:
-				cookie.distfiles().extract(args[0], args[1])
+				cookie.distfiles.extract(args[0], args[1])
 			except Exception, e:
 				cookie.logger.abort(e)
 
@@ -53,7 +54,7 @@ class cookie_cmd(cookie.command):
 				a = args[0] if len(args) == 1 else 'update'
 				if a == 'update':
 					cookie.logger.info('Creating or updating cookie docker image')
-					(status, out, err) = s.run('docker build -t cookie %s' % self.mkpath('bootstrap'))
+					(status, out, err) = s.run('docker build -t cookie %s' % cookie.layout.bootstrap())
 					if status != 0:
 						cookie.logger.abort(' '.join(err))
 					else:
@@ -140,32 +141,87 @@ class cookie_cmd(cookie.command):
 		except Exception, e:
 			cookie.logger.abort('%s profiles failed: %s' (self.name(), e.message))
 
+	def do_distfiles(self, args):
+		"""
+		Manage third party archives within the cookie environment. It allow to download and unpack
+		them. This action work closely with the environment cache as to ensure optimum efficienty.
+		"""
+		try:
+			if len(args) < 1 or args[0] not in [ 'path', 'fetch', 'archive', 'extract', 'list', 'remove', 'clear' ]:
+				cookie.logger.abort('Syntax: %s distfiles path|fetch|archive|extract|list|remove|clear ...' % (self.name()))
+			elif args[0] == 'path' and len(args) != 1:
+				cookie.logger.abort('Syntax: %s distfiles path' % (self.name()))
+			elif args[0] == 'fetch' and len(args) != 3:
+				cookie.logger.abort('Syntax: %s distfiles fetch url dest' % (self.name()))
+			elif args[0] == 'archive' and len(args) != 2:
+				cookie.logger.abort('Syntax: %s distfiles archive name' % (self.name()))
+			elif args[0] == 'extract' and len(args) != 3:
+				cookie.logger.abort('Syntax: %s distfiles extract name dest' % (self.name()))
+			elif args[0] == 'list' and len(args) != 1:
+				cookie.logger.abort('Syntax: %s distfiles list' % (self.name()))
+			elif args[0] == 'remove' and len(args) != 2:
+				cookie.logger.abort('Syntax: %s distfiles remove name' % (self.name()))
+			elif args[0] == 'clear' and len(args) != 1:
+				cookie.logger.abort('Syntax: %s distfiles clear' % (self.name()))
+			elif args[0] == 'path':
+				cookie.logger.info('path to distfiles:')
+				cookie.logger.debug(cookie.distfiles.path())
+			elif args[0] == 'archive':
+				cookie.logger.info('path to %s archive:' % args[1])
+				cookie.logger.debug(cookie.distfiles.archive(args[1]))
+			elif args[0] == 'list':
+				cookie.logger.info('list of existing distfiles:')
+				for t in cookie.distfiles.list():
+					cookie.logger.debug(t)
+			elif args[0] == 'remove':
+				cookie.distfiles.remove(name)
+			elif args[0] == 'clear':
+				cookie.distfiles.clear()
+			elif args[0] == 'fetch':
+				cookie.distfiles.fetch(args[1], args[2])
+			elif args[0] == 'extract':
+				cookie.distfiles.extract(args[1], args[2])
+		except Exception, e:
+			cookie.logger.abort('%s git failed: %s' % (self.name(), e.message))
+
 	def do_git(self, args):
 		"""
 		Manage git source within the cookie environment. It allow to clone, update and checkout
-		repositories from any git server. This action work closely with the envrionment cache as to
+		repositories from any git server. This action work closely with the environment cache as to
 		ensure optimum efficienty.
 		"""
 		try:
-			if len(args) < 1 or args[0] not in [ 'clone', 'checkout', 'rm', 'deps' ]:
-				cookie.logger.abort('Syntax: %s git clone|checkout|rm ...' % (self.name()))
+			if len(args) < 1 or args[0] not in [ 'clone', 'checkout', 'remove', 'list', 'clear', 'path' ]:
+				cookie.logger.abort('Syntax: %s git clone|checkout|remove|list|clear|path ...' % (self.name()))
 			elif args[0] == 'clone' and len(args) != 3:
 				cookie.logger.abort('Syntax: %s git clone <url> <reponame>' % (self.name()))
 			elif args[0] == 'checkout' and len(args) != 4:
 				cookie.logger.abort('Syntax: %s git checkout <reponame> <revision> <destdir>' % (self.name()))
-			elif args[0] == 'rm' and len(args) != 2:
-				cookie.logger.abort('Syntax: %s git rm <reponame>' % (self.name()))
+			elif args[0] == 'remove' and len(args) != 2:
+				cookie.logger.abort('Syntax: %s git remove <reponame>' % (self.name()))
+			elif args[0] == 'clear' and len(args) != 1:
+				cookie.logger.abort('Syntax: %s git clear')
+			elif args[0] == 'list' and len(args) != 1:
+				cookie.logger.abort('Syntax: %s git list')
+			elif args[0] == 'path' and len(args) != 1:
+				cookie.logger.abort('Syntax: %s git path')
 			elif args[0] == 'clone':
-				cookie.gitsources().clone(args[1], args[2])
+				cookie.gitsources.clone(args[1], args[2])
 			elif args[0] == 'checkout':
-				cookie.gitsources().checkout(args[1], args[2], args[3])
-			elif args[0] == 'rm':
-				cookie.gitsources().remove(args[1])
-			elif args[0] == 'deps':
-				cookie.gitsources().deps(args[1])
+				cookie.gitsources.checkout(args[1], args[2], args[3])
+			elif args[0] == 'remove':
+				cookie.gitsources.remove(args[1])
+			elif args[0] == 'clear':
+				cookie.gitsources.clear()
+			elif args[0] == 'path':
+				cookie.logger.info('path to git repositories:')
+				cookie.logger.debug(cookie.gitsources.path())
+			elif args[0] == 'list':
+				cookie.logger.info('list of existing git repositories:')
+				for t in cookie.gitsources.list():
+					cookie.logger.debug(t)
 		except Exception, e:
 			cookie.logger.abort('%s git failed: %s' % (self.name(), e.message))
-		pass
 
 	def do_target(self, args):
 		"""

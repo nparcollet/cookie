@@ -34,5 +34,17 @@ class layout:
 		return '%s/cache/distfiles' % self.root()
 
 	@classmethod
+	def distfile(self, name):
+		return '%s/%s' % (self.distfiles(), name)
+
+	@classmethod
 	def gitsources(self):
 		return '%s/cache/gitsources' % self.root()
+
+	@classmethod
+	def gitsource(self, name):
+		return '%s/%s' % (self.gitsources(), name)
+
+	@classmethod
+	def bootstrap(self):
+		return '%s/bootstrap' % self.root()

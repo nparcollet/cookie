@@ -5,19 +5,18 @@ import cookie
 
 class distfiles:
 
-	def __init__(self):
-		self._path = cookie.layout.distfiles()
-		if not os.path.isdir(self.path()):
-			os.makedirs(self.path())
-
+	@classmethod
 	def path(self):
-		return self._path
+		return cookie.layout.distfiles()
 
+	@classmethod
 	def fetch(self, url, name):
 		name = url.split('/')[-1] if name is None else name
-		dest = '%s/%s' % (self.path(), name)
+		dest = cookie.layout.distfile(name)
 		cookie.logger.info('retrieving %s from %s' % (name, url))
 		try:
+			if not os.path.isdir(cookie.layout.distfiles()):
+				os.makedirs(cookie.layout.distfiles())
 			if not os.path.isfile(dest):
 				(status, out, err) = cookie.shell().run('wget -c %s -O %s.t' % (url, dest))
 				if status != 0:
@@ -30,12 +29,14 @@ class distfiles:
 			os.unlink('%s.t' % (dest))
 			raise
 
+	@classmethod
 	def archive(self, name):
-		path = '%s/%s' % (self.path(), name)
+		path = cookie.layout.distfile(name)
 		if os.path.isfile(path):
 			return path
 		raise Exception('archive %s was not found in the cache' % name)
 
+	@classmethod
 	def extract(self, name, dest):
 		try:
 			s = cookie.shell()
@@ -53,8 +54,21 @@ class distfiles:
 		except Exception, e:
 			raise Exception('could not extract %s: %s' % (name, str(e)))
 
+	@classmethod
 	def list(self):
-		raise Exception('list is not implemented')
+		res = []
+		if os.path.isdir(cookie.layout.distfiles()):
+			for e in os.listdir(cookie.layout.distfiles()):
+				res.append(e)
+		return res
 
+	@classmethod
+	def remove(self, name):
+		if os.path.isfile(cookie.layout.distfile(name)):
+			os.unlink(cookie.layout.distfile(name))
+
+	@classmethod
 	def clear(self):
-		raise Exception('clear is not implemented')
+		if os.path.isdir(cookie.layout.distfiles()):
+			for e in os.listdir(cookie.layout.distfiles()):
+				self.remove(e)

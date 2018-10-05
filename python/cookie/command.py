@@ -6,35 +6,14 @@ import cookie
 
 class command(object):
 
-	"""
-	Base class to be used in order to create cookie command line tools. It provide basic functions
-	that are common to all of them, such as path definitions to the various files of the
-	environment and sanity check functions.
-	"""
-
 	def __init__(self, action = 'help'):
-		"""
-		Initialize the command object. The name is saved at this time and can be further referenced
-		by calling the name() function. When initializing the command it is possible to specify the
-		default action to run when none is provided. This action defaults to "help" if it is not
-		set.
-		"""
 		self._name		= os.path.basename(sys.argv[0])
 		self._action    = action
 
 	def name(self):
-		"""
-		Retrieve the name of this command. The name is initialized when the command object is
-		created by extracting it from the command line argument (argv[0]).
-		"""
 		return self._name
 
 	def actions(self):
-		"""
-		List the existing actions for this command. An action is a method of the command subclass
-		whose name starts with the do_ prefix. This function is used when generating the help for
-		the command.
-		"""
 		res = []
 		for e in dir(self):
 			if not e.startswith('do_'): continue
@@ -42,10 +21,6 @@ class command(object):
 		return res
 
 	def summary(self, action):
-		"""
-		Get the first sentence within the documentation of the given action. This is used
-		when displaying a summary of the commands while invoking the help menu.
-		"""
 		raw = self.__getattribute__('do_%s' % action).__doc__
 		if raw is None or len(raw) == 0:
 			return 'no documentation available'
@@ -55,13 +30,6 @@ class command(object):
 			return raw.strip()
 
 	def run(self):
-		"""
-		Parse stdin an perform the action requested by the caller. Once the action is completed the
-		program return a status code indicating whether it succeeded or not. Note that if the path
-		to the cookie environment is not defined (COOKIE env), the execution will fail immediatly.
-		If an action fail to execute, it is expected to raise an exception so that the error is
-		properly forwarded to the caller and the exit status code is correct.
-		"""
 		if cookie.layout.root() == None:
 			cookie.logger.abort('The COOKIE environment variable is not defined')
 			return 1
@@ -78,11 +46,6 @@ class command(object):
 				self.do_help([])
 
 	def do_help(self, args):
-		"""
-		List of all the command actions along with their description. This menu is shown when running
-		the command with no parameter where one is expected, or when the command is invoked with an
-		invalid action parameter.
-		"""
 		print ''
 		ml  = max([ len(a) for a in self.actions()])
 		doc = self.__getattribute__('do_help').__doc__

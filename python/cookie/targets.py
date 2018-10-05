@@ -31,7 +31,9 @@ class targets():
 
 		def package(self, selector):
 			try:
-				return cookie.package(selector, self.name())
+				pkg = cookie.packages.elect(selector)
+				pkg.attach(self.name())
+				return pkg
 			except Exception, e:
 				raise Exception('no package found for selector "%s": %s' % (selector, str(e)))
 

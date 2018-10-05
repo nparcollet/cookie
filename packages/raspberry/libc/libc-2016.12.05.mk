@@ -20,3 +20,4 @@ compile:
 install:
 	mkdir -p $(P_DESTDIR)
 	cp -a $(P_WORKDIR)/raspberry-tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot/* $(P_DESTDIR)/
+	#cp -an /opt/rpitools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot/* $(P_DESTDIR)/
