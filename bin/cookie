@@ -7,7 +7,8 @@ import cookie
 class cookie_cmd(cookie.command):
 
 	"""
-	Cookie command line tool. The entry point to the cookie framework.
+	Cookie command line tool. The entry point to the cookie framework. Type "cookie help" for a
+	summary of all commands.
 	"""
 
 	def __init__(self):
@@ -44,28 +45,18 @@ class cookie_cmd(cookie.command):
 	def do_bootstrap(self, args):
 		"""
 		The bootstrap command is used to initialize or update the docker image that is used by the
-		cookie environment. It can also be used to delete the existing environment if needed.
+		cookie environment. It can also be used to remove the existing environment for cleanup if
+		needed.
 		"""
-		if len(args) > 1 or (len(args) == 1 and args[0] != 'update' and args[0] != 'delete'):
-			cookie.logger.abort('Syntax: %s bootstrap [update|delete]' % self.name())
+		if len(args) > 1 or (len(args) == 1 and args[0] != 'update' and args[0] != 'remove'):
+			cookie.logger.abort('Syntax: %s bootstrap [update|remove]' % self.name())
 		else:
 			try:
-				s = cookie.shell()
-				a = args[0] if len(args) == 1 else 'update'
-				if a == 'update':
-					cookie.logger.info('Creating or updating cookie docker image')
-					(status, out, err) = s.run('docker build -t cookie %s' % cookie.layout.bootstrap())
-					if status != 0:
-						cookie.logger.abort(' '.join(err))
-					else:
-						cookie.logger.info('Cookie docker image was updated')
-				elif a =='delete':
-					cookie.logger.info('Deleting cookie docker image')
-					(status, out, err) = s.run('docker rmi -f cookie')
-					if status != 0:
-						cookie.logger.abort(' '.join(err))
-					else:
-						cookie.logger.info('Cookie docker image was deleted')
+				action = args[0] if len(args) == 1 else 'update'
+				if action == 'update':
+					cookie.docker.update()
+				elif action =='remove':
+					cookie.docker.remove()
 				else:
 					cookie.logger.abort('Unknown subcommand "%s"' % a)
 			except Exception, e:
@@ -73,20 +64,17 @@ class cookie_cmd(cookie.command):
 
 	def do_shell(self, args):
 		"""
-		Log into the docker environment. This will provide the caller with a functionnal shell
+		Log into the docker environment. This will provide the caller with a functionnal console
 		within the cookie docker image with everything properly setup. This environment can be
 		used to test the compilation of various elements or to work on the targets manually. Note
-		any modification outside of the /opt/cookie done in the image will be erased once the shell
-		is exited.
+		any modification outside of the /opt/cookie done in the image will be erased once the user
+		exit the environment.
 		"""
 		if len(args) != 0:
 			cookie.logger.abort('Syntax: %s shell' % self.name())
 		else:
 			try:
-				# TODO: RUN if not yet running, else start only
-				cmd = 'docker run -it --rm --privileged --cap-add=SYS_ADMIN --cap-add=MKNOD --cap-add=SYS_PTRACE --volume %s:/opt/cookie cookie' % cookie.layout.root()
-				#cmd = 'docker start --privileged --cap-add=SYS_ADMIN --cap-add=MKNOD --cap-add=SYS_PTRACE --volume %s:/opt/cookie cookie' % cookie.layout.root()
-				subprocess.call(cmd.split())
+				cookie.docker.console()
 			except Exception, e:
 				cookie.logger.abort(e)
 
@@ -223,23 +211,73 @@ class cookie_cmd(cookie.command):
 		except Exception, e:
 			cookie.logger.abort('%s git failed: %s' % (self.name(), e.message))
 
+	def do_add(self, args):
+		"""
+		Add a package within the currently selected target of cookie. This takes a package selector
+		as argument. It allow to add packages that are not necessarly part of the target profile.
+		Note that calling merge will remove packages that does not belong. This command works both
+		from the host system and from within the cookie shell but always operate within the build
+		environment.
+		"""
+		try:
+			if len(args) != 1:
+				cookie.logger.abort('syntax: %s add selector' % (self.name()))
+			elif os.getenv('COOKIE_ENV') != '1':
+				cookie.docker.run('cookie add %s' % args[0])
+			else:
+				cookie.targets.get(cookie.targets.current()).add(args[0])
+		except Exception, e:
+			cookie.logger.abort('%s add failed: %s' % (self.name(), e.message))
+
+	def do_remove(self, args):
+		"""
+		Remove a package from the currently selected target. This take a package name as argument
+		and will remove all the files in the targets that belong to this package. It can be used to
+		remove profile packages, or custom packages that were added with the add command. This
+		command works both from the host system and from within the cookie shell, but will always
+		operate within the build environment.
+		"""
+		try:
+			if len(args) != 1:
+				cookie.logger.abort('syntax: %s remove package_name' % (self.name()))
+			elif os.getenv('COOKIE_ENV') != '1':
+				cookie.docker.run('cookie remove %s' % args[0])
+			else:
+				cookie.targets.get(cookie.targets.current()).remove(args[0])
+		except Exception, e:
+			cookie.logger.abort('%s remove failed: %s' % (self.name(), e.message))
+
+	def do_merge(self, args):
+		"""
+		Merge all packages of the current target as defined in its profile. This will add or update
+		packages, and removes the one that are not defined in the profile. This command works both
+		from the host system and from within the cookie shell, but will always operate within the
+		build environment.
+		"""
+		try:
+			if len(args) != 0:
+				cookie.logger.abort('syntax: %s merge' % (self.name()))
+			elif os.getenv('COOKIE_ENV') != '1':
+				cookie.docker.run('cookie merge')
+			else:
+				raise Exception('TODO: TARGET MERGE')
+				#cookie.targets.get(cookie.targets.current()).merge()
+		except Exception, e:
+			cookie.logger.abort('%s merge failed: %s' % (self.name(), e.message))
+
 	def do_target(self, args):
 		"""
 		Manage targets within the cookie environment.
 		"""
 		try:
-			if len(args) < 1 or args[0] not in [ 'create', 'list', 'select', 'delete', 'add', 'remove']:
-				cookie.logger.abort('syntax: %s target create|list|delete|merge' % (self.name()))
+			if len(args) < 1 or args[0] not in [ 'create', 'list', 'select', 'delete']:
+				cookie.logger.abort('syntax: %s target create|list|delete' % (self.name()))
 			elif args[0] in ['list'] and len(args) != 1:
 				cookie.logger.abort('syntax: %s target %s' % (self.name(), args[0]))
 			elif args[0] in ['select', 'delete'] and len(args) != 2:
 				cookie.logger.abort('syntax: %s target %s <target_name>' % (self.name(), args[0]))
 			elif args[0] == 'create' and len(args) not in [2, 3]:
 				cookie.logger.abort('syntax: %s target %s <profile> [name]' % (self.name(), args[0]))
-			elif args[0] == 'add' and len(args) != 2:
-				cookie.logger.abort('syntax: %s target add <package_selector>' % (self.name()))
-			elif args[0] == 'remove' and len(args) != 2:
-				cookie.logger.abort('syntax: %s target remove <package_name>' % (self.name()))
 			elif args[0] == 'list':
 				cookie.logger.info('list of existing targets:')
 				for t in cookie.targets.list():
@@ -250,10 +288,6 @@ class cookie_cmd(cookie.command):
 				cookie.targets.delete(args[1])
 			elif args[0] == 'create':
 				cookie.targets.create(args[1], args[2] if len(args) == 3 else None)
-			elif args[0] == 'add':
-				cookie.targets.get(cookie.targets.current()).add(args[1])
-			elif args[0] == 'remove':
-				cookie.targets.get(cookie.targets.current()).remove(args[1])
 		except Exception, e:
 			cookie.logger.abort('%s target failed: %s' % (self.name(), str(e)))
 

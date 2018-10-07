@@ -8,3 +8,4 @@ from cookie.targets		import targets
 from cookie.gitsources	import gitsources
 from cookie.logger		import logger
 from cookie.layout		import layout
+from cookie.docker		import docker

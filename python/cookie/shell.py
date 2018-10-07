@@ -9,8 +9,11 @@ import cookie
 class shell:
 
 	def __init__(self):
-		self._path			= os.getcwd()
-		self._env			= None
+		self._path	= os.getcwd()
+		self._env	= None
+		self._log	= None
+		self._quiet = False
+		self._inenv = True if os.getenv('COOKIE_ENV') == '1' else False
 
 	def setpath(self, path):
 		self._path = path
@@ -19,6 +22,14 @@ class shell:
 		if self._env is None:
 			self._env = {}
 		self._env[name] = value
+
+	def setquiet(self, quiet):
+		self._quiet = quiet
+
+	def setlog(self, path):
+		if not os.path.exists(path[0:path.rfind('/')]):
+			os.makedirs(path[0:self._log.rfind('/')])
+		self._log = open(path, 'w')
 
 	def addenv(self, data):
 		for d in data:
@@ -31,6 +42,8 @@ class shell:
 		self._env = dict(os.environ)
 
 	def run(self, cmd):
+		#if not self._inenv:
+		#	cmd = cookie.docker.run_cmd(cmd)
 		p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=self._path, env=self._env)
 		handles = [ p.stdout, p.stderr ]
 		out = err = []
@@ -41,7 +54,10 @@ class shell:
 					handles.remove(handle)
 					continue
 				data = output.rstrip()
-				cookie.logger.debug(data)
+				if not self._quiet:
+					cookie.logger.debug(data)
+				if self._log:
+					print >> self._log, data
 				(out if handle == p.stdout else err).append(data)
 		status = p.wait()
 		if status != 0:

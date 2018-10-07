@@ -46,6 +46,7 @@ directly without an object. The complete list of modules is provided below:
 - logger
 - profiles
 - shell
+- docker
 
 TO DOCUMENT:
 
@@ -139,9 +140,11 @@ flow once an error is encountered.
 
 # Shell module
 
-The shell module provide a way to conveniently execute shell command from within the cookie
-environment. Shell object are created from the **cookie.shell** constructor that returns a shell
-instance. Various configuration methods are available on the object as listed below:
+The shell module provide a way to conveniently execute shell commands. Objects will automatically
+detect if they are run from the host system or from the build environment. This is done by checking
+for the presence of COOKIE_ENV environment variable. Shell object are created from the
+**cookie.shell** constructor that returns a shell instance. Various configuration methods are
+available on the object as listed below:
 
 - **setpath**: update the working directory
 - **setenv**: add a new environment variable
@@ -163,7 +166,8 @@ a static module with 2 class methods accessible throu the **cookie.profiles** pr
 - **list**: list all profiles
 - **get**: access a single profile
 
-When accessing a profile, additional functions are available to work on this specific profile:
+When using the **get** method, a profile object is returned providing additional means to control
+the profile that was accessed:
 
 - **name**: retrieve the name of the profile
 - **path**: retrieve the path to the profile
@@ -171,10 +175,46 @@ When accessing a profile, additional functions are available to work on this spe
 - **arch**: retrieve the architecture of a profile, as defined in its env
 - **packages**: retrieve the list of package and version that made up a profile
 
-# Packages module
-
-TODO
-
 # Targets module
+
+The targets module is in charge of managing the different target of the cookie environment. It is
+a static module that can be accessed trough the **cookie.targets** prefix and provides the following
+methods:
+
+- **list**: retrieve a list of all existing targets
+- **current**: retrieve the name of the currently active target
+- **get**: access a single target object
+- **delete**: delete a target given its name
+- **select**: select a new target as the current one
+- **create**: create a new target from the given profile and name
+
+When using the **get** method, a target object is returned providing additional means to control the
+target that was accessed:
+
+- **name**: retrieve the name of the target (not the profile name)
+- **manifest**: retrieve the target manifest (dict with profile and creation date)
+- **profile**: retrieve the name of the profile bound to this target
+- **package**: given a selector, retrieve a package object bound to this target
+- **add**: given a selector, install a new package in the target
+- **remove**: given a package name, uninstall it from the target
+- **merge**: merge all package described in the bound profile into the target
+
+# Docker module
+
+The docker module is in charge of handling the interaction between the host system and the docker
+image used by the cookie environment. This goes from the setup of this environment to the execution
+of command within it. It is a static module that can be accessed with the **cookie.docker** prefix
+and provides the following apis:
+
+- **update**: create or update the environment
+- **remove**: remove the image, allowing to start fresh if something goes wrong
+- **console**: start an interactive console within the environment (changes are not persistant)
+- **exec**: execute a command within the environment.
+
+**NOTE**: using **console** or **exec**, any changes that are not within the writable area will be
+discarded once the execution is complete. To simplify, only the **/opt/cookie** directory can be
+modified in a persistent manner.
+
+# Packages module
 
 TODO

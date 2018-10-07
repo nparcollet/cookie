@@ -10,7 +10,7 @@ class targets():
 
 		def __init__(self, name):
 			self._name     = name
-			self._path     = '%s/%s' % (cookie.targets.path, name)
+			self._path     = cookie.layout.target(name)
 			self._build    = '%s/build' % (self._path)
 			self._debian   = '%s/debian' % (self._path)
 			self._rootfs   = '%s/rootfs' % (self._path)
@@ -52,28 +52,78 @@ class targets():
 				pkg.mkdeb()
 			pkg.merge()
 
-		def remove(self, selector):
+		def remove(self, name):
+			# TODO: HERE WE WANT AN INSTALLED PACKAGE ONLY, WE NEED TO GET THE SELECTOR OTHERWISE...
+			# TODO: HERE WE HAVE A NAME, NOT A SELECTOR ...
 			cookie.logger.info('removing package from the target')
-			pkg = self.package(selector)
+			pkg = self.package(name)
 			pkg.unmerge()
 
 		def merge(self):
-			# PERFORM THE OPERATION OF BUILINDG / INSTALLING ALL TARGET PROFILE PACKAGES
-			pass
 
-	path = '%s/targets' % os.getenv('COOKIE')
+			# TODO: FIND PACKAGE INSTALLED BUT NOT REQUIRED ...
+
+			# Setup List of package
+			prf  = cookie.profiles.get(self.profile())
+			pkgl = [ cookie.packages.elect(x) for x in prf.packages() ] # LIST OF PACKAGES
+			ord  = [ x for x in pkgl if x.depends() == [] ]
+			rem  = [ x for x in pkgl if x not in ord ]
+			# Add in order of needed dependencies
+			while len(rem) > 0:
+				count = len(rem)
+				names = [ n.name() for n in ord ]
+				for r in rem:
+					ready = True
+					for d in r.depends():
+						if not d in names:
+							ready = False
+					if ready:
+						ord.append(r)
+						rem.remove(r)
+				if count == len(rem):
+					cookie.logger.abort('unable to satisfy dependencies for one or more packages')
+			# List of operations
+			for pkg in ord:
+				pkg.attach(self.name())
+				iv = pkg.installed_version()
+				if iv == None:
+					cookie.logger.debug('[ADD] %s-%s' % (pkg.name(), pkg.version()))
+				elif iv != pkg.version():
+					cookie.logger.debug('[UPD] %s-%s > %s' % (pkg.name(), iv, pkg.version()))
+				elif False:
+					cookie.logger.debug('[DEL] %s-%s' % (pkg.name(), pkg.version()))
+				else:
+					cookie.logger.debug('[IGN] %s-%s' % (pkg.name(), pkg.version()))
+			# Confirm
+			answer = ''
+			while answer not in ["y", "n"]:
+				answer = raw_input("Proceed with merge [y/n]? ").lower()
+			if answer == 'y':
+				for pkg in ord:
+					iv = pkg.installed_version()
+					if iv == None:
+						self.add(pkg.selector())
+					elif iv != pkg.version():
+						self.remove(pkg.name())
+						self.add(pkg.selector())
+					elif False:
+						self.remove(pkg.name)
+					else:
+						pass
 
 	@classmethod
 	def list(self):
-		if os.path.isdir(self.path):
-			return [p for p in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, p)) and p != 'current']
+		path = cookie.layout.targets()
+		if os.path.isdir(path):
+			return [p for p in os.listdir(path) if os.path.isdir(os.path.join(path, p)) and p != 'current']
 		else:
 			raise Exception('no target directory found')
 
 	@classmethod
 	def current(self):
 		try:
-			return os.readlink('%s/current' % self.path).split('/')[-1]
+			path = cookie.layout.targets()
+			return os.readlink('%s/current' % path).split('/')[-1]
 		except Exception, e:
 			return None
 
@@ -86,25 +136,27 @@ class targets():
 		if name not in self.list():
 			raise Exception('unknown target %s' % name)
 		else:
-			shutil.rmtree('%s/%s' % (self.path, name))
+			path = cookie.layout.targets()
+			shutil.rmtree('%s/%s' % (path, name))
 			self.select(None if len(self.list()) == 0 else self.list()[0])
 
 	@classmethod
 	def select(self, name):
+		path = cookie.layout.targets()
 		if name is None:
-			os.remove('%s/current' % self.path)
+			os.remove('%s/current' % path)
 		elif name not in self.list():
 			raise Exception('unknown target %s' % name)
 		else:
-			if os.path.islink('%s/current' % self.path):
-				os.remove('%s/current' % self.path)
-			os.symlink('%s/%s' % (self.path, name), '%s/current' % self.path)
+			if os.path.islink('%s/current' % path):
+				os.remove('%s/current' % path)
+			os.symlink('%s/%s' % (path, name), '%s/current' % path)
 
 	@classmethod
 	def create(self, profile, name):
 		today = datetime.date.today()
 		name = profile if name == None else name
-		path = '%s/%s' % (self.path, name)
+		path = '%s/targets/%s' % (os.getenv('COOKIE'), name)
 		if os.path.isdir(path):
 			raise Exception('target already exists')
 		elif not os.path.isdir(cookie.layout.profile(profile)):
@@ -120,30 +172,3 @@ class targets():
 			except Exception, e:
 				shutil.rmtree(path)
 				raise e
-
-	"""
-	def merge(self):
-		# Create a list of packages in order of dependencies
-		ord = [ x for x in self._packages.keys() if self._packages[x].depends() == [] ]
-		rem = [ x for x in self._packages.keys() if x not in ord ]
-		while len(rem) > 0:
-			for r in rem:
-				ready = True
-				for d in self._packages[r].depends():
-					if not d in ord: ready = False
-				if not ready: continue
-				ord.append(r)
-				rem.remove(r)
-		# Remove the one that are up to date
-		for p in ord:
-			pkg = self._packages[p]
-			action, reason = pkg.diff()
-			print '[%s] %s: %s' % (action, p, reason)
-			if action == 'R':
-				pkg.unmerge()
-			elif action == 'I':
-				pkg.merge()
-			elif action == 'U':
-				pkg.unmerge()
-				pkg.merge()
-	"""

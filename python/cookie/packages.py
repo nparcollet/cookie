@@ -102,7 +102,7 @@ class packages:
 				raise Exception('package %s does not support %s architecture' % (self.name(), self._arch))
 			else:
 				if not os.path.isdir(self.workdir()): os.makedirs(self.workdir())
-				s = cookie.shell(log = '%s/%s-%s.log.%s' % (self.debian(), self.name(), self.version(), rule))
+				s = cookie.shell()
 				s.loadenv()
 				s.addenv(self._env)
 				s.setenv('P_WORKDIR', self.workdir())
@@ -178,6 +178,15 @@ class packages:
 		def unmerge(self):
 			cookie.logger.info('uninstalling package')
 			cookie.shell().run('dpkg --root=%s -P %s' % (self.rootfs(), self._name))
+
+		def installed_version(self):
+			try:
+				shell = cookie.shell()
+				shell.setquiet(True)
+				(s, o, e) = shell.run('dpkg --root=%s --force-architecture  -l | awk \'$2=="%s" { print $3 }\'' % (self.rootfs(), self.name()))
+				return o[0] if len(o) == 1 else None
+			except Exception, e:
+				return None
 
 	@classmethod
 	def exists(self, overlay, name, version):

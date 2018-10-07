@@ -2,8 +2,8 @@
 
 import os
 import shutil
-import cookie
 import re
+import cookie
 
 class profiles:
 
@@ -11,7 +11,7 @@ class profiles:
 
 		def __init__(self, name):
 			self._name = name
-			self._path = cookie.layout.profile(self._name)
+			self._path = cookie.layout.profile(name)
 
 		def name(self):
 			return self._name
