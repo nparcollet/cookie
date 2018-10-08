@@ -7,19 +7,14 @@ P_LICENCES		= MULTI
 P_ARCHS			= arm
 P_OPTIONS		=
 P_DEPENDS		=
+P_PROVIDES		=
 
 fetch:
-	#cookie git clone $(P_GITURL) raspberry-tools
-	echo ""
 
 setup:
-	#cookie git checkout raspberry-tools $(P_REVISION) $(P_WORKDIR)/raspberry-tools
-	echo ""
 
 compile:
-	echo "no compilation needed, binary sysroot from raspberry tools repository"
 
 install:
 	mkdir -p $(P_DESTDIR)
-	#cp -a $(P_WORKDIR)/raspberry-tools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot/* $(P_DESTDIR)/
-	cp -ra /opt/rpitools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot/* $(P_DESTDIR)/
+	cp -a /opt/rpitools/arm-bcm2708/arm-rpi-4.9.3-linux-gnueabihf/arm-linux-gnueabihf/sysroot/* $(P_DESTDIR)/

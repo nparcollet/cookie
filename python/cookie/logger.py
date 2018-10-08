@@ -4,7 +4,7 @@ class logger:
 
 	@classmethod
 	def error(self, msg):
-		print '(!) %s: %s' % (self.name(), msg)
+		print '[\033[31m!\033[0m] \033[31m%s\033[0m' % msg
 
 	@classmethod
 	def abort(self, msg):

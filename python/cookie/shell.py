@@ -8,11 +8,11 @@ import cookie
 
 class shell:
 
-	def __init__(self):
+	def __init__(self, quiet = False):
 		self._path	= os.getcwd()
 		self._env	= None
 		self._log	= None
-		self._quiet = False
+		self._quiet = quiet
 		self._inenv = True if os.getenv('COOKIE_ENV') == '1' else False
 
 	def setpath(self, path):

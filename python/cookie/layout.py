@@ -1,4 +1,5 @@
 import os
+from os.path import expanduser
 
 class layout:
 
@@ -30,16 +31,21 @@ class layout:
 		return '%s/packages' % self.root()
 
 	@classmethod
+	def cache(self):
+		# HOME: expanduser("~")
+		return '%s/cache' % self.root()
+
+	@classmethod
 	def distfiles(self):
-		return '%s/cache/distfiles' % self.root()
+		return '%s/distfiles' % self.cache()
+
+	@classmethod
+	def gitsources(self):
+		return '%s/gitsources' % self.cache()
 
 	@classmethod
 	def distfile(self, name):
 		return '%s/%s' % (self.distfiles(), name)
-
-	@classmethod
-	def gitsources(self):
-		return '%s/cache/gitsources' % self.root()
 
 	@classmethod
 	def gitsource(self, name):

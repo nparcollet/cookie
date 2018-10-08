@@ -38,18 +38,15 @@ VOLUME /opt/cookie
 # Raspberry Pi Tools
 RUN git clone https://github.com/raspberrypi/tools.git /opt/rpitools
 
-# Cookie specific packages
-#ADD *.deb /root/debian/
-#RUN dpkg -i /root/debian/crosstool-ng-1.22.0.deb
-#RUN dpkg -i /root/debian/arm-rpi-linux-gnueabihf-2016.12.05.deb
-#RUN dpkg -i /root/debian/depot-tools-2017.01.06.deb
-#RUN rm -rf /root/debian
+# Install Cookie binary in the build environment
+ADD cookie /usr/bin/
 
 # Customize the image
 ADD .bashrc /root
 
 # Environment Variables
 ENV COOKIE			/opt/cookie
+ENV COOKIE_ENV		1
 ENV PYTHONPATH			${COOKIE}/python
 ENV PYTHONDONTWRITEBYTECODE	1
 ENV PATH			.:/opt/cookie/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin

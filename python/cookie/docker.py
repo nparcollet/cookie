@@ -7,27 +7,29 @@ class docker:
 
 	@classmethod
 	def run(self, args):
+		cur = cookie.targets.current()
+		tgt = cookie.targets.get(cur) if cur else None
 		cmd = ' '.join([
 			'/usr/local/bin/docker',
 			'run',
-			'-it',
+			'--interactive',
+			'--tty',
 			'--rm',
 			'--privileged',
 			'--cap-add=SYS_ADMIN',
 			'--cap-add=MKNOD',
 			'--cap-add=SYS_PTRACE',
-			'-e',
-			'COOKIE_ENV=1',
-			'--volume',
-			'%s:/opt/cookie' % cookie.layout.root(),
+			'--volume=%s:/opt/cookie' % cookie.layout.root(),
+			'-e COOKIE_PROFILE=%s' % tgt.profile() if tgt else '',
+			'--mount=source=%s,target=%s' % (tgt.volume(), tgt.path()) if tgt else '',
 			'cookie'
 		]) + ' ' + args
-		subprocess.call(cmd.split())
+		return subprocess.call(cmd.split())
 
 	@classmethod
 	def console(self):
 		cookie.logger.info('Entering interactive console')
-		cookie.docker.run('/bin/bash')
+		return cookie.docker.run('/bin/bash')
 
 	@classmethod
 	def update(self):

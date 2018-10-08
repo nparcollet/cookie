@@ -25,6 +25,9 @@ class profiles:
 		def arch(self):
 			return self.buildenv()['ARCH']
 
+		def host(self):
+			return self.buildenv()['HOST']
+
 		def packages(self):
 			path = '%s/packages.conf' % (self._path)
 			list = []

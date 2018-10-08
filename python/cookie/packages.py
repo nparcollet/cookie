@@ -4,13 +4,9 @@ import cookie
 import re
 import distutils.version
 import hashlib
+import json
 
 class packages:
-
-	"""
-	TODO: Check package dependencies before building
-	TODO: Handle Provides/Virtual Packages
-	"""
 
 	class package:
 
@@ -19,10 +15,11 @@ class packages:
 			self._name			= name
 			self._version		= version
 			self._meta			= { re.split('[:?]?=', line)[0][2:].strip(): line.split('=')[1].strip() for line in tuple(open(self.makefile(), 'r')) if line[0:2] == 'P_' }
-			self._description	= self._meta['DESCRIPTION'].strip()
-			self._depends		= [ o.strip() for o in self._meta['DEPENDS'].split() ]
-			self._licences		= [ o.strip() for o in self._meta['LICENCES'].split() ]
-			self._archs			= [ o.strip() for o in self._meta['ARCHS'].split() ]
+			self._description	= self._meta['DESCRIPTION'].strip() 					if 'DESCRIPTION' in self._meta else ''
+			self._depends		= [ o.strip() for o in self._meta['DEPENDS'].split() ]  if 'DEPENDS'     in self._meta else []
+			self._licences		= [ o.strip() for o in self._meta['LICENCES'].split() ] if 'LICENCES'    in self._meta else []
+			self._archs			= [ o.strip() for o in self._meta['ARCHS'].split() ]    if 'ARCHS'       in self._meta else []
+			self._provides      = [ o.strip() for o in self._meta['PROVIDES'].split() ] if 'PROVIDES'    in self._meta else []
 			self._target		= None
 			self._profile		= None
 			self._targetdir		= None
@@ -33,20 +30,16 @@ class packages:
 
 		def attach(self, target):
 			self._target	= target
+			self._targetdir	= cookie.targets.get(self._target).path() #cookie.layout.target(self._target)
 			self._profile	= cookie.targets.get(self._target).profile()
 			self._env		= cookie.profiles.get(self._profile).buildenv()
 			self._arch		= cookie.profiles.get(self._profile).arch()
-			self._targetdir	= cookie.layout.target(self._target)
+
+		def provides(self):
+			return self._provides
 
 		def depends(self):
 			return self._depends
-
-		def depends_r(self):
-			all = {}
-			for d in self.depends():
-				p = cookie.packages.elect(d)
-				all[p.selector()] = p.depends_r()
-			return all
 
 		def overlay(self):
 			return self._overlay
@@ -84,8 +77,11 @@ class packages:
 		def rootfs(self):
 			return '%s/rootfs' % self._targetdir
 
-		def debian(self):
-			return '%s/debian' % self._targetdir
+		def archives(self):
+			return '%s/archives' % self._targetdir
+
+		def installed(self):
+			return '%s/installed' % self._targetdir
 
 		def workdir(self):
 			return '%s/build/%s-%s' % (self._targetdir, self.name(), self.version())
@@ -138,55 +134,59 @@ class packages:
 			self.make('install')
 
 		def has_binpkg(self):
-			sha1file = '%s/%s-%s.sha1' % (self.debian(), self.name(), self.version())
 			try:
-				with open(path, 'r') as handle:
-					data = handle.read().strip()
-					handle.close()
-				return self.sha1() == data
+				sha1file  = '%s/%s-%s-%s.sha1' % (self.archives(), self.overlay(), self.name(), self.version())
+				installed = str(open(sha1file).read().strip())
+				packaged  = self.sha1()
+				return True if packaged == installed else False
 			except Exception, e:
 				return False
 
-		def mkdeb(self):
-			debfile = '%s/%s-%s.deb' % (self.debian(), self.name(), self.version())
-			if not os.path.isdir('%s/DEBIAN' % self.destdir()):
-				os.makedirs('%s/DEBIAN' % self.destdir())
-			with open('%s/DEBIAN/control' % self.destdir(), 'w') as handle:
-				print >> handle, 'Package: %s' % self.name()
-				print >> handle, 'Version: %s' % self.version()
-				print >> handle, 'Depends: %s' % ', '.join(self.depends())
-				print >> handle, 'Description: %s' % self.description()
-				print >> handle, 'Section: cookie'
-				print >> handle, 'Priority: optional'
-				print >> handle, 'Architecture: %s' % self._arch
-				print >> handle, 'Maintainer: Cookie Environment'
-				handle.close()
-			cookie.shell().run('mkdir -p %s && dpkg-deb --build %s %s' % (self.debian(), self.destdir(), debfile))
-			with open('%s/%s-%s.sha1' % (self.debian(), self.name(), self.version()), 'w') as handle:
+		def merge(self):
+			archive = '%s/%s-%s-%s.tar.xz' % (self.archives(), self.overlay(), self.name(), self.version())
+			(status, entries, errors) = cookie.shell(quiet = True).run('tar -tf %s' % archive)
+			conflicts = [ e[2:] for e in entries if os.path.isfile('%s/%s' % (self.rootfs(), e[2:])) or os.path.islink('%s/%s' % (self.rootfs(), e[2:])) ]
+			if not os.path.isdir(self.rootfs()):
+				os.makedirs(self.rootfs())
+			elif conflicts:
+				cookie.logger.abort('conflicts detected: %s' % str(conflicts))
+			else:
+				cookie.shell().run('cd %s && tar xJf %s/%s-%s-%s.tar.xz' % (self.rootfs(), self.archives(), self.overlay(), self.name(), self.version()))
+				open('%s/%s.list' % (self.installed(), self.name()), 'w').write('\n'.join([ x[1:] for x in reversed(entries) ]))
+				path = '%s/packages.json' % self.installed()
+				try :
+					meta = json.load(open(path)) if os.path.isfile(path) else {}
+				except Exception, e:
+					meta = {}
+				meta[self.name()] = { 'overlay': self.overlay(), 'version': self.version() }
+				json.dump(meta, open('%s/packages.json' % self.installed(), 'w'))
+
+		def mkarchive(self):
+			archive = '%s-%s-%s.tar.xz' % (self.overlay(), self.name(), self.version())
+			cookie.logger.info('creating archive %s' % archive)
+			if not os.path.isdir(self.archives()): os.makedirs(self.archives())
+			cookie.shell().run('tar cJf %s/%s -C %s .' % (self.archives(), archive, self.destdir()))
+			with open('%s/%s-%s-%s.sha1' % (self.archives(), self.overlay(), self.name(), self.version()), 'w') as handle:
 				print >> handle, self.sha1()
 				handle.close()
 
-		def merge(self):
-			cookie.logger.info('merging package')
-			shell = cookie.shell()
-			shell.run('mkdir -p %s/var/lib/dpkg' % self.rootfs())
-			shell.run('mkdir -p %s/var/lib/dpkg/updates' % self.rootfs())
-			shell.run('mkdir -p %s/var/lib/dpkg/info' % self.rootfs())
-			shell.run('touch %s/var/lib/dpkg/status' % self.rootfs())
-			shell.run('dpkg --root=%s --force-architecture -i %s/%s-%s.deb' % (self.rootfs(), self.debian(), self.name(), self.version()))
-
 		def unmerge(self):
-			cookie.logger.info('uninstalling package')
-			cookie.shell().run('dpkg --root=%s -P %s' % (self.rootfs(), self._name))
-
-		def installed_version(self):
-			try:
-				shell = cookie.shell()
-				shell.setquiet(True)
-				(s, o, e) = shell.run('dpkg --root=%s --force-architecture  -l | awk \'$2=="%s" { print $3 }\'' % (self.rootfs(), self.name()))
-				return o[0] if len(o) == 1 else None
-			except Exception, e:
-				return None
+			path = '%s/%s.list' % (self.installed(), self.name())
+			meta = json.load(open('%s/packages.json' % self.installed()))
+			if not os.path.isfile(path): # or self.name() not in meta:
+				raise Exception('package %s is not installed' % self.name())
+			else:
+				for f in open(path).read().split():
+					fpath = '%s%s' % (self.rootfs(), f)
+					if os.path.islink(fpath) or os.path.isfile(fpath):
+						os.unlink(fpath)
+					elif os.path.isdir(fpath) and f != '/' and not os.listdir(fpath):
+						os.rmdir(fpath)
+					else:
+						cookie.logger.debug('[I] Ignored entry %s' % fpath)
+				del meta[self.name()]
+				json.dump(meta, open('%s/packages.json' % self.installed(), 'w'))
+				os.unlink(path)
 
 	@classmethod
 	def exists(self, overlay, name, version):
@@ -225,3 +225,7 @@ class packages:
 					eo = o
 					ev = v
 			return cookie.packages.package(eo, en, ev)
+
+	@classmethod
+	def get(self, overlay, name, version):
+		return self.elect('%s/%s-%s' % (overlay, name, version))
