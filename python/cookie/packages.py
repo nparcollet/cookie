@@ -89,22 +89,22 @@ class packages:
 		def destdir(self):
 			return '%s/staging' % self.workdir()
 
-		def srcdir(self):
-			return '%s/srcdir' % self.workdir()
-
 		def make(self, rule):
 			cookie.logger.info('running %s on package' % rule)
 			if self._arch not in self.archs():
 				raise Exception('package %s does not support %s architecture' % (self.name(), self._arch))
 			else:
 				if not os.path.isdir(self.workdir()): os.makedirs(self.workdir())
+				srcdir = '%s/%s' % (self.workdir(), self._meta['SRCDIR']) if 'SRCDIR' in self._meta else '%s/srcdir' % self.workdir()
 				s = cookie.shell()
 				s.loadenv()
 				s.addenv(self._env)
+				s.setenv('P_OVERLAY', self.overlay())
 				s.setenv('P_WORKDIR', self.workdir())
 				s.setenv('P_DESTDIR', self.destdir())
-				s.setenv('P_SRCDIR', self.srcdir())
-				s.run('make -f %s %s' % (self.makefile(), rule))
+				s.setenv('P_SYSROOT', self.rootfs())
+				s.setenv('P_NPROCS',  '4') # TODO: Get this programmatically ...
+				s.run('make -C %s -f %s %s' % (srcdir if os.path.isdir(srcdir) else self.workdir(), self.makefile(), rule))
 
 		def clean(self):
 			cookie.logger.info('cleaning package workdir')

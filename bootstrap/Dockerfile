@@ -38,9 +38,6 @@ VOLUME /opt/cookie
 # Raspberry Pi Tools
 RUN git clone https://github.com/raspberrypi/tools.git /opt/rpitools
 
-# Install Cookie binary in the build environment
-ADD cookie /usr/bin/
-
 # Customize the image
 ADD .bashrc /root
 
@@ -50,6 +47,9 @@ ENV COOKIE_ENV		1
 ENV PYTHONPATH			${COOKIE}/python
 ENV PYTHONDONTWRITEBYTECODE	1
 ENV PATH			.:/opt/cookie/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+
+RUN apt-get install -y --no-install-recommends \
+	kmod
 
 # Default Command (shell)
 CMD ["/bin/bash"]

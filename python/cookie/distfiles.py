@@ -42,13 +42,13 @@ class distfiles:
 			s = cookie.shell()
 			if not os.path.isdir(dest): os.makedirs(dest)
 			if name.endswith('.tar.bz2') or name.endswith('.tbz2'):
-				s.run('cd %s && tar -xvjf %s' % (dest, self.archive(name)))
+				s.run('cd %s && tar -xjf %s' % (dest, self.archive(name)))
 			elif name.endswith('.tar.gz') or name.endswith('.tgz'):
-				s.run('cd %s && tar -xvzf %s' % (dest, self.archive(name)))
+				s.run('cd %s && tar -xzf %s' % (dest, self.archive(name)))
 			elif name.endswith('.zip'):
 				s.run('cd %s && unzip %s' % (dest, self.archive(name)))
 			elif name.endswith('.xz'):
-				s.run('cd %s && tar -xvf %s' % (dest, self.archive(name)))
+				s.run('cd %s && tar -xf %s' % (dest, self.archive(name)))
 			else:
 				raise Exception('unsupported %s format' % name.split('.')[-1])
 		except Exception, e:

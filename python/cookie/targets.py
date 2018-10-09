@@ -36,9 +36,8 @@ class targets():
 			try:
 				path = '%s/installed/packages.json' % self._path
 				raw  = json.load(open(path))
-				return [ '%s/%s-%s' % (v['overlay'], k, v['version']) for k, v in raw.items() ]
+				return [ '%s/%s-%s' % (str(v['overlay']), str(k), str(v['version'])) for k, v in raw.items() ]
 			except Exception, e:
-				print e
 				return []
 
 		def version(self, name):
@@ -65,6 +64,8 @@ class targets():
 				cookie.logger.abort('package %s is already installed' % pkg.name())
 			if pkg.has_binpkg():
 				cookie.logger.debug('requested package is already build, reusing')
+				pkg.clean()
+				pkg.merge()
 			else:
 				pkg.clean()
 				pkg.check()
@@ -73,7 +74,7 @@ class targets():
 				pkg.compile()
 				pkg.install()
 				pkg.mkarchive()
-			pkg.merge()
+				pkg.merge()
 
 		def remove(self, name):
 			cookie.logger.info('removing package %s from the target' % name)
@@ -88,61 +89,59 @@ class targets():
 
 		def merge(self):
 
-			installed = self.packages()
+			# Build list of actions
+			tpkg   = self.packages()
+			ppkg   = cookie.profiles.get(self.profile()).packages()
+			remove = [ x for x in tpkg if x not in ppkg ]
+			keep   = [ x for x in tpkg if x in ppkg ]
+			add    = [ x for x in ppkg if x not in tpkg ]
 
+			# Summarize actions
+			cookie.logger.info('The following packages can be kept:')
+			for p in keep: cookie.logger.debug(p)
+			cookie.logger.info('The following packages need to be removed:')
+			for p in remove: cookie.logger.debug(p)
+			cookie.logger.info('The following packages need to be installed:')
+			for p in add: cookie.logger.debug(p)
 
-			pass
-			"""
-			# TODO: FIND PACKAGE INSTALLED BUT NOT REQUIRED ...
+			# Ask for confirmation
+			answer = ''
+			while answer not in ["y", "n"]:
+				answer = raw_input("Proceed with merge [y/n]? ").lower()
 
-			# Setup List of package
-			prf  = cookie.profiles.get(self.profile())
-			pkgl = [ cookie.packages.elect(x) for x in prf.packages() ] # LIST OF PACKAGES
-			ord  = [ x for x in pkgl if x.depends() == [] ]
-			rem  = [ x for x in pkgl if x not in ord ]
-			# Add in order of needed dependencies
+			# Abort
+			if answer == 'n':
+				cookie.logger.abort('merge canceled')
+
+			# Remove packages
+			for p in remove:
+				cookie.logger.info('removing package %s' % p)
+				pkg = cookie.packages.elect(p)
+				pkg.attach(self.name())
+				pkg.unmerge()
+
+			# Order package to add by dependencies
+			obj  = [ cookie.packages.elect(x) for x in add ]
+			ord  = [ x for x in obj if x.depends() == [] ]
+			rem  = [ x for x in obj if x not in ord ]
 			while len(rem) > 0:
 				count = len(rem)
-				names = [ n.name() for n in ord ]
 				for r in rem:
 					ready = True
 					for d in r.depends():
-						if not d in names:
+						if not [ x for x in ord if d == x.name() or d in x.provides() ]:
 							ready = False
+							break
 					if ready:
 						ord.append(r)
 						rem.remove(r)
 				if count == len(rem):
-					cookie.logger.abort('unable to satisfy dependencies for one or more packages')
-			# List of operations
+					cookie.logger.abort('unable to satisfy dependencies')
+
+			# Add packages
 			for pkg in ord:
-				pkg.attach(self.name())
-				iv = pkg.installed_version()
-				if iv == None:
-					cookie.logger.debug('[ADD] %s-%s' % (pkg.name(), pkg.version()))
-				elif iv != pkg.version():
-					cookie.logger.debug('[UPD] %s-%s > %s' % (pkg.name(), iv, pkg.version()))
-				elif False:
-					cookie.logger.debug('[DEL] %s-%s' % (pkg.name(), pkg.version()))
-				else:
-					cookie.logger.debug('[IGN] %s-%s' % (pkg.name(), pkg.version()))
-			# Confirm
-			answer = ''
-			while answer not in ["y", "n"]:
-				answer = raw_input("Proceed with merge [y/n]? ").lower()
-			if answer == 'y':
-				for pkg in ord:
-					iv = pkg.installed_version()
-					if iv == None:
-						self.add(pkg.selector())
-					elif iv != pkg.version():
-						self.remove(pkg.name())
-						self.add(pkg.selector())
-					elif False:
-						self.remove(pkg.name)
-					else:
-						pass
-		"""
+				cookie.logger.info('adding package %s' % pkg.selector())
+				self.add(pkg.selector())
 
 	@classmethod
 	def list(self):
