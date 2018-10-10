@@ -23,8 +23,8 @@ class layout:
 		return '%s/profiles' % self.root()
 
 	@classmethod
-	def profile(self, name):
-		return '%s/%s' % (self.profiles(), name)
+	def profile(self, board):
+		return '%s/%s' % (self.profiles(), board)
 
 	@classmethod
 	def packages(self):

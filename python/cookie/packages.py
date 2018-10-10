@@ -22,18 +22,16 @@ class packages:
 			self._provides      = [ o.strip() for o in self._meta['PROVIDES'].split() ] if 'PROVIDES'    in self._meta else []
 			self._target		= None
 			self._profile		= None
-			self._targetdir		= None
 			self._env			= { 'ARCH':'amd64' }
 
 		def selector(self):
 			return '%s/%s-%s' % (self.overlay(), self.name(), self.version())
 
 		def attach(self, target):
-			self._target	= target
-			self._targetdir	= cookie.targets.get(self._target).path() #cookie.layout.target(self._target)
-			self._profile	= cookie.targets.get(self._target).profile()
-			self._env		= cookie.profiles.get(self._profile).buildenv()
-			self._arch		= cookie.profiles.get(self._profile).arch()
+			self._target	= cookie.targets.get(target)
+			self._profile	= cookie.profiles.get(self._target.board(), self._target.app())
+			self._env		= self._profile.buildenv()
+			self._arch		= self._profile.arch()
 
 		def provides(self):
 			return self._provides
@@ -62,29 +60,35 @@ class packages:
 		def makefile(self):
 			return '%s/%s/%s/%s-%s.mk' % (cookie.layout.packages(), self._overlay, self._name, self._name, self._version)
 
-		def sha1(self):
-			h = hashlib.sha1()
-			with open(self.makefile(), 'rb') as handle:
-				chunk = 0
-				while chunk != b'':
-					chunk = handle.read(1024)
-					h.update(chunk)
-			return str(h.hexdigest())
-
 		def arch(self):
 			return self._arch
 
 		def rootfs(self):
-			return '%s/rootfs' % self._targetdir
+			path = '/opt/target/rootfs'
+			if not os.path.isdir(path):
+				cookie.logger.debug('creating missing rootfs directory')
+				os.mkdir(path)
+			return path
 
 		def archives(self):
-			return '%s/archives' % self._targetdir
+			path = '/opt/target/archives'
+			if not os.path.isdir(path):
+				cookie.logger.debug('creating missing archives directory')
+				os.mkdir(path)
+			return path
 
 		def installed(self):
-			return '%s/installed' % self._targetdir
+			path = '/opt/target/installed'
+			if not os.path.isdir(path):
+				cookie.logger.debug('creating missing installed directory')
+				os.mkdir(path)
+			return path
 
 		def workdir(self):
-			return '%s/build/%s-%s' % (self._targetdir, self.name(), self.version())
+			path = '/opt/target/build/%s-%s' % (self.name(), self.version())
+			if not os.path.isdir(path):
+				os.mkdir(path)
+			return path
 
 		def destdir(self):
 			return '%s/staging' % self.workdir()
@@ -135,14 +139,15 @@ class packages:
 
 		def has_binpkg(self):
 			try:
-				sha1file  = '%s/%s-%s-%s.sha1' % (self.archives(), self.overlay(), self.name(), self.version())
-				installed = str(open(sha1file).read().strip())
-				packaged  = self.sha1()
-				return True if packaged == installed else False
+				sha1file      = '%s/%s-%s-%s.sha1' % (self.archives(), self.overlay(), self.name(), self.version())
+				built_sha1	  = file(sha1file).read().strip()
+				makefile_sha1 = cookie.sha1.compute(self.makefile())
+				return True if built_sha1 == makefile_sha1 else False
 			except Exception, e:
 				return False
 
 		def merge(self):
+			cookie.logger.info('merging content in rootfs')
 			archive = '%s/%s-%s-%s.tar.xz' % (self.archives(), self.overlay(), self.name(), self.version())
 			(status, entries, errors) = cookie.shell(quiet = True).run('tar -tf %s' % archive)
 			conflicts = [ e[2:] for e in entries if os.path.isfile('%s/%s' % (self.rootfs(), e[2:])) or os.path.islink('%s/%s' % (self.rootfs(), e[2:])) ]
@@ -153,8 +158,8 @@ class packages:
 			else:
 				cookie.shell().run('cd %s && tar xJf %s/%s-%s-%s.tar.xz' % (self.rootfs(), self.archives(), self.overlay(), self.name(), self.version()))
 				open('%s/%s.list' % (self.installed(), self.name()), 'w').write('\n'.join([ x[1:] for x in reversed(entries) ]))
-				path = '%s/packages.json' % self.installed()
 				try :
+					path = '%s/packages.json' % self.installed()
 					meta = json.load(open(path)) if os.path.isfile(path) else {}
 				except Exception, e:
 					meta = {}
@@ -167,7 +172,7 @@ class packages:
 			if not os.path.isdir(self.archives()): os.makedirs(self.archives())
 			cookie.shell().run('tar cJf %s/%s -C %s .' % (self.archives(), archive, self.destdir()))
 			with open('%s/%s-%s-%s.sha1' % (self.archives(), self.overlay(), self.name(), self.version()), 'w') as handle:
-				print >> handle, self.sha1()
+				print >> handle, cookie.sha1.compute(self.makefile())
 				handle.close()
 
 		def unmerge(self):
