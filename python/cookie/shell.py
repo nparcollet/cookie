@@ -9,7 +9,10 @@ import cookie
 class shell:
 
 	def __init__(self, quiet = False):
-		self._path	= os.getcwd()
+		try:
+			self._path = os.getcwd()
+		except Exception, e:
+			cookie.logger.abort('current directory is invalid and was probably deleted' )
 		self._env	= None
 		self._log	= None
 		self._quiet = quiet
@@ -42,8 +45,6 @@ class shell:
 		self._env = dict(os.environ)
 
 	def run(self, cmd):
-		#if not self._inenv:
-		#	cmd = cookie.docker.run_cmd(cmd)
 		p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=self._path, env=self._env)
 		handles = [ p.stdout, p.stderr ]
 		out = err = []
