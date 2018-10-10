@@ -20,8 +20,11 @@ class targets():
 		def path(self):
 			return self._path
 
-		def profile(self):
-			return str(self._infos['profile'])
+		def board(self):
+			return str(self._infos['board'])
+
+		def app(self):
+			return str(self._infos['app'])
 
 		def volume(self):
 			return str(self._infos['volume'])
@@ -30,7 +33,7 @@ class targets():
 			return str(self._infos['created_on'])
 
 		def arch(self):
-			return cookie.profiles.get(self.profile()).arch()
+			return cookie.profiles.get(self.board(), self.app()).arch()
 
 		def packages(self):
 			try:
@@ -65,7 +68,6 @@ class targets():
 			if pkg.has_binpkg():
 				cookie.logger.debug('requested package is already build, reusing')
 				pkg.clean()
-				pkg.merge()
 			else:
 				pkg.clean()
 				pkg.check()
@@ -74,7 +76,7 @@ class targets():
 				pkg.compile()
 				pkg.install()
 				pkg.mkarchive()
-				pkg.merge()
+			pkg.merge()
 
 		def remove(self, name):
 			cookie.logger.info('removing package %s from the target' % name)
@@ -91,10 +93,19 @@ class targets():
 
 			# Build list of actions
 			tpkg   = self.packages()
-			ppkg   = cookie.profiles.get(self.profile()).packages()
+			ppkg   = cookie.profiles.get(self.board(), self.app()).packages()
 			remove = [ x for x in tpkg if x not in ppkg ]
 			keep   = [ x for x in tpkg if x in ppkg ]
 			add    = [ x for x in ppkg if x not in tpkg ]
+
+			# Some kept package might have been modified, check here
+			for p in keep:
+				pkg = cookie.packages.elect(p)
+				pkg.attach(self.name())
+				if not pkg.has_binpkg():
+					remove.append(p)
+					add.append(p)
+					keep.remove(p)
 
 			# Summarize actions
 			cookie.logger.info('The following packages can be kept:')
@@ -119,6 +130,7 @@ class targets():
 				pkg = cookie.packages.elect(p)
 				pkg.attach(self.name())
 				pkg.unmerge()
+
 
 			# Order package to add by dependencies
 			obj  = [ cookie.packages.elect(x) for x in add ]
@@ -191,20 +203,42 @@ class targets():
 			json.dump(mapping, open('%s/mapping.json' % cookie.layout.cache(), 'w'))
 
 	@classmethod
-	def create(self, profile, name = None):
+	def create(self, board, app, name = None):
 		now  = str(datetime.date.today())
-		name = profile + '-' + now if name == None else name
+		name = '%s-%s-%s' % (board, app, now) if name == None else name
+		cookie.logger.info('creating target %s' % name)
 		if name in self.list():
 			raise Exception('target %s already exists' % name)
-		elif not os.path.isdir(cookie.layout.profile(profile)):
-			raise Exception('unknown profile %s' % profile)
+		elif not os.path.isdir(cookie.layout.profile(board)) or not os.path.isfile('%s/%s.conf' % (cookie.layout.profile(board), app)):
+			raise Exception('unknown profile %s-%s' % (board, app))
 		else:
+
+			cookie.logger.debug('creating target volume')
 			(s, volume, e) = cookie.shell(quiet = True).run('docker volume create')
-			mapping = json.load(open('%s/mapping.json' % cookie.layout.cache()))
+
+			cookie.logger.debug('adding target mapping')
+			mapping_file = '%s/mapping.json' % cookie.layout.cache()
+			mapping = json.load(open(mapping_file)) if os.path.isfile(mapping_file) else { 'targets':{} }
+			mapping['current'] = name
 			mapping['targets'][name] = {
 				'created_on'	: now,
-				'profile'		: profile,
+				'board'			: board,
+				'app'			: app,
 				'volume'		: volume[0]
 			}
-			mapping['current'] = name
-			json.dump(mapping, open('%s/mapping.json' % cookie.layout.cache(), 'w'))
+			json.dump(mapping, open(mapping_file, 'w'))
+
+			try:
+				profile      = cookie.profiles.get(board, app)
+				profile_sha1 = cookie.sha1.compute('%s/crosstool-ng.config' % cookie.layout.profile(board))
+				built_sha1	 = file('%s/toolchains/%s.sha1' % (cookie.layout.cache(), board)).read().strip()
+				if profile_sha1 == built_sha1:
+					cookie.logger.debug('reusing packaged toolchain')
+					cookie.docker.run('tar xJf /opt/cookie/cache/toolchains/%s.tar.xz -C /opt/target' % board)
+				else:
+					cookie.logger.debug('compiling the profile toolchain')
+					raise Exception('target toolchain compilation not implemented')
+					#cookie.sha1.save('%s/crosstool-ng.config' % cookie.layout.profile(board), '%s/toolchains/%s.sha1' % (cookie.layout.cache(), board))
+			except Exception, e:
+				self.destroy(name)
+				raise e
