@@ -4,9 +4,9 @@
 
 Let start with a simple analogy that I like to make. Creating a firmware for a board is similar to
 cooking. It seems complicated when you look at the result, but in the end it is just a matter of
-following a receipe.
+following a recipe.
 
-In the embedded world, it is the same. You define a profile (a receipe), that contains the list of
+In the embedded world, it is the same. You define a profile (a recipe), that contains the list of
 build tools (cutting board, knifes, pans, ...) and packages (ingredients) that are needed. You
 bring all of these together in a target (kitchen) and build them (you cook). Once everything is
 built you generate one or more images (plates) that can be deployed on the board.
@@ -18,7 +18,7 @@ available in the bin directory of your cookie installation. If you properly foll
 instructions, it should accessible from your terminal independently of your current directory.
 Cookie is a command line tool, and allow easily manage the creation of a new image ready to be
 deployed on your target target device. This goes from configuring an isolated cross compilation
-build environment to generating squashfs images or uboot binaries. In order to do so, cookie
+build environment to generating kernel images or boot loader binaries. In order to do so, cookie
 provide a set of command that are described here after. This section is organized logically so
 that you will have a good understanding of the process of creating a binary for your PI device.
 
@@ -35,7 +35,7 @@ host machine (on linux, windows or mac)
 After the installation of cookie, it is necessary to generate this docker image. It is done simply
 using the **update** command. In the event some changes are required, for instance adding a package
 necessary to build something, one need to modify the configuration files located in the
-**${COOKIE}/bootstrap** folder and rerun the same command.
+**${COOKIE}/bootstrap/DockerFile** and rerun the same command.
 
 If for any reason your image become unstable or broken, you will need to recreate it from scratch.
 To do soo you will to delete it with the **delete** action before calling **update** again.
@@ -44,8 +44,10 @@ Finaly, you might have noticed that there are no way to version the different pa
 docker image. This is a limitation due to the fact that we use a standard debian distribution as a
 base. For day to day development and prototyping this is fine. However, if you are working on a
 project with several releases, this can become problematic if you ever want to rebuild an old
-version several month later. The solution to this problem will be described later on in the profile
-managment section.
+version several month later. The solution is to store the docker image used to generate
+important releases so that they can be reused in the event of a rebuild.
+
+
 
 ## Custom Host Packages
 
@@ -177,4 +179,3 @@ This command is also used on cookie packages.
 	- redist
 	- images
 	- staging
-

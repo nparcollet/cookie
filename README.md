@@ -33,13 +33,6 @@ of systems. As of today, the following are required:
 - python
 - docker
 
-Regarding docker, you must ensure that the cookie root directory is added to the file sharing
-preferences of the docker installation. This is because this directory is used as an exchange
-area between the host system and the docker image. It also make it easy to work on your host
-machine and have changes immediately available in the build environment. This can be check in the
-preferences tab of docker. Ensure that there is a path the that lead to the cookie directory, or
-add this directory yourself.
-
 # SETUP
 
 The installation is pretty straight forward. First you need to clone this repository using the
@@ -47,47 +40,72 @@ following command:
 
 	> git clone https://github.com/nparcollet/cookie.git
 
-Once this is done, simply run:
+Secondly, some adjustment are required to your console environment:
 
-	> /path/to/cloned/repository/bin/cookie setup
+	- Add **COOKIE=/path/to/cookie** to the environment
+	- Add **$COOKIE/bin** to the **PATH** variable of the environment
+	- Add **PYTHONPATH=$COOKIE/python** to the environment
 
-Under the hood, the command does the following operations:
-
-	> echo 'export COOKIE="/path/to/cookie"' >> ~/.bash_profile
-	> echo 'export PATH="$PATH:$COOKIE/bin"' >> ~/.bash_profile
-	> echo 'export PYTHONPATH="$PYTHONPATH:$COOKIE/python"' >> ~/.bash_profile
-	> source ~/.bash_profile
-
-IMPORTANT: The location of this directory is bound when running this command. If it is moved to
-another location, the information will have to be adapted accordingly.
+Once this is done, cookie is fully functional and can be used from the console of your system.
 
 # BOOTSTRAP
 
 Cookie is now installed on your host environment. It does not matter whether it is Linux, Windows or
 MacOS. However, to create images for the raspberry we will need a dedicated environment that will be
-the same independently of your host. To do this we use Docker and a custom made image. To trigger
-the creation of this image, one simply need to run the following command:
+the same independently of your host. To do this we use Docker and a custom made image named
+**cookie**. To trigger the creation of this image, one simply need to run the following command:
 
 	> cookie bootstrap update
 
 Under the hood this will setup the new image, which is basically a Debian distribution with all the
-tools needed to work with a raspberry. Running this command might take a while and it is recommended
-to go get some coffee at this point. Once complete, you will have a brand new OS within your host,
+tools needed to work with a raspberry. Running this command might take a while (up to one hour). It
+is a one time process thou. Once complete, you will have a brand new OS within your host,
 specifically tailored for creating Pi images. You can actually access this environment manually
 using the following command:
 
 	> cookie shell
 
 Cookie itself is accessible within this environment, and is bound with the host system as the
-/opt/cookie directory. In addition, raspberry tools (in particular toolchain) are already installed
-and can be used for cross compiling. The gcc-linaro-arm-linux-gnueabihf-raspbian-x64 toolchain is
-already made part of the path. This shell is a complete Linux system that will behave as expected
+/opt/cookie directory. This shell is a complete Linux system that will behave as expected
 by any Linux developer.
 
 **IMPORTANT**: Accessing this environment is normally done for debugging purpose, as you wont be
 creating a PI image manually from there. In particular, changes you make when accessing the
 environment through the shell will be discarded once you exit it. This guarantee that the system
 will remain sanitized, and one can freely experiment there.
+
+# QUICKSTART
+
+Let's get to it. Below is a sequence of command that will allow you to generate a firmware and to
+install it on an sdcard:
+
+> cookie create rpi3b webserver
+> cookie merge
+> cookie deploy /dev/sdb
+
+After that, simply put the sdcard in your board and you are good to go. This is of course very
+minimalist and just to give you a taste of what can be done. A more complete documentation is
+available below and explain the ins and outs of the cookie environment.
+
+# GUIDES
+
+[Command Line Reference](docs/CMDLINE.md)
+[Advanced usage information](docs/CMDLINE.md)
+[Flashing an image to the board](docs/FLASHING.md)
+[Managing and customizing the kernel](docs/KERNEL.md)
+[Working with profiles](docs/PROFILES.md)
+[The rules to create and use packages](docs/PACKAGES.md)
+[Understanding cookie python module](docs/PYTHON.md)
+[Targets ins and outs](docs/TARGETS.md)
+
+
+
+
+
+
+
+
+
 
 # RECIPES
 
@@ -108,13 +126,8 @@ create new ones. Profiles can be listed with the following command:
 
 	> cookie profile list
 
-	
-
-
 # QUICKSTART
 
-Let's get to it. Below is a sequence of command that will allow you to generate a firmware and to
-run it on a RPI 3 Board
 
 	> cookie target create webserver rpi3b
 	> cookie target build
