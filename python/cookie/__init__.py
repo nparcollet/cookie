@@ -9,3 +9,4 @@ from cookie.gitsources	import gitsources
 from cookie.logger		import logger
 from cookie.layout		import layout
 from cookie.docker		import docker
+from cookie.sha1		import sha1
