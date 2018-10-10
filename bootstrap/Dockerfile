@@ -45,6 +45,13 @@ VOLUME /opt/cookie
 # Customize the image
 ADD .bashrc /root
 
+# Environment
+ENV COOKIE			/opt/cookie
+ENV COOKIE_ENV			1
+ENV PYTHONPATH			${COOKIE}/python
+ENV PYTHONDONTWRITEBYTECODE	1
+ENV PATH			.:/sbin:/usr/sbin:/usr/local/sbin:/bin:/usr/bin:/usr/local/bin:/opt/target/toolchain/bin:${COOKIE}/bin
+
 # Default Command (shell)
 CMD ["/bin/bash"]
 
