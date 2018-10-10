@@ -30,26 +30,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	dosfstools			\
 	xutils-dev			\
 	gcc-multilib			\
-	g++-multilib
+	g++-multilib			\
+	kmod				\
+	python-dev
+
+# Cross Tool NG 1.23.0
+RUN git clone -b 'crosstool-ng-1.23.0' --single-branch --depth 1 https://github.com/crosstool-ng/crosstool-ng.git /root/ctng
+RUN cd /root/ctng && autoreconf -if && ./configure --prefix=/usr && make && make install
+RUN rm -rf /root/ctng
 
 # Where cookie is mounted within bootstrap
 VOLUME /opt/cookie
 
-# Raspberry Pi Tools
-RUN git clone https://github.com/raspberrypi/tools.git /opt/rpitools
-
 # Customize the image
 ADD .bashrc /root
 
-# Environment Variables
-ENV COOKIE			/opt/cookie
-ENV COOKIE_ENV		1
-ENV PYTHONPATH			${COOKIE}/python
-ENV PYTHONDONTWRITEBYTECODE	1
-ENV PATH			.:/opt/cookie/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
-RUN apt-get install -y --no-install-recommends \
-	kmod
-
 # Default Command (shell)
 CMD ["/bin/bash"]
+

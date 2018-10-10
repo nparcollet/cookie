@@ -11,8 +11,23 @@ alias grep='grep --color=auto'
 # Configure Terminal
 shopt -s checkwinsize
 
+# Cookie Environment
+export COOKIE=/opt/cookie
+export COOKIE_ENV=1
+export PYTHONPATH=${COOKIE}/python
+export PYTHONDONTWRITEBYTECODE=1
+
 # Setup path
-export PATH=.:/opt/cookie/bin:/opt/rpitools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin:$PATH
+PATH=.
+PATH=$PATH:/sbin
+PATH=$PATH:/usr/sbin
+PATH=$PATH:/bin
+PATH=$PATH:/usr/bin
+PATH=$PATH:/usr/local/sbin
+PATH=$PATH:/usr/local/bin
+PATH=$PATH:/opt/target/toolchain/bin
+PATH=$PATH:$COOKIE/bin
+export PATH
 
 # Source Custom Environment Information
 [ -d /root/profile.d ] && for e in $(ls /root/profile.d/*.env); do echo "Sourcing ${e}"; . ${e}; done
