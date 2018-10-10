@@ -2,7 +2,9 @@
 
 import subprocess
 import os
+import shutil
 import cookie
+import sys
 
 class cookie_cmd(cookie.command):
 
@@ -247,6 +249,23 @@ class cookie_cmd(cookie.command):
 	# ACTION THAT NEED SORTING
 	#
 
+	def do_import(self, args):
+		"""
+		Import a file from the profile of the current target into the component buid directory. If
+		the file does not exists, this fail with 1, other it succeed (0). This mechanism is to be
+		used in package makefile using "cookie import filename dest || default_behavior".
+		"""
+		try:
+			if len(args) not in [2]:
+				raise Exception('syntax: %s import filename destname' % self.name())
+			else:
+				i = '%s/%s' % (cookie.layout.profile(cookie.targets.get(cookie.targets.current()).board()), args[0])
+				o = args[1]
+				shutil.copy(i, o)
+			sys.exit(0)
+		except Exception, e:
+			cookie.logger.error(str(e))
+			sys.exit(1)
 
 	def do_fetch(self, args):
 		"""
