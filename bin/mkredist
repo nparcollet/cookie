@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+echo "Defining locales"
+ROOTFS_DIR=/opt/target/rootfs
+REDIST_DIR=/opt/target/redist
+
+echo "Reset redist directory"
+[ -d ${REDIST_DIR} ] && rm -rf ${REDIST_DIR}
+mkdir -p ${REDIST_DIR}
+
+echo "Syncing redist"
+rsync -aHAXx --exclude *.a --exclude *.h ${ROOTFS_DIR}/ ${REDIST_DIR}/
+
+echo "Stripping libraries and binaries"
+find /opt/target/redist -type f -executable | xargs arm-rpi-linux-gnueabihf-strip

@@ -3,7 +3,7 @@ P_VERSION		= 0.1.0
 P_DESCRIPTION	= Base sysroot imported from the toolchain
 P_LICENCES		= Cookie
 P_ARCHS			= arm
-P_PROVIDES		= sysroot libc
+P_PROVIDES		= libc
 P_DEPENDS		=
 
 fetch:

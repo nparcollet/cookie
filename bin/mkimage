@@ -1,26 +1,23 @@
 #!/usr/bin/env bash
 
 echo "Defining locales"
-ROOTFS=/opt/cookie/targets/current/rootfs
-IMG_FILE=/tmp/cookie.img
-BOOT_START=0
+ROOTFS=/opt/target/rootfs
+IMG_FILE=${COOKIE}/cache/images/${COOKIE_BOARD}-${COOKIE_APP}.img
+TOTAL_SIZE=256
 BOOT_SIZE=32
-BOOT_END=$((${BOOT_START} + ${BOOT_SIZE} * 1024 * 1024 / 512 - 1))
-ROOTFS_START=$((${BOOT_END} + 1))
-ROOTFS_SIZE=224
-ROOTFS_END=$((${ROOTFS_START} + ${ROOTFS_SIZE} * 1024 * 1024 / 512 - 1))
-TOTAL_SIZE=$((${BOOT_SIZE}+${ROOTFS_SIZE}))
-LOOP_BOOT=/tmp/loop_boot
-LOOP_ROOTFS=/tmp/loop_rootfs
+ROOTFS_SIZE=$((${TOTAL_SIZE}-${BOOT_SIZE}))
+LOOP_DEVICE=/dev/loop0
 
 echo "Removing previous artifacts"
 mountpoint -q /mnt/boot && umount /mnt/boot
-mountpoint -q /mnt && umount /mnt
-losetup -d ${LOOP_BOOT}
-losetup -d ${LOOP_ROOTFS}
-[ -e ${LOOP_BOOT} ] && rm ${LOOP_BOOT}
-[ -e ${LOOP_ROOTFS} ] && rm ${LOOP_ROOTFS}
+mountpoint -q /mnt		&& umount /mnt
+losetup -d ${LOOP_DEVICE}
 [ -e ${IMG_FILE} ] && rm -f ${IMG_FILE}
+[ -e ${LOOP_DEVICE}p1 ] && rm ${LOOP_DEVICE}p1
+[ -e ${LOOP_DEVICE}p2 ] && rm ${LOOP_DEVICE}p2
+
+echo "Creating redist rootfs"
+mkredist
 
 echo "Preparing image"
 echo "  ... boot size: ${BOOT_SIZE}"
@@ -28,41 +25,58 @@ echo "  ... rootfs size: ${ROOTFS_SIZE}"
 echo "  ... total size: ${TOTAL_SIZE}"
 
 echo "Creating image file"
-#fallocate -l ${TOTAL_SIZE}M ${IMG_FILE}
-fallocate -l $((${TOTAL_SIZE} * 1024 * 1024)) ${IMG_FILE}
-fdisk ${IMG_FILE} > /dev/null 2>&1 <<EOF
+mkdir -p ${COOKIE}/cache/images
+dd if=/dev/zero of=${IMG_FILE} bs=1M count=${TOTAL_SIZE}
+
+echo "Bind with losetup"
+losetup -P ${LOOP_DEVICE} ${IMG_FILE}
+
+echo "Partitioning image file"
+fdisk ${LOOP_DEVICE} > /dev/null 2>&1 <<EOF
 o
 n
-
-
-${BOOT_START}
-+ ${BOOT_SIZE}M
 p
+1
+
++ ${BOOT_SIZE}M
 t
 c
 n
-
-
-${BOOT_START}
-
-
 p
+2
+
+
+t
+2
+83
 w
 EOF
+fdisk -l ${LOOP_DEVICE}
 
+echo "Loopback devices"
+lsblk ${LOOP_DEVICE};
+
+echo "Ensuring device nodes exists"
+[ ! -e ${LOOP_DEVICE}p1 ] && mknod -m 660 ${LOOP_DEVICE}p1 b 259 0
+[ ! -e ${LOOP_DEVICE}p2 ] && mknod -m 660 ${LOOP_DEVICE}p2 b 259 1
 
 echo "Preparing BOOT partition"
-[ ! -e ${LOOP_BOOT} ] && mknod -m 660 ${LOOP_BOOT} b 7 10
-losetup -o $((${BOOT_START}*512)) --sizelimit $((${BOOT_END}*512)) ${LOOP_BOOT} ${IMG_FILE}
-mkdosfs -n BOOT -S 512 -s 16 -v ${LOOP_BOOT} > /dev/null
+mkdosfs -n BOOT -S 512 -s 16 -v ${LOOP_DEVICE}p1 > /dev/null
 
 echo "Preparing ROOTFS partition"
-[ ! -e ${LOOP_ROOTFS} ] && mknod -m 660 ${LOOP_ROOTFS} b 7 11
-losetup -o $((${ROOTFS_START}*512)) --sizelimit $((${ROOTFS_END}*512)) ${LOOP_ROOTFS} ${IMG_FILE}
-mkfs.ext4 -O ^huge_file ${LOOP_ROOTFS} > /dev/null
+mkfs.ext4 -O ^huge_file ${LOOP_DEVICE}p2 > /dev/null
 
-echo "Syncing data to the image"
-mount -v -t ext4 /tmp/loop_rootfs /mnt
+echo "Mounting partitions"
+mount -t ext4 ${LOOP_DEVICE}p2 /mnt || exit 1
 mkdir /mnt/boot
-mount -v -t vfat /tmp/loop_boot /mnt/boot
+mount -t vfat ${LOOP_DEVICE}p1 /mnt/boot || exit 1
+
+echo "Syncing Data"
 rsync -aHAXx ${ROOTFS}/ /mnt/
+
+echo "Cleanup"
+umount /mnt/boot
+umount /mnt
+losetup -d ${LOOP_DEVICE}
+rm ${LOOP_DEVICE}p1
+rm ${LOOP_DEVICE}p2

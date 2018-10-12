@@ -1,0 +1,4 @@
+cmdline=cmdline.txt
+kernel=zImage
+disable_splash=1
+dtparam=audio=on
