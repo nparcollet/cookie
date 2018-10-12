@@ -1,0 +1,5 @@
+#!/bin/bash
+/etc/init.d/rpcbind start
+start-statd
+ganesha.nfsd -L /var/log/ganesha.log -f /etc/ganesha/ganesha.conf -N NIV_EVENT -F
+
