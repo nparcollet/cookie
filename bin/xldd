@@ -1,0 +1,2 @@
+#arm-rpi-linux-gnueabihf-ldd --root=/opt/target/rootfs $1
+arm-rpi-linux-gnueabihf-readelf -d $1 | grep NEEDED
