@@ -31,4 +31,5 @@ install:
 	cookie import busybox.rcS $(P_DESTDIR)/etc/init.d/rcS
 	chmod +x $(P_DESTDIR)/etc/init.d/rcS
 	echo "$(COOKIE_BOARD)-$(COOKIE_APP)" > $(P_DESTDIR)/etc/hostname
+	rm $(P_DESTDIR)/usr/bin/bzip2 $(P_DESTDIR)/usr/bin/bunzip2 $(P_DESTDIR)/usr/bin/bzcat
 	#cp examples/depmod.pl $(P_DESTDIR)/bin
