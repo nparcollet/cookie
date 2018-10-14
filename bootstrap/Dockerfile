@@ -66,6 +66,9 @@ RUN 	cd /root 									\
 ADD ganesha.conf /etc/ganesha/ganesha.conf
 EXPOSE 2049 38465-38467 662 111/udp 111
 
+
+RUN apt-get install -y --no-install-recommends gettext
+
 # Cookie Environment
 VOLUME /opt/cookie
 ADD .bashrc /root
