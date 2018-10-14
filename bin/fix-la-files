@@ -1,0 +1,5 @@
+#!/bin/bash
+
+ROOTDIR=$1
+find -P ${ROOTDIR} -name '*.la' | xargs rm
+
