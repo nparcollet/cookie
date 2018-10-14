@@ -23,6 +23,7 @@ class packages:
 			self._target		= None
 			self._profile		= None
 			self._env			= { 'ARCH':'amd64' }
+			self._path			= '%s/%s/%s' % (cookie.layout.packages(), o, name)
 
 		def selector(self):
 			return '%s/%s-%s' % (self.overlay(), self.name(), self.version())
@@ -100,6 +101,7 @@ class packages:
 			else:
 				if not os.path.isdir(self.workdir()): os.makedirs(self.workdir())
 				srcdir = '%s/%s' % (self.workdir(), self._meta['SRCDIR']) if 'SRCDIR' in self._meta else '%s/srcdir' % self.workdir()
+				patchfile = '%s/%s/%s/%s-%s.patch' % (cookie.layout.packages(), self.overlay(), self.name(), self.name(), self.version())
 				s = cookie.shell()
 				s.loadenv()
 				s.addenv(self._env)
@@ -107,6 +109,7 @@ class packages:
 				s.setenv('P_WORKDIR', self.workdir())
 				s.setenv('P_DESTDIR', self.destdir())
 				s.setenv('P_SYSROOT', self.rootfs())
+				s.setenv('P_PATCH',   patchfile if os.path.isfile(patchfile) else '')
 				s.setenv('P_NPROCS',  '4') # TODO: Get this programmatically ...
 				s.run('make -C %s -f %s %s' % (srcdir if os.path.isdir(srcdir) else self.workdir(), self.makefile(), rule))
 
@@ -215,7 +218,8 @@ class packages:
 				candidates.append((o, name, version))
 			elif version is None and os.path.isdir('%s/%s/%s' % (cookie.layout.packages(), o, name)):
 				for e in os.listdir('%s/%s/%s' % (cookie.layout.packages(), o, name)):
-					candidates.append((o, '-'.join(e.split('-')[0:-1]), e.split('-')[-1].split('.mk')[0]))
+					if e.endswith('.mk'):
+						candidates.append((o, '-'.join(e.split('-')[0:-1]), e.split('-')[-1].split('.mk')[0]))
 		return candidates
 
 	@classmethod
