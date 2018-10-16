@@ -1,0 +1,69 @@
+diff --git a/sdl/configure.ac b/sdl/configure.ac
+index 670ea05..779c276 100644
+--- a/sdl/configure.ac
++++ b/sdl/configure.ac
+@@ -4,7 +4,7 @@ AC_REVISION([$Revision: 1.53 $])
+ 
+ AC_CONFIG_SRCDIR([sdlmain.cpp])
+ 
+-AC_CANONICAL_TARGET
++AC_CANONICAL_HOST
+ 
+ AC_PROG_CC
+ AC_PROG_CXX
+@@ -38,7 +38,7 @@ AC_DEFUN([AC_S9X_COMPILER_FLAG],
+ 				return (argc);
+ 			}
+ 		],
+-		[snes9x_cv_option_$2="yes"], [snes9x_cv_option_$2="no"])
++		[snes9x_cv_option_$2="yes"], [snes9x_cv_option_$2="no"], [snes9x_cv_option_$2="yes"])
+ 	])
+ 
+ 	CXXFLAGS="[$]OLD_CXXFLAGS"
+@@ -154,9 +154,10 @@ AC_ARG_ENABLE([gzip],
+ 	[], [enable_gzip="yes"])
+ 
+ if test "x$enable_gzip" = "xyes"; then
++	PKG_CHECK_MODULES([ZLIB], [zlib])
+ 	if test "x$snes9x_cv_zlib" = "xyes"; then
+-		S9XDEFS="$S9XDEFS -DZLIB"
+-		S9XLIBS="$S9XLIBS -lz"
++		S9XDEFS="$S9XDEFS ${ZLIB_CFLAGS} -DZLIB"
++		S9XLIBS="$S9XLIBS ${ZLIB_LIBS}"
+ 	else
+ 		AC_MSG_WARN([zlib not found. Build without GZIP support.])
+ 		enable_gzip="no"
+@@ -214,9 +215,10 @@ AC_ARG_ENABLE([screenshot],
+ 	[], [enable_screenshot="yes"])
+ 
+ if test "x$enable_screenshot" = "xyes"; then
++	PKG_CHECK_MODULES([PNG], [libpng])
+ 	if test "x$snes9x_cv_libpng" = "xyes"; then
+-		S9XDEFS="$S9XDEFS -DHAVE_LIBPNG"
+-		S9XLIBS="$S9XLIBS -lpng"
++		S9XDEFS="$S9XDEFS ${PNG_CFLAGS} -DHAVE_LIBPNG"
++		S9XLIBS="$S9XLIBS ${PNG_LIBS}"
+ 	else
+ 		AC_MSG_WARN([libpng not found. Build without screenshot support.])
+ 		enable_screenshot="no"
+@@ -240,8 +242,9 @@ AC_CACHE_VAL([snes9x_cv_sdl],
+ ])
+ 
+ if test "x$snes9x_cv_sdl" = "xyes"; then
+-  	S9XFLGS="$S9XFLGS `sdl-config --cflags`"
+-	S9XLIBS="$S9XLIBS `sdl-config --libs`"
++	PKG_CHECK_MODULES([SDL], [sdl])
++  	S9XFLGS="$S9XFLGS ${SDL_CFLAGS}"
++	S9XLIBS="$S9XLIBS ${SDL_LIBS}"
+ else
+ 	AC_MSG_ERROR([SDL is required.])
+ fi
+@@ -332,7 +335,7 @@ AC_DEFUN([AC_S9X_CHECK_SAR],
+ 			return (i < 0 ? 0 : 1);
+ 		}
+ 	],
+-	[snes9x_sar_$1="yes"], [snes9x_sar_$1="no"])
++	[snes9x_sar_$1="yes"], [snes9x_sar_$1="no"], [snes9x_sar_$1=$GCC])
+ 
+ 	CXXFLAGS="[$]OLD_CXXFLAGS"
+ 
