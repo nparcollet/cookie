@@ -34,6 +34,7 @@ install:
 	cookie import rcS			$(P_DESTDIR)/etc/init.d/rcS
 	cookie import passwd		$(P_DESTDIR)/etc/passwd
 	cookie import group			$(P_DESTDIR)/etc/group
+	cookie import shells		$(P_DESTDIR)/etc/shells
 	cookie import fb.modes		$(P_DESTDIR)/etc/fb.modes
 	cookie import asound.conf	$(P_DESTDIR)/etc/asound.conf
-	cookie import hostname		$(P_DESTDIR)/etc/asound.conf
+	cookie import hostname		$(P_DESTDIR)/etc/hostname.conf
