@@ -148,7 +148,7 @@ class targets():
 						ord.append(r)
 						rem.remove(r)
 				if count == len(rem):
-					cookie.logger.abort('unable to satisfy dependencies')
+					cookie.logger.abort('unable to satisfy dependencies for %s' % str(['%s: %s' % (x.name(), str(x.depends())) for x in rem]))
 
 			# Add packages
 			for pkg in ord:
