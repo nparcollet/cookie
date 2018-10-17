@@ -1,0 +1,28 @@
+#! /bin/sh
+
+# Mount Filesystems
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t tmpfs devtmpfs /dev
+mkdir /dev/pts
+mount -t devpts devpts /dev/pts
+
+# Setup Mdev
+mdev -s
+echo /sbin/mdev > /proc/sys/kernel/hotplug
+
+# Mount boot partition
+mount -t vfat /dev/mmcblk0p2 /boot
+
+# Remount / as Read/Write (TMP)
+mount -oremount,rw /
+mkdir /mnt
+
+# Setup Alsa
+modprobe snd_bcm2835
+amixer cset numid=3 0
+
+# Setup Network
+#udhcpc eth0
+ifconfig eth0 up
+ifconfig eth0 192.168.1.222

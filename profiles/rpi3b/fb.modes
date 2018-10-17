@@ -1,0 +1,9 @@
+mode "console"
+	geometry 1184 624 1184 624 8
+	timings 0 0 0 0 0 0 0
+endmode
+
+mode "snes9x"
+	geometry 720 576 720 576 16
+	timings 21208 144 40 32 10 128 3
+endmode
