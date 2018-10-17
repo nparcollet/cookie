@@ -23,3 +23,5 @@ compile:
 install:
 	make DESTDIR=$(P_DESTDIR) install
 	cp scp $(P_DESTDIR)/usr/bin/
+	rm -rf $(P_DESTDIR)/usr/share
+	mkdir -p $(P_DESTDIR)/etc/dropbear
