@@ -2,3 +2,10 @@ cmdline=cmdline.txt
 kernel=zImage
 disable_splash=1
 dtparam=audio=on
+
+hdmi_group=1
+hdmi_mode=4
+hdmi_drive=2
+hdmi_aspect=3
+hdmi_force_hotplug=1
+hdmi_force_edid_audio=1
