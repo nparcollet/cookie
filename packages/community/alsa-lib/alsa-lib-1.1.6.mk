@@ -17,9 +17,8 @@ setup:
 	cookie git checkout $(P_NAME) $(P_GITREV) $(P_SRCDIR)
 
 compile:
-
 	autoreconf -if
-	./configure --prefix=/usr --host=$(HOST) --disable-aload --disable-mixer --disable-rawmidi --disable-hwdep --disable-seq --disable-instr --disable-alisp --with-pcm-plugins=hw
+	./configure --prefix=/usr --host=$(HOST) --with-pcm-plugins=hw
 	make -j$(P_NPROCS)
 
 install:
