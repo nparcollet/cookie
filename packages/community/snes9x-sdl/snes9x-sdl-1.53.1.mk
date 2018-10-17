@@ -6,15 +6,16 @@ P_GITREV		= 59d68a2c2ed8cb7266c689e704a1d843961ac6bc
 P_LICENCES		= GPL2
 P_ARCHS			= arm
 P_DEPENDS		= sdl zlib libpng
-P_SRCDIR		= snes9x-sdl
+P_SRCDIR		= sources
+P_PROVIDES		= snes9x
 
 .PHONY: fetch setup compile install
 
 fetch:
-	cookie git clone $(P_GITURL) snes9x-sdl
+	cookie git clone $(P_GITURL) $(P_NAME)
 
 setup:
-	cookie git checkout snes9x-sdl HEAD $(P_SRCDIR)
+	cookie git checkout $(P_NAME) $(P_GITREV) $(P_SRCDIR)
 	cd $(P_SRCDIR) && patch -p1 < $(P_PATCH)
 
 compile:
