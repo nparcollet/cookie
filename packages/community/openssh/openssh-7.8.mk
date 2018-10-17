@@ -6,8 +6,18 @@ P_ARCHIVE		= openssh-7.8p1.tar.gz
 P_LICENCES		= BSD
 P_ARCHS			= arm
 P_SRCDIR		= openssh-7.8p1
-# Note: openssl-1.1.1 i not comptatible with this version
+# Note: openssl-1.1.1 is not comptatible with this version...
 P_DEPENDS		= openssl zlib
+
+CONFOPTS = 					\
+	--host=$(HOST)			\
+	--with-lib				\
+	--prefix=/usr			\
+	--with-ssl-dir=/etc/ssl	\
+	--disable-strip			\
+	--sysconfdir=/etc/ssh	\
+	CC=$(HOST)-gcc			\
+	AR=$(HOST)-ar
 
 fetch:
 	cookie fetch $(P_URL) $(P_ARCHIVE)
@@ -17,16 +27,9 @@ setup:
 
 compile:
 	autoreconf -if
-	./configure 				\
-		--host=$(HOST)			\
-		--with-lib				\
-		--prefix=/usr			\
-		--with-ssl-dir=/etc/ssl	\
-		--disable-strip			\
-		--sysconfdir=/etc/ssh	\
-		CC=$(HOST)-gcc			\
-		AR=$(HOST)-ar
+	./configure $(CONFOPTS)
 	make -j$(P_NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install
+	rm -rf $(P_DESTDIR)/usr/share
