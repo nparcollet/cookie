@@ -131,9 +131,9 @@ class targets():
 				pkg.attach(self.name())
 				pkg.unmerge()
 
-
 			# Order package to add by dependencies
 			obj  = [ cookie.packages.elect(x) for x in add ]
+			ins  = [ cookie.packages.elect(x) for x in keep ]
 			ord  = [ x for x in obj if x.depends() == [] ]
 			rem  = [ x for x in obj if x not in ord ]
 			while len(rem) > 0:
@@ -141,7 +141,7 @@ class targets():
 				for r in rem:
 					ready = True
 					for d in r.depends():
-						if not [ x for x in ord if d == x.name() or d in x.provides() ]:
+						if	not [ x for x in ord if d == x.name() or d in x.provides() ] and not [ x for x in ins if d == x.name() or d in x.provides() ]:
 							ready = False
 							break
 					if ready:
