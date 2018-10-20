@@ -7,7 +7,7 @@ P_LICENCES		= FTL
 P_ARCHS			= arm
 P_DEPENDS		= zlib bzip2 libpng glib
 P_SRCDIR		= freetype-2.9.1
-P_PROVIDES		= harfbuzz
+P_PROVIDES		= 
 
 .PHONY: fetch setup compile install
 
@@ -18,10 +18,10 @@ setup:
 	cookie extract $(P_ARCHIVE) $(P_WORKDIR)
 
 compile:
-
 	./configure --host=$(HOST) --prefix=/usr --with-png=yes --with-zlib=yes --with-bzip2=yes --with-harfbuzz=no
 	make -j$(P_NPROCS)
-	make DESTDIR=$(P_WORKDIR)/staging_freetype install
 
 install:
 	make DESTDIR=$(P_DESTDIR) install
+	mkdir -p $(P_DESTDIR)/usr/bin
+	cp builds/unix/freetype-config $(P_DESTDIR)/usr/bin
