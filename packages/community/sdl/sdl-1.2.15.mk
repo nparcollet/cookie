@@ -1,9 +1,9 @@
 P_NAME			= sdl
 P_VERSION		= 1.2.15
-P_DESCRIPTION	= libpng is the official PNG reference library.
+P_DESCRIPTION	= Framework fpr low level access to audio, keyboard, mouse, joystick, and graphics
 P_ARCHIVE		= SDL-1.2.15.tar.gz
 P_URL			= https://www.libsdl.org/release/$(P_ARCHIVE)
-P_LICENCES		=
+P_LICENCES		= ZLIB
 P_ARCHS			= arm
 P_DEPENDS		= alsa-lib
 P_SRCDIR		= SDL-1.2.15
