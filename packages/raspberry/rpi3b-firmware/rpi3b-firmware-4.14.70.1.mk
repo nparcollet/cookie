@@ -31,3 +31,4 @@ install:
 	cp -a  hardfp/opt/vc/lib  $(P_DESTDIR)/usr
 	cp -a  hardfp/opt/vc/bin $(P_DESTDIR)/usr
 	cp -a  hardfp/opt/vc/sbin $(P_DESTDIR)/usr
+	sed -e 's#/opt/vc#/usr#g' -i $(P_DESTDIR)/usr/lib/pkgconfig/*.pc
