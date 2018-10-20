@@ -22,4 +22,5 @@ compile:
 install:
 	make CC=$(HOST)-gcc PREFIX=$(P_DESTDIR)/usr install
 	cp -av libbz2.so* $(P_DESTDIR)/usr/lib
+	rm -rf $(P_DESTDIR)/usr/bin
 	rm -rf $(P_DESTDIR)/usr/man
