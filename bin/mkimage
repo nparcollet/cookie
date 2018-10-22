@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 echo "Defining locales"
-ROOTFS=/opt/target/rootfs
+ROOTFS=/opt/target/redist
 IMG_FILE=${COOKIE}/cache/images/${COOKIE_BOARD}-${COOKIE_APP}.img
-TOTAL_SIZE=512
+TOTAL_SIZE=256
 BOOT_SIZE=32
 ROOTFS_SIZE=$((${TOTAL_SIZE}-${BOOT_SIZE}))
 LOOP_DEVICE=/dev/loop0
