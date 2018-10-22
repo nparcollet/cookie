@@ -14,6 +14,7 @@ class packages:
 			self._overlay		= overlay
 			self._name			= name
 			self._version		= version
+			self._path			= '%s/%s/%s' % (cookie.layout.packages(), overlay, name)
 			self._meta			= { re.split('[:?]?=', line)[0][2:].strip(): line.split('=')[1].strip() for line in tuple(open(self.makefile(), 'r')) if line[0:2] == 'P_' }
 			self._description	= self._meta['DESCRIPTION'].strip() 					if 'DESCRIPTION' in self._meta else ''
 			self._depends		= [ o.strip() for o in self._meta['DEPENDS'].split() ]  if 'DEPENDS'     in self._meta else []
@@ -23,7 +24,6 @@ class packages:
 			self._target		= None
 			self._profile		= None
 			self._env			= { 'ARCH':'amd64' }
-			self._path			= '%s/%s/%s' % (cookie.layout.packages(), o, name)
 
 		def selector(self):
 			return '%s/%s-%s' % (self.overlay(), self.name(), self.version())
@@ -59,7 +59,7 @@ class packages:
 			return self._licences
 
 		def makefile(self):
-			return '%s/%s/%s/%s-%s.mk' % (cookie.layout.packages(), self._overlay, self._name, self._name, self._version)
+			return '%s/%s-%s.mk' % (self._path, self._name, self._version)
 
 		def arch(self):
 			return self._arch

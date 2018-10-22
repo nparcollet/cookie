@@ -16,7 +16,8 @@ fetch:
 
 setup:
 	cookie git checkout $(P_NAME) $(P_GITREV) $(P_SRCDIR)
-	cd $(P_SRCDIR) && patch -p1 < $(P_PATCH)
+	cookie patch $(P_SRCDIR) snes9x-sdl-1.53.1-crosscompile.patch
+	cookie patch $(P_SRCDIR) snes9x-sdl-1.53.1-joystick-support.patch
 
 compile:
 	cd sdl && autoreconf -if

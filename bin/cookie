@@ -245,9 +245,41 @@ class cookie_cmd(cookie.command):
 		except Exception, e:
 			cookie.logger.abort('%s build failed: %s' % (self.name(), str(e)))
 
+	def do_depends(self, args):
+		try:
+			if len(args) != 1:
+				cookie.logger.abort('syntax: %s depends <selector>' % self.name())
+			else:
+				def do_one(d, l):
+					for k, v in d.items():
+						cookie.logger.debug('%s%s' % (' ' * l, k))
+						do_one(v, l + 4)
+				pkg = cookie.packages.elect(args[0])
+				cookie.logger.info('Dependencies for %s' % pkg.selector())
+				do_one(pkg.depends_r(), 0)
+		except Exception, e:
+			cookie.logger.abort('%s depends failed: %s' % (self.name(), str(e)))
+
 	#
-	# ACTION THAT NEED SORTING
+	# Commands normally used within packages. As such, it is important that they exit with a proper
+	# status code in order to be fully integrated with Makefile
 	#
+
+	def do_patch(self, args):
+		"""
+		Apply a patch to a source. All patches are expected to be located in the cookie patches
+		directory. This function is intended to be called from the package file when a patch is
+		needed. Note that the use of patches is discouraged and to be used sparsingly.
+		"""
+		try:
+			if len(args) != 2:
+				raise Exception('syntax: %s patch <work_dir> <patch_name>' % self.name())
+			else:
+				cmd = 'cd %s && patch -p1 < %s/%s' % (args[0], cookie.layout.patches(), args[1])
+				cookie.shell().run(cmd)
+				sys.exit(0)
+		except Exception, e:
+				sys.exit(1)
 
 	def do_import(self, args):
 		"""
@@ -373,22 +405,6 @@ class cookie_cmd(cookie.command):
 					cookie.logger.debug(t)
 		except Exception, e:
 			cookie.logger.abort('%s git failed: %s' % (self.name(), e.message))
-
-	def do_depends(self, args):
-		try:
-			if len(args) != 1:
-				cookie.logger.abort('syntax: %s depends <selector>' % self.name())
-			else:
-				def do_one(d, l):
-					for k, v in d.items():
-						cookie.logger.debug('%s%s' % (' ' * l, k))
-						do_one(v, l + 4)
-				pkg = cookie.packages.elect(args[0])
-				cookie.logger.info('Dependencies for %s' % pkg.selector())
-				do_one(pkg.depends_r(), 0)
-		except Exception, e:
-			cookie.logger.abort('%s depends failed: %s' % (self.name(), str(e)))
-
 
 cmd = cookie_cmd()
 cmd.run()

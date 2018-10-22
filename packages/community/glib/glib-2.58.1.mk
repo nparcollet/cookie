@@ -15,8 +15,7 @@ fetch:
 
 setup:
 	cookie extract $(P_ARCHIVE) $(P_WORKDIR)
-	# TODO: a cookie patch command that take automatically patch if a patch exists
-	cd $(P_SRCDIR) && patch -p1 < $(P_PATCH)
+	cookie patch $(P_SRCDIR) glib-2.58.1-gio-missing-dependency.patch
 
 compile:
 	wget https://raw.githubusercontent.com/GNOME/gtk-doc-stub/master/gtk-doc.m4 -O gtk-doc.m4
