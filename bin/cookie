@@ -205,17 +205,16 @@ class cookie_cmd(cookie.command):
 	def do_search(self, args):
 		"""
 		Search for all packages that match the given selector and display the resulting list to the
-		caller. A selector always contains a package name, and might contains an optional overlay
-		and/or a version. When no version is specified, the system will select the latest available
-		one.
+		caller. A selector always contains a package name, and might contains an optional version.
+		When no version is specified, the system will select the latest available one.
 		"""
 		try:
 			if len(args) != 1:
 				cookie.logger.abort('syntax: %s search <selector>' % self.name())
 			else:
 				cookie.logger.info('list of packages matching with "%s":' % args[0])
-				for (o,n,v) in cookie.packages.candidates(args[0]):
-					cookie.logger.debug('%s/%s-%s' % (o, n, v))
+				for (n,v) in cookie.packages.candidates(args[0]):
+					cookie.logger.debug('%s-%s' % (n, v))
 		except Exception, e:
 			cookie.logger.abort('%s search failed: %s' % (self.name(), str(e)))
 

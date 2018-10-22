@@ -39,7 +39,7 @@ class targets():
 			try:
 				path = '%s/installed/packages.json' % self._path
 				raw  = json.load(open(path))
-				return [ '%s/%s-%s' % (str(v['overlay']), str(k), str(v['version'])) for k, v in raw.items() ]
+				return [ '%s-%s' % (str(k), str(v['version'])) for k, v in raw.items() ]
 			except Exception, e:
 				return []
 
@@ -51,19 +51,11 @@ class targets():
 			except Exception, e:
 				return None
 
-		def overlay(self, name):
-			try:
-				path = '%s/installed/packages.json' % self._path
-				raw  = json.load(open(path))
-				return raw[name]['overlay']
-			except Exception, e:
-				return None
-
 		def add(self, selector):
 			cookie.logger.info('adding %s to the target' % selector)
 			pkg = cookie.packages.elect(selector)
 			pkg.attach(self.name())
-			if self.version(pkg.name()) or self.overlay(pkg.name()):
+			if self.version(pkg.name()):
 				cookie.logger.abort('package %s is already installed' % pkg.name())
 			if pkg.has_binpkg():
 				cookie.logger.debug('requested package is already build, reusing')
@@ -80,10 +72,9 @@ class targets():
 
 		def remove(self, name):
 			cookie.logger.info('removing package %s from the target' % name)
-			overlay = self.overlay(name)
 			version = self.version(name)
-			if overlay is not None and version is not None:
-				pkg = cookie.packages.get(overlay, name, version)
+			if version is not None:
+				pkg = cookie.packages.get(name, version)
 				pkg.attach(self.name())
 				pkg.unmerge()
 			else:

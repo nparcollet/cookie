@@ -10,11 +10,10 @@ class packages:
 
 	class package:
 
-		def __init__(self, overlay, name, version):
-			self._overlay		= overlay
+		def __init__(self, name, version):
 			self._name			= name
 			self._version		= version
-			self._path			= '%s/%s/%s' % (cookie.layout.packages(), overlay, name)
+			self._makefile		= '%s/%s-%s.mk' % (cookie.layout.packages(), name, version)
 			self._meta			= { re.split('[:?]?=', line)[0][2:].strip(): line.split('=')[1].strip() for line in tuple(open(self.makefile(), 'r')) if line[0:2] == 'P_' }
 			self._description	= self._meta['DESCRIPTION'].strip() 					if 'DESCRIPTION' in self._meta else ''
 			self._depends		= [ o.strip() for o in self._meta['DEPENDS'].split() ]  if 'DEPENDS'     in self._meta else []
@@ -26,7 +25,7 @@ class packages:
 			self._env			= { 'ARCH':'amd64' }
 
 		def selector(self):
-			return '%s/%s-%s' % (self.overlay(), self.name(), self.version())
+			return '%s-%s' % (self.name(), self.version())
 
 		def attach(self, target):
 			self._target	= cookie.targets.get(target)
@@ -39,9 +38,6 @@ class packages:
 
 		def depends(self):
 			return self._depends
-
-		def overlay(self):
-			return self._overlay
 
 		def name(self):
 			return self._name
@@ -59,7 +55,7 @@ class packages:
 			return self._licences
 
 		def makefile(self):
-			return '%s/%s-%s.mk' % (self._path, self._name, self._version)
+			return self._makefile
 
 		def arch(self):
 			return self._arch
@@ -101,15 +97,12 @@ class packages:
 			else:
 				if not os.path.isdir(self.workdir()): os.makedirs(self.workdir())
 				srcdir = '%s/%s' % (self.workdir(), self._meta['SRCDIR']) if 'SRCDIR' in self._meta else '%s/srcdir' % self.workdir()
-				patchfile = '%s/%s/%s/%s-%s.patch' % (cookie.layout.packages(), self.overlay(), self.name(), self.name(), self.version())
 				s = cookie.shell()
 				s.loadenv()
 				s.addenv(self._env)
-				s.setenv('P_OVERLAY', self.overlay())
 				s.setenv('P_WORKDIR', self.workdir())
 				s.setenv('P_DESTDIR', self.destdir())
 				s.setenv('P_SYSROOT', self.rootfs())
-				s.setenv('P_PATCH',   patchfile if os.path.isfile(patchfile) else '')
 				s.setenv('P_NPROCS',  '4') # TODO: Get this programmatically ...
 				s.run('make -C %s -f %s %s' % (srcdir if os.path.isdir(srcdir) else self.workdir(), self.makefile(), rule))
 
@@ -142,7 +135,7 @@ class packages:
 
 		def has_binpkg(self):
 			try:
-				sha1file      = '%s/%s-%s-%s.sha1' % (self.archives(), self.overlay(), self.name(), self.version())
+				sha1file      = '%s/%s-%s.sha1' % (self.archives(), self.name(), self.version())
 				built_sha1	  = file(sha1file).read().strip()
 				makefile_sha1 = cookie.sha1.compute(self.makefile())
 				return True if built_sha1 == makefile_sha1 else False
@@ -151,7 +144,7 @@ class packages:
 
 		def merge(self):
 			cookie.logger.info('merging content in rootfs')
-			archive = '%s/%s-%s-%s.tar.xz' % (self.archives(), self.overlay(), self.name(), self.version())
+			archive = '%s/%s-%s.tar.xz' % (self.archives(), self.name(), self.version())
 			(status, entries, errors) = cookie.shell(quiet = True).run('tar -tf %s' % archive)
 			conflicts = [ e[2:] for e in entries if os.path.isfile('%s/%s' % (self.rootfs(), e[2:])) or os.path.islink('%s/%s' % (self.rootfs(), e[2:])) ]
 			if not os.path.isdir(self.rootfs()):
@@ -159,22 +152,22 @@ class packages:
 			elif conflicts:
 				cookie.logger.abort('conflicts detected: %s' % str(conflicts))
 			else:
-				cookie.shell().run('cd %s && tar xJf %s/%s-%s-%s.tar.xz' % (self.rootfs(), self.archives(), self.overlay(), self.name(), self.version()))
+				cookie.shell().run('cd %s && tar xJf %s/%s-%s.tar.xz' % (self.rootfs(), self.archives(), self.name(), self.version()))
 				open('%s/%s.list' % (self.installed(), self.name()), 'w').write('\n'.join([ x[1:] for x in reversed(entries) ]))
 				try :
 					path = '%s/packages.json' % self.installed()
 					meta = json.load(open(path)) if os.path.isfile(path) else {}
 				except Exception, e:
 					meta = {}
-				meta[self.name()] = { 'overlay': self.overlay(), 'version': self.version() }
+				meta[self.name()] = { 'version': self.version() }
 				json.dump(meta, open('%s/packages.json' % self.installed(), 'w'))
 
 		def mkarchive(self):
-			archive = '%s-%s-%s.tar.xz' % (self.overlay(), self.name(), self.version())
+			archive = '%s-%s.tar.xz' % (self.name(), self.version())
 			cookie.logger.info('creating archive %s' % archive)
 			if not os.path.isdir(self.archives()): os.makedirs(self.archives())
 			cookie.shell().run('tar cJf %s/%s -C %s .' % (self.archives(), archive, self.destdir()))
-			with open('%s/%s-%s-%s.sha1' % (self.archives(), self.overlay(), self.name(), self.version()), 'w') as handle:
+			with open('%s/%s-%s.sha1' % (self.archives(), self.name(), self.version()), 'w') as handle:
 				print >> handle, cookie.sha1.compute(self.makefile())
 				handle.close()
 
@@ -197,29 +190,28 @@ class packages:
 				os.unlink(path)
 
 	@classmethod
-	def exists(self, overlay, name, version):
-		return os.path.isfile('%s/%s/%s/%s-%s.mk' % (cookie.layout.packages(), overlay, name, name, version))
+	def exists(self, name, version):
+		return os.path.isfile('%s/%s-%s.mk' % (cookie.layout.packages(), name, version))
 
 	@classmethod
 	def parse(self, selector):
-		overlay	= None		if selector.find('/') == -1 else selector.split('/')[0]
-		pnv		= selector	if overlay is None else selector.split('/')[1]
-		name	= pnv		if pnv.rfind('-') == -1 or not pnv[pnv.rfind('-')+1].isdigit() else '-'.join(pnv.split('-')[0:-1])
-		version	= None		if pnv == name else pnv[len(name)+1:]
-		return (overlay, name, version)
+		pnv		= selector
+		name	= pnv	if pnv.rfind('-') == -1 or not pnv[pnv.rfind('-')+1].isdigit() else '-'.join(pnv.split('-')[0:-1])
+		version	= None	if pnv == name else pnv[len(name)+1:]
+		return (name, version)
 
 	@classmethod
 	def candidates(self, selector):
-		(overlay, name, version) = self.parse(selector)
+		(name, version) = self.parse(selector)
 		candidates = []
-		overlays  = [overlay] if overlay is not None else os.listdir(cookie.layout.packages())
-		for o in overlays:
-			if version is not None and self.exists(o, name, version):
-				candidates.append((o, name, version))
-			elif version is None and os.path.isdir('%s/%s/%s' % (cookie.layout.packages(), o, name)):
-				for e in os.listdir('%s/%s/%s' % (cookie.layout.packages(), o, name)):
-					if e.endswith('.mk'):
-						candidates.append((o, '-'.join(e.split('-')[0:-1]), e.split('-')[-1].split('.mk')[0]))
+		if version is not None and self.exists(name, version):
+			candidates.append((name, version))
+		else:
+			all  = os.listdir(cookie.layout.packages())
+			for a in all:
+				candidate = self.parse(a.split('.mk')[0])
+				if candidate[0] == name:
+					candidates.append((candidate[0], candidate[1]))
 		return candidates
 
 	@classmethod
@@ -228,13 +220,12 @@ class packages:
 		if len(candidates) == 0:
 			raise Exception('no matching package for selector %s' % selector)
 		else:
-			eo, en, ev = candidates[0]
-			for o, n, v in candidates:
+			en, ev = candidates[0]
+			for n, v in candidates:
 				if distutils.version.LooseVersion(ev) < distutils.version.LooseVersion(v):
-					eo = o
 					ev = v
-			return cookie.packages.package(eo, en, ev)
+			return cookie.packages.package(en, ev)
 
 	@classmethod
-	def get(self, overlay, name, version):
-		return self.elect('%s/%s-%s' % (overlay, name, version))
+	def get(self, name, version):
+		return self.elect('%s-%s' % (name, version))
