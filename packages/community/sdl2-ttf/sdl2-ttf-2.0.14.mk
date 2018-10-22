@@ -5,7 +5,7 @@ P_ARCHIVE		= SDL2_ttf-2.0.14.tar.gz
 P_URL			= https://www.libsdl.org/projects/SDL_ttf/release/$(P_ARCHIVE)
 P_LICENCES		= ZLIB
 P_ARCHS			= arm
-P_DEPENDS		= stl2 freetype
+P_DEPENDS		= sdl2 freetype
 P_SRCDIR		= SDL2_ttf-2.0.14
 
 .PHONY: fetch setup compile install
