@@ -1,8 +1,8 @@
 P_NAME			= s9xlauncher
 P_VERSION		= 0.1.0
 P_DESCRIPTION	= SNes Emulator
-P_GITURL		= /opt/cookie/__wip__/s9xlauncher
-P_GITREV		= 8965f2e164060dd20e28efa6d3fd898e24ac92e3
+P_GITURL		= https://github.com/nparcollet/s9xlauncher.git
+P_GITREV		= 3deae0d75f2ecf3598e55238b64c45c39650dbba
 P_LICENCES		= MIT
 P_ARCHS			= arm
 P_DEPENDS		= sdl2 sdl2-ttf
