@@ -9,7 +9,12 @@ echo "Reset redist directory"
 mkdir -p ${REDIST_DIR}
 
 echo "Syncing redist"
-rsync -aHAXx --exclude *.a --exclude *.h ${ROOTFS_DIR}/ ${REDIST_DIR}/
+rsync -aHAXx 					\
+	--exclude *.a 				\
+	--exclude *.h 				\
+	--exclude *.la 				\
+	--exclude /usr/share/man	\
+	${ROOTFS_DIR}/ ${REDIST_DIR}/
 
 echo "Stripping libraries and binaries"
 find /opt/target/redist -type f -executable | xargs arm-rpi-linux-gnueabihf-strip
