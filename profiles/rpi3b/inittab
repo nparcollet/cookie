@@ -3,4 +3,9 @@
 ::restart:/sbin/init
 ::ctrlaltdel:/sbin/reboot
 
-::respawn:/sbin/dropbear -R -F -B -E
+tty2::askfirst:-/bin/sh
+tty3::askfirst:-/bin/sh
+tty4::askfirst:-/bin/sh
+
+::respawn:/usr/sbin/dropbear -R -F -B -E
+::respawn:/usr/bin/s9xlauncher

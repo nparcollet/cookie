@@ -24,9 +24,12 @@ install:
 	mkdir -p $(P_DESTDIR)/sys
 	mkdir -p $(P_DESTDIR)/tmp
 	mkdir -p $(P_DESTDIR)/var
+	mkdir -p $(P_DESTDIR)/var/log
+	mkdir -p $(P_DESTDIR)/var/snes9x
 	mkdir -p $(P_DESTDIR)/media
-
-	mkdir -p $(P_DESTDIR)/usr/etc
+	mkdir -p $(P_DESTDIR)/usr
+	mkdir -p $(P_DESTDIR)/usr/bin
+	mkdir -p $(P_DESTDIR)/etc
 	mkdir -p $(P_DESTDIR)/etc/init.d
 
 	cookie import fstab			$(P_DESTDIR)/etc/fstab
@@ -38,3 +41,5 @@ install:
 	cookie import fb.modes		$(P_DESTDIR)/etc/fb.modes
 	cookie import asound.conf	$(P_DESTDIR)/etc/asound.conf
 	cookie import hostname		$(P_DESTDIR)/etc/hostname.conf
+	cookie import mdev.conf		$(P_DESTDIR)/etc/mdev.conf
+	cookie import automount.sh	$(P_DESTDIR)/usr/bin/automount.sh
