@@ -67,3 +67,84 @@ index 670ea05..779c276 100644
  
  	CXXFLAGS="[$]OLD_CXXFLAGS"
  
+diff --git a/sdl/sdlinput.cpp b/sdl/sdlinput.cpp
+index 156d392..c682e33 100644
+--- a/sdl/sdlinput.cpp
++++ b/sdl/sdlinput.cpp
+@@ -246,19 +246,18 @@ void S9xParseInputConfig (ConfigFile &conf, int pass)
+ 	keymaps.clear();
+ 	if (!conf.GetBool("Unix::ClearAllControls", false))
+ 	{
+-		// Using 'Joypad# Axis'
++		// Hardcoded Pad Config
+ 		keymaps.push_back(strpair_t("J00:Axis0",      "Joypad1 Axis Left/Right T=50%"));
+ 		keymaps.push_back(strpair_t("J00:Axis1",      "Joypad1 Axis Up/Down T=50%"));
+-
+-		keymaps.push_back(strpair_t("J00:B0",         "Joypad1 X"));
++		keymaps.push_back(strpair_t("J00:B2",         "Joypad1 X"));
+ 		keymaps.push_back(strpair_t("J00:B1",         "Joypad1 A"));
+-		keymaps.push_back(strpair_t("J00:B2",         "Joypad1 B"));
++		keymaps.push_back(strpair_t("J00:B0",         "Joypad1 B"));
+ 		keymaps.push_back(strpair_t("J00:B3",         "Joypad1 Y"));
++		keymaps.push_back(strpair_t("J00:B4",         "Joypad1 L"));
++		keymaps.push_back(strpair_t("J00:B5",         "Joypad1 R"));
++		keymaps.push_back(strpair_t("J00:B9",         "Joypad1 Select"));
++		keymaps.push_back(strpair_t("J00:B8",        "Joypad1 Start"));
+ 
+-		keymaps.push_back(strpair_t("J00:B6",         "Joypad1 L"));
+-		keymaps.push_back(strpair_t("J00:B7",         "Joypad1 R"));
+-		keymaps.push_back(strpair_t("J00:B8",         "Joypad1 Select"));
+-		keymaps.push_back(strpair_t("J00:B11",        "Joypad1 Start"));
+ 		keymaps.push_back(strpair_t("K00:SDLK_RIGHT",        "Joypad1 Right"));
+ 		keymaps.push_back(strpair_t("K00:SDLK_LEFT",         "Joypad1 Left"));
+ 		keymaps.push_back(strpair_t("K00:SDLK_DOWN",         "Joypad1 Down"));
+@@ -350,22 +349,43 @@ void S9xProcessEvents (bool8 block)
+ 			}
+ 			break;
+ 
+-/***** Joystick starts *****/
+-#if 0
+ 		case SDL_JOYBUTTONDOWN:
+ 		case SDL_JOYBUTTONUP:
+ 			S9xReportButton(0x80000000 | // joystick button
+-					(event.jbutton.which << 24) | // joystick index
+-					event.jbutton.button, // joystick button code
+-					event.type == SDL_JOYBUTTONDOWN); // press or release
++                                        (event.jbutton.which << 24) | // joystick index
++                                        event.jbutton.button, // joystick button code
++                                        event.type == SDL_JOYBUTTONDOWN); // press or release
+ 			break;
+-
++		
+ 		case SDL_JOYAXISMOTION:
+ 			S9xReportAxis(0x80008000 | // joystick axis
+ 				      (event.jaxis.which << 24) | // joystick index
+ 				      event.jaxis.axis, // joystick axis
+ 				      event.jaxis.value); // axis value
+ 			break;
++
++ 		case SDL_JOYHATMOTION:
++                        switch (event.jhat.value) {
++                        case SDL_HAT_UP:
++                                printf ("SDL_HAT_UP\n");
++				//SDLK_RIGHT
++                                break;
++                        case SDL_HAT_DOWN:
++                                printf ("SDL_HAT_DOWN\n");
++                                break;
++                        case SDL_HAT_LEFT:
++                                printf ("SDL_HAT_LEFT\n");
++                                break;
++                        case SDL_HAT_RIGHT:
++                                printf ("SDL_HAT_RIGHT\n");
++                                break;
++                        }
++			break;
++
++
++/***** Joystick starts *****/
++#if 0
++
+ #endif
+ /***** Joystick ends *****/
+ 
