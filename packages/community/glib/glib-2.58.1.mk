@@ -5,7 +5,7 @@ P_ARCHIVE		= glib-2.58.1.tar.xz
 P_URL			= https://download.gnome.org/sources/glib/2.58/$(P_ARCHIVE)
 P_LICENCES		= LGPL
 P_ARCHS			= arm
-P_DEPENDS		= zlib libffi libpcre
+P_DEPENDS		= zlib libffi pcre
 P_SRCDIR		= glib-2.58.1
 
 .PHONY: fetch setup compile install
