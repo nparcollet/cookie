@@ -20,11 +20,8 @@ class targets():
 		def path(self):
 			return self._path
 
-		def board(self):
-			return str(self._infos['board'])
-
-		def app(self):
-			return str(self._infos['app'])
+		def profile(self):
+			return str(self._infos['profile'])
 
 		def volume(self):
 			return str(self._infos['volume'])
@@ -33,7 +30,7 @@ class targets():
 			return str(self._infos['created_on'])
 
 		def arch(self):
-			return cookie.profiles.get(self.board(), self.app()).arch()
+			return cookie.profiles.get(self.name(), self.app()).arch()
 
 		def packages(self):
 			try:
@@ -84,7 +81,7 @@ class targets():
 
 			# Build list of actions
 			tpkg   = self.packages()
-			ppkg   = cookie.profiles.get(self.board(), self.app()).packages()
+			ppkg   = cookie.profiles.get(self.profile()).packages()
 			remove = [ x for x in tpkg if x not in ppkg ]
 			keep   = [ x for x in tpkg if x in ppkg ]
 			add    = [ x for x in ppkg if x not in tpkg ]
@@ -194,14 +191,14 @@ class targets():
 			json.dump(mapping, open('%s/mapping.json' % cookie.layout.cache(), 'w'))
 
 	@classmethod
-	def create(self, board, app, name = None):
+	def create(self, pname, name = None):
 		now  = str(datetime.date.today())
-		name = '%s-%s-%s' % (board, app, now) if name == None else name
+		name = '%s-%s' % (pname, now) if name == None else name
 		cookie.logger.info('creating target %s' % name)
 		if name in self.list():
 			raise Exception('target %s already exists' % name)
-		elif not os.path.isdir(cookie.layout.profile(board)) or not os.path.isfile('%s/%s.conf' % (cookie.layout.profile(board), app)):
-			raise Exception('unknown profile %s-%s' % (board, app))
+		elif pname not in cookie.profiles.list():
+			raise Exception('unknown profile %s' % pname)
 		else:
 
 			cookie.logger.debug('creating target volume')
@@ -213,23 +210,22 @@ class targets():
 			mapping['current'] = name
 			mapping['targets'][name] = {
 				'created_on'	: now,
-				'board'			: board,
-				'app'			: app,
+				'profile'		: pname,
 				'volume'		: volume[0]
 			}
 			json.dump(mapping, open(mapping_file, 'w'))
 
 			try:
-				profile      = cookie.profiles.get(board, app)
-				profile_sha1 = cookie.sha1.compute('%s/crosstool-ng.config' % cookie.layout.profile(board))
-				built_sha1	 = file('%s/toolchains/%s.sha1' % (cookie.layout.cache(), board)).read().strip()
+				profile      = cookie.profiles.get(pname)
+				profile_sha1 = cookie.sha1.compute('%s/crosstool-ng.config' % profile.path())
+				built_sha1	 = file('%s/toolchains/%s.sha1' % (cookie.layout.cache(), pname)).read().strip()
 				if profile_sha1 == built_sha1:
 					cookie.logger.debug('reusing packaged toolchain')
-					cookie.docker.run('tar xJf /opt/cookie/cache/toolchains/%s.tar.xz -C /opt/target' % board)
+					cookie.docker.run('tar xJf /opt/cookie/cache/toolchains/%s.tar.xz -C /opt/target' % pname)
 				else:
 					cookie.logger.debug('compiling the profile toolchain')
 					raise Exception('target toolchain compilation not implemented')
-					#cookie.sha1.save('%s/crosstool-ng.config' % cookie.layout.profile(board), '%s/toolchains/%s.sha1' % (cookie.layout.cache(), board))
+					#cookie.sha1.save('%s/crosstool-ng.config' % profile.path(), '%s/toolchains/%s.sha1' % (cookie.layout.cache(), profile))
 			except Exception, e:
 				self.destroy(name)
 				raise e

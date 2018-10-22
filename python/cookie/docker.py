@@ -20,8 +20,7 @@ class docker:
 			'--cap-add=MKNOD',
 			'--cap-add=SYS_PTRACE',
 			'--volume=%s:/opt/cookie' % cookie.layout.root(),
-			'-e COOKIE_BOARD=%s' % tgt.board() if tgt else '',
-			'-e COOKIE_APP=%s' % tgt.app() if tgt else '',
+			'-e COOKIE_PROFILE=%s' % tgt.profile() if tgt else '',
 			'--mount=source=%s,target=%s' % (tgt.volume(), tgt.path()) if tgt else '',
 			'cookie'
 		]) + ' ' + args

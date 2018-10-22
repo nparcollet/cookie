@@ -29,7 +29,7 @@ class packages:
 
 		def attach(self, target):
 			self._target	= cookie.targets.get(target)
-			self._profile	= cookie.profiles.get(self._target.board(), self._target.app())
+			self._profile	= cookie.profiles.get(self._target.profile())
 			self._env		= self._profile.buildenv()
 			self._arch		= self._profile.arch()
 

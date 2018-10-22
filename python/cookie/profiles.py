@@ -9,20 +9,12 @@ class profiles:
 
 	class profile:
 
-		def __init__(self, board, app):
-			self._board = board
-			self._app   = app
-			self._path  = cookie.layout.profile(board)
-			self._apps  = [ x[:-5] for x in os.listdir(self._path) if x.endswith('.conf') ]
+		def __init__(self, name):
+			self._name  = name
+			self._path  = '%s/%s' % (cookie.layout.profiles(), name)
 
-		def board(self):
-			return self._board
-
-		def app(self):
-			return self._app
-
-		def apps(self):
-			return self._apps
+		def name(self):
+			return self._name
 
 		def path(self):
 			return self._path
@@ -38,13 +30,12 @@ class profiles:
 
 		def packages(self):
 			list = []
-			if self._app:
-				path = '%s/%s.conf' % (self._path, self._app)
-				with open(path, 'r') as handle:
-					for l in handle.readlines():
-						selector = re.split('[\t ]+', l)[0].strip()
-						if len(selector) > 0: list.append(selector)
-					handle.close()
+			path = '%s/packages.conf' % (self._path)
+			with open(path, 'r') as handle:
+				for l in handle.readlines():
+					selector = re.split('[\t ]+', l)[0].strip()
+					if len(selector) > 0: list.append(selector)
+				handle.close()
 			return list
 
 	@classmethod
@@ -52,5 +43,5 @@ class profiles:
 		return os.listdir(cookie.layout.profiles())
 
 	@classmethod
-	def get(self, board, app):
-		return cookie.profiles.profile(board, app)
+	def get(self, name):
+		return cookie.profiles.profile(name)
