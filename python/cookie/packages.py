@@ -64,27 +64,27 @@ class packages:
 			path = '/opt/target/rootfs'
 			if not os.path.isdir(path):
 				cookie.logger.debug('creating missing rootfs directory')
-				os.mkdir(path)
+				os.makedirs(path)
 			return path
 
 		def archives(self):
 			path = '/opt/target/archives'
 			if not os.path.isdir(path):
 				cookie.logger.debug('creating missing archives directory')
-				os.mkdir(path)
+				os.makedirs(path)
 			return path
 
 		def installed(self):
 			path = '/opt/target/installed'
 			if not os.path.isdir(path):
 				cookie.logger.debug('creating missing installed directory')
-				os.mkdir(path)
+				os.makedirs(path)
 			return path
 
 		def workdir(self):
 			path = '/opt/target/build/%s-%s' % (self.name(), self.version())
 			if not os.path.isdir(path):
-				os.mkdir(path)
+				os.makedirs(path)
 			return path
 
 		def destdir(self):
