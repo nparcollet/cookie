@@ -2,7 +2,7 @@ P_NAME			= s9xlauncher
 P_VERSION		= 0.1.0
 P_DESCRIPTION	= SNes Emulator
 P_GITURL		= https://github.com/nparcollet/s9xlauncher.git
-P_GITREV		= 3deae0d75f2ecf3598e55238b64c45c39650dbba
+P_GITREV		= b6ca61e38a79247963b024d25309a20d7b0208c2
 P_LICENCES		= MIT
 P_ARCHS			= arm
 P_DEPENDS		= sdl2 sdl2-ttf
@@ -25,5 +25,3 @@ compile:
 
 install:
 	cd build && make DESTDIR=$(P_DESTDIR) install-strip
-	mkdir -p $(P_DESTDIR)/usr/share/s9xlauncher
-	cp -a roboto.ttf $(P_DESTDIR)/usr/share/s9xlauncher/
