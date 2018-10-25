@@ -18,7 +18,6 @@ compile:
 	@echo "nothing to compile"
 
 install:
-
 	mkdir -p $(P_DESTDIR)/dev
 	mkdir -p $(P_DESTDIR)/proc
 	mkdir -p $(P_DESTDIR)/root
@@ -31,6 +30,7 @@ install:
 	mkdir -p $(P_DESTDIR)/media
 	mkdir -p $(P_DESTDIR)/usr
 	mkdir -p $(P_DESTDIR)/usr/bin
+	mkdir -p $(P_DESTDIR)/usr/sbin
 	mkdir -p $(P_DESTDIR)/etc
 	mkdir -p $(P_DESTDIR)/etc/init.d
 
@@ -45,3 +45,4 @@ install:
 	cookie import asound.conf	$(P_DESTDIR)/etc/asound.conf
 	cookie import mdev.conf		$(P_DESTDIR)/etc/mdev.conf
 	cookie import automount.sh	$(P_DESTDIR)/usr/bin/automount.sh
+	cookie import ifplugd_handler	$(P_DESTDIR)/usr/sbin/ifplugd_handler

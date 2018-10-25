@@ -7,5 +7,6 @@ tty2::askfirst:-/bin/sh
 tty3::askfirst:-/bin/sh
 tty4::askfirst:-/bin/sh
 
+::respawn:/usr/sbin/ifplugd -Mns -t1 -u1 -d1 -i eth0 -r /usr/sbin/ifplugd_handler
 ::respawn:/usr/sbin/dropbear -R -F -B -E
 ::respawn:/usr/bin/s9xlauncher

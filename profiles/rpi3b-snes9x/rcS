@@ -37,11 +37,6 @@ modprobe evdev
 modprobe joydev
 #modprobe vc4
 
-# Setup network (TODO: use a service to control the network instead of static infos)
-#udhcpc eth0
-ifconfig eth0 up
-ifconfig eth0 10.0.0.20
-
 # Adjust resolution
 vcgencmd get_config sdtv_aspect set 1
 /usr/sbin/fbset snes9x
