@@ -5,7 +5,7 @@ P_GITURL		= https://github.com/domaemon/snes9x-sdl.git
 P_GITREV		= 59d68a2c2ed8cb7266c689e704a1d843961ac6bc
 P_LICENCES		= GPL2
 P_ARCHS			= arm
-P_DEPENDS		= sdl zlib libpng
+P_DEPENDS		= sdl2 zlib libpng
 P_SRCDIR		= sources
 P_PROVIDES		= snes9x
 
@@ -16,12 +16,11 @@ fetch:
 
 setup:
 	cookie git checkout $(P_NAME) $(P_GITREV) $(P_SRCDIR)
-	cookie patch $(P_SRCDIR) snes9x-sdl-1.53.1-crosscompile.patch
-	cookie patch $(P_SRCDIR) snes9x-sdl-1.53.1-joystick-support.patch
+	cookie patch $(P_SRCDIR) snes9x-sdl-1.53.1-rework-sdl2.patch
 
 compile:
 	cd sdl && autoreconf -if
-	cd sdl && ./configure --host=$(HOST) --prefix=/usr
+	cd sdl && ./configure --host=$(HOST) --prefix=/usr --disable-zip --enable-neon
 	cd sdl && make -j$(P_NPROCS)
 
 install:

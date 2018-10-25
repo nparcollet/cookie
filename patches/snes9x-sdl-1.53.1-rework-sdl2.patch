@@ -1,0 +1,953 @@
+diff --git a/sdl/configure.ac b/sdl/configure.ac
+index 670ea05..ea73ec5 100644
+--- a/sdl/configure.ac
++++ b/sdl/configure.ac
+@@ -4,7 +4,7 @@ AC_REVISION([$Revision: 1.53 $])
+ 
+ AC_CONFIG_SRCDIR([sdlmain.cpp])
+ 
+-AC_CANONICAL_TARGET
++AC_CANONICAL_HOST
+ 
+ AC_PROG_CC
+ AC_PROG_CXX
+@@ -38,7 +38,7 @@ AC_DEFUN([AC_S9X_COMPILER_FLAG],
+ 				return (argc);
+ 			}
+ 		],
+-		[snes9x_cv_option_$2="yes"], [snes9x_cv_option_$2="no"])
++		[snes9x_cv_option_$2="yes"], [snes9x_cv_option_$2="no"], [snes9x_cv_option_$2="yes"])
+ 	])
+ 
+ 	CXXFLAGS="[$]OLD_CXXFLAGS"
+@@ -154,9 +154,10 @@ AC_ARG_ENABLE([gzip],
+ 	[], [enable_gzip="yes"])
+ 
+ if test "x$enable_gzip" = "xyes"; then
++	PKG_CHECK_MODULES([ZLIB], [zlib])
+ 	if test "x$snes9x_cv_zlib" = "xyes"; then
+-		S9XDEFS="$S9XDEFS -DZLIB"
+-		S9XLIBS="$S9XLIBS -lz"
++		S9XDEFS="$S9XDEFS ${ZLIB_CFLAGS} -DZLIB"
++		S9XLIBS="$S9XLIBS ${ZLIB_LIBS}"
+ 	else
+ 		AC_MSG_WARN([zlib not found. Build without GZIP support.])
+ 		enable_gzip="no"
+@@ -176,7 +177,7 @@ if test "x$enable_zip" = "xyes"; then
+ 	if test "x$snes9x_cv_zlib" = "xyes"; then
+ 		S9XZIP="S9XZIP=1"
+ 		S9XDEFS="$S9XDEFS -DUNZIP_SUPPORT"
+-		if test "x$enable_gzip" = "xno"; then 
++		if test "x$enable_gzip" = "xno"; then
+ 			S9XLIBS="$S9XLIBS -lz"
+ 		fi
+ 	else
+@@ -214,9 +215,10 @@ AC_ARG_ENABLE([screenshot],
+ 	[], [enable_screenshot="yes"])
+ 
+ if test "x$enable_screenshot" = "xyes"; then
++	PKG_CHECK_MODULES([PNG], [libpng])
+ 	if test "x$snes9x_cv_libpng" = "xyes"; then
+-		S9XDEFS="$S9XDEFS -DHAVE_LIBPNG"
+-		S9XLIBS="$S9XLIBS -lpng"
++		S9XDEFS="$S9XDEFS ${PNG_CFLAGS} -DHAVE_LIBPNG"
++		S9XLIBS="$S9XLIBS ${PNG_LIBS}"
+ 	else
+ 		AC_MSG_WARN([libpng not found. Build without screenshot support.])
+ 		enable_screenshot="no"
+@@ -234,16 +236,17 @@ AC_CHECK_FUNC([mkstemp],
+ 
+ AC_CACHE_VAL([snes9x_cv_sdl],
+ [
+-	AC_CHECK_HEADER([SDL/SDL.h],
+-		[AC_CHECK_LIB([SDL], [SDL_Init], [snes9x_cv_sdl="yes"], [snes9x_cv_sdl="no"])],
++	AC_CHECK_HEADER([SDL2/SDL.h],
++		[AC_CHECK_LIB([SDL2], [SDL_Init], [snes9x_cv_sdl="yes"], [snes9x_cv_sdl="no"])],
+ 		[snes9x_cv_sdl="no"])
+ ])
+ 
+ if test "x$snes9x_cv_sdl" = "xyes"; then
+-  	S9XFLGS="$S9XFLGS `sdl-config --cflags`"
+-	S9XLIBS="$S9XLIBS `sdl-config --libs`"
++	PKG_CHECK_MODULES([SDL2], [sdl2])
++  	S9XFLGS="$S9XFLGS ${SDL2_CFLAGS}"
++	S9XLIBS="$S9XLIBS ${SDL2_LIBS}  -lbrcmEGL -lbrcmGLESv2 -lbcm_host -lvchostif -lbcm_host -lvcos -lvchiq_arm"
+ else
+-	AC_MSG_ERROR([SDL is required.])
++	AC_MSG_ERROR([SDL2 is required.])
+ fi
+ 
+ ###
+@@ -277,7 +280,7 @@ AC_CHECK_HEADERS([unistd.h sys/socket.h])
+ 
+ if test "x$snes9x_have_stdint_h" = "x"; then
+ 	AC_MSG_CHECKING([whether the size of pointer is int])
+-	
++
+ 	AC_TRY_RUN(
+ 	[
+ 		int main (void)
+@@ -286,7 +289,7 @@ if test "x$snes9x_have_stdint_h" = "x"; then
+ 		}
+ 	],
+ 	[snes9x_ptr_is_int="yes"], [snes9x_ptr_is_int="no"])
+-	
++
+ 	if test "x$snes9x_ptr_is_int" = "xyes"; then
+ 		AC_MSG_RESULT(yes)
+ 	else
+@@ -312,7 +315,7 @@ AC_DEFUN([AC_S9X_CHECK_SAR],
+ 		typedef int16_t			int16;
+ 		typedef int32_t			int32;
+ 		typedef int64_t			int64;
+-		#else 
++		#else
+ 		typedef signed char		int8;
+ 		typedef signed short	int16;
+ 		typedef signed int		int32;
+@@ -332,7 +335,7 @@ AC_DEFUN([AC_S9X_CHECK_SAR],
+ 			return (i < 0 ? 0 : 1);
+ 		}
+ 	],
+-	[snes9x_sar_$1="yes"], [snes9x_sar_$1="no"])
++	[snes9x_sar_$1="yes"], [snes9x_sar_$1="no"], [snes9x_sar_$1=$GCC])
+ 
+ 	CXXFLAGS="[$]OLD_CXXFLAGS"
+ 
+diff --git a/sdl/sdl_snes9x.h b/sdl/sdl_snes9x.h
+index d8db46b..6f3ee6e 100644
+--- a/sdl/sdl_snes9x.h
++++ b/sdl/sdl_snes9x.h
+@@ -1,10 +1,12 @@
+-#include <SDL/SDL.h>
++#ifndef SDL_SNES9X_H
++#define SDL_SNES9X_H
++
++#include <SDL2/SDL.h>
++
+ #include "port.h"
+ #include "conffile.h"
+ 
+ typedef std::pair<std::string, std::string>	strpair_t;
+ extern ConfigFile::secvec_t	keymaps;
+ 
+-
+-
+-
++#endif // SDL_SNES9X_H
+diff --git a/sdl/sdlaudio.cpp b/sdl/sdlaudio.cpp
+index 826a958..2755187 100644
+--- a/sdl/sdlaudio.cpp
++++ b/sdl/sdlaudio.cpp
+@@ -65,8 +65,7 @@
+ #include "debug.h"
+ #endif
+ 
+-#include <SDL/SDL.h>
+-//#include "sdl_snes9x.h"
++#include <SDL2/SDL.h>
+ 
+ SDL_AudioSpec *audiospec;
+ uint32        sound_buffer_size;
+@@ -109,32 +108,32 @@ bool8 S9xOpenSoundDevice (void)
+ 	SDL_InitSubSystem (SDL_INIT_AUDIO);
+ 
+ 	audiospec = (SDL_AudioSpec *) malloc (sizeof (SDL_AudioSpec));
+-	
++
+ 	audiospec->freq = Settings.SoundPlaybackRate;
+ 	audiospec->channels = Settings.Stereo ? 2 : 1;
+ 	audiospec->format = Settings.SixteenBitSound ? AUDIO_S16SYS : AUDIO_U8;
+ 	audiospec->samples = (sound_buffer_size * audiospec->freq / 1000) >> 1;
+ 	audiospec->callback = sdl_audio_callback;
+-	
++
+ 	printf ("SDL sound driver initializing...\n");
+ 	printf ("    --> (Frequency: %dhz, Latency: %dms)...",
+ 		audiospec->freq,
+ 		(audiospec->samples * 1000 / audiospec->freq) << 1);
+-	
++
+ 	if (SDL_OpenAudio (audiospec, NULL) < 0)
+ 	  {
+ 	    printf ("Failed\n");
+-	    
++
+ 	    free (audiospec);
+ 	    audiospec = NULL;
+-	    
++
+ 	    return FALSE;
+ 	  }
+-	
++
+ 	printf ("OK\n");
+-	
++
+ 	SDL_PauseAudio (0);
+-	
++
+ 	S9xSetSamplesAvailableCallback (samples_available, NULL);
+ #endif
+ 
+diff --git a/sdl/sdlinput.cpp b/sdl/sdlinput.cpp
+index 156d392..b72625f 100644
+--- a/sdl/sdlinput.cpp
++++ b/sdl/sdlinput.cpp
+@@ -110,37 +110,37 @@ bool8 S9xMapInput (const char *n, s9xcommand_t *cmd)
+ 			d = ((n[1] - '0') * 10 + (n[2] - '0')) << 24;
+ 			d |= 0x80000000;
+ 			i = 4;
+-			
++
+ 			if (!strncmp(n + i, "Axis", 4))	// domaemon: joystick axis
+ 			{
+ 				d |= 0x8000; // Axis mode
+ 				i += 4;
+ 			}
+ 			else if (n[i] == 'B') // domaemon: joystick button
+-			{	
++			{
+ 				i++;
+ 			}
+ 			else
+ 			{
+ 				goto unrecog;
+ 			}
+-			
++
+ 			d |= j = strtol(n + i, &c, 10); // Axis or Button id
+ 			if ((c != NULL && *c != '\0') || j > 0x3fff)
+ 				goto unrecog;
+-			
++
+ 			if (d & 0x8000)
+ 				return (S9xMapAxis(d, *cmd, false));
+-			
++
+ 			return (S9xMapButton(d, *cmd, false));
+ 		}
+ 
+ 		case 'K':
+ 		{
+ 			d = 0x00000000;
+-			
++
+ 			for (i = 4; n[i] != '\0' && n[i] != '+'; i++) ;
+-			
++
+ 			if (n[i] == '\0' || i == 4) {
+ 				// domaemon: if no mod keys are found.
+ 				i = 4;
+@@ -152,7 +152,7 @@ bool8 S9xMapInput (const char *n, s9xcommand_t *cmd)
+ 			}
+ 
+ 			string keyname (n + i); // domaemon: SDL_keysym in string format.
+-			
++
+ 			d |= name_sdlkeysym[keyname];
+ 			return (S9xMapButton(d, *cmd, false));
+ 		}
+@@ -164,10 +164,10 @@ bool8 S9xMapInput (const char *n, s9xcommand_t *cmd)
+ 			if (!strncmp(n + 4, "Pointer", 7))
+ 			{
+ 				d |= 0x8000;
+-				
++
+ 				if (n[11] == '\0')
+ 					return (S9xMapPointer(d, *cmd, true));
+-				
++
+ 				i = 11;
+ 			}
+ 			else if (n[4] == 'B')
+@@ -178,18 +178,18 @@ bool8 S9xMapInput (const char *n, s9xcommand_t *cmd)
+ 			{
+ 				goto unrecog;
+ 			}
+-			
++
+ 			d |= j = strtol(n + i, &c, 10);
+-			
++
+ 			if ((c != NULL && *c != '\0') || j > 0x7fff)
+ 				goto unrecog;
+-			
++
+ 			if (d & 0x8000)
+ 				return (S9xMapPointer(d, *cmd, true));
+ 
+ 			return (S9xMapButton(d, *cmd, false));
+ 		}
+-	
++
+ 		default:
+ 			break;
+ 	}
+@@ -246,19 +246,18 @@ void S9xParseInputConfig (ConfigFile &conf, int pass)
+ 	keymaps.clear();
+ 	if (!conf.GetBool("Unix::ClearAllControls", false))
+ 	{
+-		// Using 'Joypad# Axis'
++		// Hardcoded Pad Config
+ 		keymaps.push_back(strpair_t("J00:Axis0",      "Joypad1 Axis Left/Right T=50%"));
+ 		keymaps.push_back(strpair_t("J00:Axis1",      "Joypad1 Axis Up/Down T=50%"));
+-
+-		keymaps.push_back(strpair_t("J00:B0",         "Joypad1 X"));
++		keymaps.push_back(strpair_t("J00:B2",         "Joypad1 X"));
+ 		keymaps.push_back(strpair_t("J00:B1",         "Joypad1 A"));
+-		keymaps.push_back(strpair_t("J00:B2",         "Joypad1 B"));
++		keymaps.push_back(strpair_t("J00:B0",         "Joypad1 B"));
+ 		keymaps.push_back(strpair_t("J00:B3",         "Joypad1 Y"));
++		keymaps.push_back(strpair_t("J00:B4",         "Joypad1 L"));
++		keymaps.push_back(strpair_t("J00:B5",         "Joypad1 R"));
++		keymaps.push_back(strpair_t("J00:B9",         "Joypad1 Select"));
++		keymaps.push_back(strpair_t("J00:B8",        "Joypad1 Start"));
+ 
+-		keymaps.push_back(strpair_t("J00:B6",         "Joypad1 L"));
+-		keymaps.push_back(strpair_t("J00:B7",         "Joypad1 R"));
+-		keymaps.push_back(strpair_t("J00:B8",         "Joypad1 Select"));
+-		keymaps.push_back(strpair_t("J00:B11",        "Joypad1 Start"));
+ 		keymaps.push_back(strpair_t("K00:SDLK_RIGHT",        "Joypad1 Right"));
+ 		keymaps.push_back(strpair_t("K00:SDLK_LEFT",         "Joypad1 Left"));
+ 		keymaps.push_back(strpair_t("K00:SDLK_DOWN",         "Joypad1 Down"));
+@@ -317,7 +316,7 @@ void S9xInitInputDevices (void)
+ 		for (int i = 0; i < num_joysticks; i++)
+ 		{
+ 			joystick[i] = SDL_JoystickOpen (i);
+-			printf ("  %s\n", SDL_JoystickName(i));
++			printf ("  %s\n", SDL_JoystickName(joystick[i]));
+ 			printf ("  %d-axis %d-buttons %d-balls %d-hats \n",
+ 				SDL_JoystickNumAxes(joystick[i]),
+ 				SDL_JoystickNumButtons(joystick[i]),
+@@ -341,7 +340,7 @@ void S9xProcessEvents (bool8 block)
+ 			if (event.key.keysym.sym == SDLK_q)
+ 			{
+ 				quit_state = TRUE;
+-			} 
++			}
+ 			else
+ 			{
+ 				S9xReportButton(event.key.keysym.mod << 16 | // keyboard mod
+@@ -350,14 +349,12 @@ void S9xProcessEvents (bool8 block)
+ 			}
+ 			break;
+ 
+-/***** Joystick starts *****/
+-#if 0
+ 		case SDL_JOYBUTTONDOWN:
+ 		case SDL_JOYBUTTONUP:
+ 			S9xReportButton(0x80000000 | // joystick button
+-					(event.jbutton.which << 24) | // joystick index
+-					event.jbutton.button, // joystick button code
+-					event.type == SDL_JOYBUTTONDOWN); // press or release
++                                        (event.jbutton.which << 24) | // joystick index
++                                        event.jbutton.button, // joystick button code
++                                        event.type == SDL_JOYBUTTONDOWN); // press or release
+ 			break;
+ 
+ 		case SDL_JOYAXISMOTION:
+@@ -366,6 +363,29 @@ void S9xProcessEvents (bool8 block)
+ 				      event.jaxis.axis, // joystick axis
+ 				      event.jaxis.value); // axis value
+ 			break;
++
++ 		case SDL_JOYHATMOTION:
++                        switch (event.jhat.value) {
++                        case SDL_HAT_UP:
++                                printf ("SDL_HAT_UP\n");
++				//SDLK_RIGHT
++                                break;
++                        case SDL_HAT_DOWN:
++                                printf ("SDL_HAT_DOWN\n");
++                                break;
++                        case SDL_HAT_LEFT:
++                                printf ("SDL_HAT_LEFT\n");
++                                break;
++                        case SDL_HAT_RIGHT:
++                                printf ("SDL_HAT_RIGHT\n");
++                                break;
++                        }
++			break;
++
++
++/***** Joystick starts *****/
++#if 0
++
+ #endif
+ /***** Joystick ends *****/
+ 
+@@ -375,7 +395,7 @@ void S9xProcessEvents (bool8 block)
+ 			break;
+ 		}
+ 	}
+-	
++
+ 	if (quit_state == TRUE)
+ 	{
+ 		printf ("Quit Event. Bye.\n");
+@@ -418,7 +438,7 @@ main()
+ 	{
+ 		printf("Unable to initialize SDL: %s\n", SDL_GetError());
+ 	}
+-  
++
+ 	atexit(SDL_Quit);
+ 
+ 	screen = SDL_SetVideoMode(64, 64, 16, 0);
+@@ -431,7 +451,7 @@ main()
+ 
+ 	SDL_JoystickEventState (SDL_ENABLE);
+ 
+-	while (SDL_WaitEvent (&event) != 0) 
++	while (SDL_WaitEvent (&event) != 0)
+ 	{
+ 		switch (event.type) {
+ 		case SDL_KEYDOWN:
+@@ -468,7 +488,7 @@ main()
+ 		}
+ 	}
+ }
+-	
++
+ // domaemon: 2) here we send the keymapping request to the SNES9X
+ bool8 S9xMapDisplayInput (const char *n, s9xcommand_t *cmd)
+ {
+diff --git a/sdl/sdlvideo.cpp b/sdl/sdlvideo.cpp
+index 7e5f159..15b9135 100644
+--- a/sdl/sdlvideo.cpp
++++ b/sdl/sdlvideo.cpp
+@@ -3,7 +3,11 @@
+ 
+   See CREDITS file to find the copyright owners of this file.
+ 
+-  SDL Input/Audio/Video code (many lines of code come from snes9x & drnoksnes)
++  This port is targeting the cookie environment using a pure SDL2 Backend and target
++  raspberry pi boards. It is based on the snes9x-sdl implementation provided by
++  domaemon but as been reworked in to use SDL 2 and to be comptatible with newer
++  versions of snes9x.
++
+   (c) Copyright 2011         Makoto Sugano (makoto.sugano@gmail.com)
+ 
+   Snes9x homepage: http://www.snes9x.com/
+@@ -36,9 +40,6 @@
+ #include <ctype.h>
+ #include <errno.h>
+ #include <string.h>
+-#ifdef HAVE_STRINGS_H
+-#include <strings.h>
+-#endif
+ 
+ #include "snes9x.h"
+ #include "memmap.h"
+@@ -52,333 +53,251 @@
+ 
+ #include "sdl_snes9x.h"
+ 
++//#define USE_BUFFER 0
++
+ struct GUIData
+ {
+-	SDL_Surface             *sdl_screen;
+-	uint8			*snes_buffer;
+-	uint8			*blit_screen;
+-	uint32			blit_screen_pitch;
+-	int			video_mode;
+-        bool8                   fullscreen;
+-};
+-static struct GUIData	GUI;
+-
+-typedef	void (* Blitter) (uint8 *, int, uint8 *, int, int, int);
+-
+-#ifdef __linux
+-// Select seems to be broken in 2.x.x kernels - if a signal interrupts a
+-// select system call with a zero timeout, the select call is restarted but
+-// with an infinite timeout! The call will block until data arrives on the
+-// selected fd(s).
+-//
+-// The workaround is to stop the X library calling select in the first
+-// place! Replace XPending - which polls for data from the X server using
+-// select - with an ioctl call to poll for data and then only call the blocking
+-// XNextEvent if data is waiting.
+-#define SELECT_BROKEN_FOR_SIGNALS
++	SDL_Window *	window;
++	SDL_Renderer *	renderer;
++	SDL_Texture *	texture;
++#ifdef USE_BUFFER
++	uint8 *			buffer;
++#else
++	void *			tbuffer;
++	int tpitch;
+ #endif
+-
+-enum
+-{
+-	VIDEOMODE_BLOCKY = 1,
+-	VIDEOMODE_TV,
+-	VIDEOMODE_SMOOTH,
+-	VIDEOMODE_SUPEREAGLE,
+-	VIDEOMODE_2XSAI,
+-	VIDEOMODE_SUPER2XSAI,
+-	VIDEOMODE_EPX,
+-	VIDEOMODE_HQ2X
+ };
+-
+-static void SetupImage (void);
+-static void TakedownImage (void);
+-static void Repaint (bool8);
++static struct GUIData GUI;
+ 
+ void S9xExtraDisplayUsage (void)
+ {
+-	S9xMessage(S9X_INFO, S9X_USAGE, "-fullscreen                     fullscreen mode (without scaling)");
+-	S9xMessage(S9X_INFO, S9X_USAGE, "");
+-	S9xMessage(S9X_INFO, S9X_USAGE, "-v1                             Video mode: Blocky (default)");
+-	S9xMessage(S9X_INFO, S9X_USAGE, "-v2                             Video mode: TV");
+-	S9xMessage(S9X_INFO, S9X_USAGE, "-v3                             Video mode: Smooth");
+-	S9xMessage(S9X_INFO, S9X_USAGE, "-v4                             Video mode: SuperEagle");
+-	S9xMessage(S9X_INFO, S9X_USAGE, "-v5                             Video mode: 2xSaI");
+-	S9xMessage(S9X_INFO, S9X_USAGE, "-v6                             Video mode: Super2xSaI");
+-	S9xMessage(S9X_INFO, S9X_USAGE, "-v7                             Video mode: EPX");
+-	S9xMessage(S9X_INFO, S9X_USAGE, "-v8                             Video mode: hq2x");
+ 	S9xMessage(S9X_INFO, S9X_USAGE, "");
+ }
+ 
+-void S9xParseDisplayArg (char **argv, int &i, int argc)
++void S9xParseDisplayArg(char **argv, int &i, int argc)
+ {
+-	if (!strncasecmp(argv[i], "-fullscreen", 11))
+-        {
+-                GUI.fullscreen = TRUE;
+-                printf ("Entering fullscreen mode (without scaling).\n");
+-        }
+-        else
+-	if (!strncasecmp(argv[i], "-v", 2))
+-	{
+-		switch (argv[i][2])
+-		{
+-			case '1':	GUI.video_mode = VIDEOMODE_BLOCKY;		break;
+-			case '2':	GUI.video_mode = VIDEOMODE_TV;			break;
+-			case '3':	GUI.video_mode = VIDEOMODE_SMOOTH;		break;
+-			case '4':	GUI.video_mode = VIDEOMODE_SUPEREAGLE;	break;
+-			case '5':	GUI.video_mode = VIDEOMODE_2XSAI;		break;
+-			case '6':	GUI.video_mode = VIDEOMODE_SUPER2XSAI;	break;
+-			case '7':	GUI.video_mode = VIDEOMODE_EPX;			break;
+-			case '8':	GUI.video_mode = VIDEOMODE_HQ2X;		break;
+-		}
+-	}
+-	else
+-		S9xUsage();
++	S9xUsage();
+ }
+ 
+ const char * S9xParseDisplayConfig (ConfigFile &conf, int pass)
+ {
+-	if (pass != 1)
+-		return ("Unix/SDL");
+-
+-	if (conf.Exists("Unix/SDL::VideoMode"))
+-	{
+-		GUI.video_mode = conf.GetUInt("Unix/SDL::VideoMode", VIDEOMODE_BLOCKY);
+-		if (GUI.video_mode < 1 || GUI.video_mode > 8)
+-			GUI.video_mode = VIDEOMODE_BLOCKY;
+-	}
+-	else
+-		GUI.video_mode = VIDEOMODE_BLOCKY;
+-
+-	return ("Unix/SDL");
+-}
+-
+-static void FatalError (const char *str)
+-{
+-	fprintf(stderr, "%s\n", str);
+-	S9xExit();
++	return ("Linux/SDL2");
+ }
+ 
+ void S9xInitDisplay (int argc, char **argv)
+ {
+-	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+-	{
+-		printf("Unable to initialize SDL: %s\n", SDL_GetError());
++	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
++		SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
++		S9xExit();
+ 	}
+-  
++
+ 	atexit(SDL_Quit);
+-	
+-	/*
+-	 * domaemon
+-	 *
+-	 * we just go along with RGB565 for now, nothing else..
+-	 */
+-	
++
+ 	S9xSetRenderPixelFormat(RGB565);
+-	
+ 	S9xBlitFilterInit();
+ 	S9xBlit2xSaIFilterInit();
+ 	S9xBlitHQ2xFilterInit();
+ 
+-
+-	/*
+-	 * domaemon
+-	 *
+-	 * FIXME: The secreen size should be flexible
+-	 * FIXME: Check if the SDL screen is really in RGB565 mode. screen->fmt	
+-	 */	
+-        if (GUI.fullscreen == TRUE)
+-        {
+-                GUI.sdl_screen = SDL_SetVideoMode(0, 0, 16, SDL_FULLSCREEN);
+-        } else {
+-                GUI.sdl_screen = SDL_SetVideoMode(SNES_WIDTH * 2, SNES_HEIGHT_EXTENDED * 2, 16, 0);
+-        }
+-
+-        if (GUI.sdl_screen == NULL)
+-	{
+-		printf("Unable to set video mode: %s\n", SDL_GetError());
+-		exit(1);
+-        }
+-
+-	/*
+-	 * domaemon
+-	 *
+-	 * buffer allocation, quite important
+-	 */
+-	SetupImage();
+-}
+-
+-void S9xDeinitDisplay (void)
+-{
+-	TakedownImage();
+-
+-	SDL_Quit();
+-
+-	S9xBlitFilterDeinit();
+-	S9xBlit2xSaIFilterDeinit();
+-	S9xBlitHQ2xFilterDeinit();
+-}
+-
+-static void TakedownImage (void)
+-{
+-	if (GUI.snes_buffer)
+-	{
+-		free(GUI.snes_buffer);
+-		GUI.snes_buffer = NULL;
++	GUI.window = SDL_CreateWindow("Snes9x-SDL2", 0, 0, 0, 0, SDL_WINDOW_FULLSCREEN|SDL_WINDOW_OPENGL);
++	if (GUI.window == nullptr) {
++		SDL_Log("Could not create window: %s", SDL_GetError());
++		S9xExit();
+ 	}
+ 
+-	S9xGraphicsDeinit();
+-}
+-
+-static void SetupImage (void)
+-{
+-	TakedownImage();
+-
+-	// domaemon: The whole unix code basically assumes output=(original * 2);
+-	// This way the code can handle the SNES filters, which does the 2X.
+-	GFX.Pitch = SNES_WIDTH * 2 * 2;
+-	GUI.snes_buffer = (uint8 *) calloc(GFX.Pitch * ((SNES_HEIGHT_EXTENDED + 4) * 2), 1);
+-	if (!GUI.snes_buffer)
+-		FatalError("Failed to allocate GUI.snes_buffer.");
+-
+-	// domaemon: Add 2 lines before drawing.
+-	GFX.Screen = (uint16 *) (GUI.snes_buffer + (GFX.Pitch * 2 * 2));
+-
+-	if (GUI.fullscreen == TRUE)
+-	{
+-		int offset_height_pix;
+-		int offset_width_pix;
+-		int offset_byte;
+-
++	GUI.renderer = SDL_CreateRenderer(GUI.window, -1, SDL_RENDERER_ACCELERATED);
++	if (GUI.renderer == nullptr) {
++		SDL_Log("Could not create renderer: %s", SDL_GetError());
++		S9xExit();
++	}
+ 
+-		offset_height_pix = (GUI.sdl_screen->h - (SNES_HEIGHT * 2)) / 2;
+-		offset_width_pix = (GUI.sdl_screen->w - (SNES_WIDTH * 2)) / 2;
+-		
+-		offset_byte = (GUI.sdl_screen->w * offset_height_pix + offset_width_pix) * 2;
++	// To Respect AR, we need to rely on these.
++	if (SDL_RenderSetLogicalSize(GUI.renderer, IMAGE_WIDTH, IMAGE_HEIGHT) == -1) {
++		SDL_Log("Unable to set logical size: %s", SDL_GetError());
++		S9xExit();
++	}
+ 
+-		GUI.blit_screen       = (uint8 *) GUI.sdl_screen->pixels + offset_byte;
+-		GUI.blit_screen_pitch = GUI.sdl_screen->w * 2;
++#ifdef USE_BUFFER
++	// Use an intermediate buffer. This allow for flexibility on how SNES handle the generation of
++	// data, at the cost of having an additionnal buffer to copy around. The pipline is defined as
++	// follow: SNES_BUFFER -> SDL_TEXTURE -> RENDERER (BUFFER != TEXTURE)
++	if (GUI.buffer) {
++		SDL_Log("Buffer is already initialized");
++	} else {
++		GUI.buffer = (uint8 *) malloc(IMAGE_WIDTH * IMAGE_HEIGHT * 2); // 16Bits per Pixel
++		GFX.Pitch  = IMAGE_WIDTH * 2;
++		GFX.Screen = (uint16*)GUI.buffer;
++	}
++	if (!GUI.buffer) {
++		SDL_Log("Unable to initialize Buffer");
++		S9xExit();
++	}
++	if (GUI.texture) {
++		SDL_Log("Texture is already initialized");
++	} else {
++		GUI.texture = SDL_CreateTexture(GUI.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, IMAGE_WIDTH, IMAGE_HEIGHT);
+ 	}
+-	else 
+-	{
+-		GUI.blit_screen       = (uint8 *) GUI.sdl_screen->pixels;
+-		GUI.blit_screen_pitch = SNES_WIDTH * 2 * 2; // window size =(*2); 2 byte pir pixel =(*2)
++#else
++	// Do not use and intermediate buffer. This is less flexible and only work because we know what
++	// format is used internally by SNES. However it avoid a costly buffer copy. The pipeline is
++	// Greatly simplified: SNES_BUFFER -> RENDERER (BUFFER = TEXTURE = S9xEndScreenRefresh < 10ms)
++	// TODO: This does not always work, we need a way to determine the size of the buffer used
++	//       dynamically because sometime it change (ex: Secret Of Mana home screen)
++	if (GUI.texture) {
++		SDL_Log("Texture is already initialized");
++	} else {
++		GUI.texture = SDL_CreateTexture(GUI.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 256, 239);
++	}
++	if (SDL_LockTexture(GUI.texture, nullptr, &GUI.tbuffer, &GUI.tpitch) == -1) {
++		SDL_Log("Cant lock texture: %s", SDL_GetError());
++		return;
++	}
++	GFX.Pitch  = GUI.tpitch;
++	GFX.Screen = (uint16*)(GUI.tbuffer + 8 * GUI.tpitch); // Not sure why this line skip is needed ...
++#endif
++
++	if (GUI.texture == nullptr) {
++		SDL_Log("Could not initialize Texture: %s", SDL_GetError());
++		S9xExit();
+ 	}
+ 
+ 	S9xGraphicsInit();
+ }
+ 
+-void S9xPutImage (int width, int height)
++void S9xDeinitDisplay (void)
+ {
+-	static int	prevWidth = 0, prevHeight = 0;
+-	int			copyWidth, copyHeight;
+-	Blitter		blitFn = NULL;
+-
+-	if (GUI.video_mode == VIDEOMODE_BLOCKY || GUI.video_mode == VIDEOMODE_TV || GUI.video_mode == VIDEOMODE_SMOOTH)
+-		if ((width <= SNES_WIDTH) && ((prevWidth != width) || (prevHeight != height)))
+-			S9xBlitClearDelta();
+-
+-	if (width <= SNES_WIDTH)
+-	{
+-		if (height > SNES_HEIGHT_EXTENDED)
+-		{
+-			copyWidth  = width * 2;
+-			copyHeight = height;
+-			blitFn = S9xBlitPixSimple2x1;
+-		}
+-		else
+-		{
+-			copyWidth  = width  * 2;
+-			copyHeight = height * 2;
+-
+-			switch (GUI.video_mode)
+-			{
+-				case VIDEOMODE_BLOCKY:		blitFn = S9xBlitPixSimple2x2;		break;
+-				case VIDEOMODE_TV:			blitFn = S9xBlitPixTV2x2;			break;
+-				case VIDEOMODE_SMOOTH:		blitFn = S9xBlitPixSmooth2x2;		break;
+-				case VIDEOMODE_SUPEREAGLE:	blitFn = S9xBlitPixSuperEagle16;	break;
+-				case VIDEOMODE_2XSAI:		blitFn = S9xBlitPix2xSaI16;			break;
+-				case VIDEOMODE_SUPER2XSAI:	blitFn = S9xBlitPixSuper2xSaI16;	break;
+-				case VIDEOMODE_EPX:			blitFn = S9xBlitPixEPX16;			break;
+-				case VIDEOMODE_HQ2X:		blitFn = S9xBlitPixHQ2x16;			break;
+-			}
+-		}
+-	}
+-	else
+-	if (height <= SNES_HEIGHT_EXTENDED)
+-	{
+-		copyWidth  = width;
+-		copyHeight = height * 2;
+-
+-		switch (GUI.video_mode)
+-		{
+-			default:					blitFn = S9xBlitPixSimple1x2;	break;
+-			case VIDEOMODE_TV:			blitFn = S9xBlitPixTV1x2;		break;
+-		}
+-	}
+-	else
+-	{
+-		copyWidth  = width;
+-		copyHeight = height;
+-		blitFn = S9xBlitPixSimple1x1;
++	S9xGraphicsDeinit();
++
++	if (GUI.texture) {
++		SDL_DestroyTexture(GUI.texture);
+ 	}
+ 
++#ifdef USE_BUFFER
++	if (GUI.buffer) {
++		free(GUI.buffer);
++	}
++	GUI.buffer = nullptr;
++#endif
+ 
+-	// domaemon: this is place where the rendering buffer size should be changed?
+-	blitFn((uint8 *) GFX.Screen, GFX.Pitch, GUI.blit_screen, GUI.blit_screen_pitch, width, height);
++	if (GUI.renderer) {
++		SDL_DestroyRenderer(GUI.renderer);
++	}
+ 
+-	// domaemon: does the height change on the fly?
+-	if (height < prevHeight)
+-	{
+-		int	p = GUI.blit_screen_pitch >> 2;
+-		for (int y = SNES_HEIGHT * 2; y < SNES_HEIGHT_EXTENDED * 2; y++)
+-		{
+-			uint32	*d = (uint32 *) (GUI.blit_screen + y * GUI.blit_screen_pitch);
+-			for (int x = 0; x < p; x++)
+-				*d++ = 0;
+-		}
++	if (GUI.window) {
++		SDL_DestroyWindow(GUI.window);
+ 	}
+ 
+-	Repaint(TRUE);
++	SDL_Quit();
+ 
+-	prevWidth  = width;
+-	prevHeight = height;
+-}
++	S9xBlitFilterDeinit();
++	S9xBlit2xSaIFilterDeinit();
++	S9xBlitHQ2xFilterDeinit();
+ 
+-static void Repaint (bool8 isFrameBoundry)
+-{
+-        SDL_Flip(GUI.sdl_screen);
++	GUI.texture     = nullptr;
++	GUI.renderer    = nullptr;
++	GUI.window      = nullptr;
+ }
+ 
+ void S9xMessage (int type, int number, const char *message)
+ {
+ 	const int	max = 36 * 3;
+ 	static char	buffer[max + 1];
+-
+ 	fprintf(stdout, "%s\n", message);
+ 	strncpy(buffer, message, max + 1);
+ 	buffer[max] = 0;
+ 	S9xSetInfoString(buffer);
+ }
+ 
+-const char * S9xStringInput (const char *message)
++const char * S9xStringInput(const char * message)
+ {
+ 	static char	buffer[256];
+-
+ 	printf("%s: ", message);
+ 	fflush(stdout);
+-
+-	if (fgets(buffer, sizeof(buffer) - 2, stdin))
++	if (fgets(buffer, sizeof(buffer) - 2, stdin)) {
+ 		return (buffer);
+-
++	}
+ 	return (NULL);
+ }
+ 
+-void S9xSetTitle (const char *string)
++void S9xSetTitle (const char * title)
+ {
+-	SDL_WM_SetCaption(string, string);
++	SDL_SetWindowTitle(GUI.window, title);
+ }
+ 
+-void S9xSetPalette (void)
++void S9xSetPalette(void)
+ {
+ 	return;
+ }
++
++#ifdef USE_BUFFER
++
++// In this mode we provide a buffer to SNES that is fill with screen data. When Put image is called
++// we blit this buffer into a surface using one of the S9XBlit functions. Note we do not use an
++// intermediate buffer and udpate the texture with it, we update the texture directly. This is
++// possible because the texture format is known and comptatible with SNES data.
++
++void S9xPutImage(int width, int height)
++{
++	static int prevWidth = 0;
++	static int prevHeight = 0;
++	void * pixels;
++	int pitch;
++	if ((width <= SNES_WIDTH) && ((prevWidth != width) || (prevHeight != height))) {
++		SDL_Log("Render:%dx%d, Texture:%dx%d ", width, height, IMAGE_WIDTH, IMAGE_HEIGHT);
++		S9xBlitClearDelta();
++	}
++	if (SDL_LockTexture(GUI.texture, nullptr, &pixels, &pitch) == -1) {
++		SDL_Log("Cant lock texture: %s", SDL_GetError());
++		return;
++	}
++	if (width <= SNES_WIDTH && height > SNES_HEIGHT_EXTENDED) {
++		S9xBlitPixSimple2x1((uint8*)GFX.Screen, GFX.Pitch, (uint8*)pixels, GFX.Pitch, width, height);
++	} else if (width <= SNES_WIDTH) {
++		S9xBlitPixSimple2x2((uint8*)GFX.Screen, GFX.Pitch, (uint8*)pixels, GFX.Pitch, width, height);
++	} else if (height <= SNES_HEIGHT_EXTENDED) {
++		S9xBlitPixSimple1x2((uint8*)GFX.Screen, GFX.Pitch, (uint8*)pixels, GFX.Pitch, width, height);
++	} else {
++		S9xBlitPixSimple1x1((uint8*)GFX.Screen, GFX.Pitch, (uint8*)pixels, GFX.Pitch, width, height);
++	}
++	if (height < prevHeight) {
++		int  p = SNES_WIDTH >> 2;
++		for (int y = SNES_HEIGHT * 2; y < SNES_HEIGHT_EXTENDED * 2; y++) {
++			uint32  * d = (uint32 *) ((uint32 *)pixels + y * GFX.Pitch);
++			for (int x = 0; x < p; x++) {
++				*d++ = 0;
++			}
++		}
++	}
++	SDL_UnlockTexture(GUI.texture);
++	SDL_RenderClear(GUI.renderer);
++	SDL_RenderCopy(GUI.renderer, GUI.texture, nullptr, nullptr);
++	SDL_RenderPresent(GUI.renderer);
++	prevWidth  = width;
++	prevHeight = height;
++}
++
++#else
++
++// In this mode we dont use a buffer at all. Instead when initializing we give SNES the buffer that
++// directly map a Texture object. This can work because we know the format being used by SNES when
++// rendering the buffer. As such, we dont need the extra copy with one of the SNES blit functions.
++
++void S9xPutImage(int width, int height)
++{
++	static int prevWidth = 0;
++	static int prevHeight = 0;
++	void * pixels;
++	int pitch;
++	if ((width <= SNES_WIDTH) && ((prevWidth != width) || (prevHeight != height))) {
++		SDL_Log("Render:%dx%d, Texture:%dx%d ", width, height, IMAGE_WIDTH, IMAGE_HEIGHT);
++		S9xBlitClearDelta();
++	}
++	SDL_UnlockTexture(GUI.texture);
++	SDL_RenderClear(GUI.renderer);
++	SDL_RenderCopy(GUI.renderer, GUI.texture, nullptr, nullptr);
++	SDL_RenderPresent(GUI.renderer);
++	SDL_LockTexture(GUI.texture, nullptr, &GUI.tbuffer, &GUI.tpitch);
++	prevWidth  = width;
++	prevHeight = height;
++}
++
++#endif
