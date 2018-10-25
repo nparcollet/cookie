@@ -1,13 +1,12 @@
-P_NAME			= rpi3b-firmware
+P_NAME			= firmware
 P_VERSION		= 4.14.70.1
-P_DESCRIPTION	= Proprietary Binaries for Raspberry PI (Release 1.20180919.1)
+P_DESCRIPTION	= Proprietary Binaries for Raspberry PI board, does not include the kernel
 P_URL   		= https://www.raspberrypi.org/documentation/firmware
 P_LICENCES		= Broadcom
 P_ARCHS			= arm
 P_ARCHIVE       = 1.20180919.tar.gz
 P_SRCDIR		= firmware-1.20180919
 P_DEPENDS		=
-P_PROVIDES		= firmware
 
 fetch:
 	cookie fetch https://github.com/raspberrypi/firmware/archive/$(P_ARCHIVE)
