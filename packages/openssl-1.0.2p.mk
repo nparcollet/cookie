@@ -1,5 +1,5 @@
 P_NAME			= openssl
-P_VERSION		= 1.0.2
+P_VERSION		= 1.0.2p
 P_DESCRIPTION	= Source toolkit implementing the Transport Layer Security (TLS) protocols (including SSLv3)
 P_GITURL		= https://github.com/openssl/openssl.git
 P_GITREV		= e71ebf275da66dfd601c92e0e80a35114c32f6f8
