@@ -27,9 +27,9 @@ class packages:
 		def selector(self):
 			return '%s-%s' % (self.name(), self.version())
 
-		def attach(self, target):
-			self._target	= cookie.targets.get(target)
-			self._profile	= cookie.profiles.get(self._target.profile())
+		def attach(self, name):
+			self._target	= cookie.targets.get(name)
+			self._profile	= cookie.profiles.get(self._target.profile(), self._target.board())
 			self._env		= self._profile.buildenv()
 			self._arch		= self._profile.arch()
 

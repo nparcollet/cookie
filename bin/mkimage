@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 echo "Sourcing Profile information"
-source /opt/cookie/profiles/${COOKIE_PROFILE}/build.env
+source /opt/cookie/profiles/${COOKIE_PROFILE}/${COOKIE_BOARD}.env
 
 echo "Defining locales"
 IMG_REDIST=/opt/target/redist

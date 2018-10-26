@@ -63,8 +63,8 @@ class cookie_cmd(cookie.command):
 			else:
 				cookie.logger.info('Profiles List:')
 				for pname in cookie.profiles.list():
-					profile = cookie.profiles.get(pname)
-					cookie.logger.debug('%s (%s)' % (profile.name(), profile.arch()))
+					boards  = cookie.profiles.boards(pname)
+					cookie.logger.debug('%s [%s]' % (pname, ','.join(boards)))
 		except Exception, e:
 			cookie.logger.abort('%s profiles failed: %s' (self.name(), e.message))
 
@@ -90,12 +90,12 @@ class cookie_cmd(cookie.command):
 		target, otherwise it is defined as profile_name-current_date.
 		"""
 		try:
-			if len(args) not in [1, 2]:
-				cookie.logger.abort('syntax: %s create profile [target_name]' % (self.name()))
+			if len(args) not in [2, 3]:
+				cookie.logger.abort('syntax: %s create profile board [target_name]' % (self.name()))
 			elif os.getenv('COOKIE_ENV') == '1':
 				cookie.logger.abort('you cannot create a create from the build environment')
 			else:
-				cookie.targets.create(args[0], args[1] if len(args) == 2 else None)
+				cookie.targets.create(args[0], args[1], args[2] if len(args) == 3 else None)
 		except Exception, e:
 			cookie.logger.abort('%s create failed: %s' % (self.name(), str(e)))
 

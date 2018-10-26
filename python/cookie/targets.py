@@ -23,6 +23,9 @@ class targets():
 		def profile(self):
 			return str(self._infos['profile'])
 
+		def board(self):
+			return str(self._infos['board'])
+
 		def volume(self):
 			return str(self._infos['volume'])
 
@@ -30,7 +33,7 @@ class targets():
 			return str(self._infos['created_on'])
 
 		def arch(self):
-			return cookie.profiles.get(self.name(), self.app()).arch()
+			return cookie.profiles.get(self.name(), self.board()).arch()
 
 		def packages(self):
 			try:
@@ -81,7 +84,7 @@ class targets():
 
 			# Build list of actions
 			tpkg   = self.packages()
-			ppkg   = cookie.profiles.get(self.profile()).packages()
+			ppkg   = cookie.profiles.get(self.profile(), self.board()).packages()
 			remove = [ x for x in tpkg if x not in ppkg ]
 			keep   = [ x for x in tpkg if x in ppkg ]
 			add    = [ x for x in ppkg if x not in tpkg ]
@@ -191,7 +194,7 @@ class targets():
 			json.dump(mapping, open('%s/mapping.json' % cookie.layout.cache(), 'w'))
 
 	@classmethod
-	def create(self, pname, name = None):
+	def create(self, pname, pboard, name = None):
 		now  = str(datetime.date.today())
 		name = '%s-%s' % (pname, now) if name == None else name
 		cookie.logger.info('creating target %s' % name)
@@ -199,6 +202,8 @@ class targets():
 			raise Exception('target %s already exists' % name)
 		elif pname not in cookie.profiles.list():
 			raise Exception('unknown profile %s' % pname)
+		elif pboard not in cookie.profiles.boards(pname):
+			raise Exception('unknown board %s for profile %s', (pboard, pname))
 		else:
 
 			cookie.logger.debug('creating target volume')
@@ -211,12 +216,13 @@ class targets():
 			mapping['targets'][name] = {
 				'created_on'	: now,
 				'profile'		: pname,
+				'board'			: pboard,
 				'volume'		: volume[0]
 			}
 			json.dump(mapping, open(mapping_file, 'w'))
 
 			try:
-				profile      = cookie.profiles.get(pname)
+				profile      = cookie.profiles.get(pname, pboard)
 				profile_sha1 = cookie.sha1.compute('%s/crosstool-ng.config' % profile.path())
 				built_sha1	 = file('%s/toolchains/%s.sha1' % (cookie.layout.cache(), pname)).read().strip()
 				if profile_sha1 == built_sha1:
