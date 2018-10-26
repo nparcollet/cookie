@@ -20,3 +20,25 @@ class sha1:
 				chunk = handle.read(1024)
 				h.update(chunk)
 		return str(h.hexdigest())
+
+
+	@classmethod
+	def load(self, path):
+		"""
+		Load the sha1 value stored in the file at the given path
+		"""
+		sha1 = None
+		if os.path.isfile(path):
+			with open(path, 'r') as handle:
+				sha1 = handle.read().strip()
+				handle.close()
+		return sha1
+
+	@classmethod
+	def save(self, sha1, path):
+		"""
+		Save the sha1 value in the file at the given path
+		"""
+		with open(path, 'w') as handle:
+			print >> handle, sha1
+			handle.close()

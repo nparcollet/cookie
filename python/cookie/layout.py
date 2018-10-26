@@ -31,8 +31,11 @@ class layout:
 		return '%s/packages' % self.root()
 
 	@classmethod
+	def toolchains(self):
+		return '%s/toolchains' % self.root()
+
+	@classmethod
 	def cache(self):
-		# HOME: expanduser("~")
 		return '%s/cache' % self.root()
 
 	@classmethod

@@ -32,6 +32,9 @@ class profiles:
 		def host(self):
 			return self.buildenv()['HOST']
 
+		def toolchain(self):
+			return self.buildenv()['TOOLCHAIN']
+
 		def packages(self):
 			list = []
 			path = '%s/packages.conf' % (self._path)

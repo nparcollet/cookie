@@ -222,16 +222,28 @@ class targets():
 			json.dump(mapping, open(mapping_file, 'w'))
 
 			try:
-				profile      = cookie.profiles.get(pname, pboard)
-				profile_sha1 = cookie.sha1.compute('%s/crosstool-ng.config' % profile.path())
-				built_sha1	 = file('%s/toolchains/%s.sha1' % (cookie.layout.cache(), pname)).read().strip()
-				if profile_sha1 == built_sha1:
+				profile     = cookie.profiles.get(pname, pboard)
+				source_file = '%s/%s.config' % (cookie.layout.toolchains(), profile.toolchain())
+				source_sha1 = cookie.sha1.compute(source_file)
+				target_path = '%s/toolchains' % cookie.layout.cache()
+				target_file = '%s/%s.sha1' % (target_path, profile.toolchain())
+				target_sha1	= cookie.sha1.load(target_file);
+				cookie.logger.debug('toolchain cache directory is %s' % target_path)
+				cookie.logger.debug('profile toolchain sha1 is: %s' % source_sha1)
+				cookie.logger.debug('prebuilt toolchain sha1 is: %s' % target_sha1)
+				if not os.path.isdir(target_path):
+					cookie.logger.debug('creating missing cache directory')
+					os.makedirs(target_path)
+				if source_sha1 == target_sha1:
 					cookie.logger.debug('reusing packaged toolchain')
-					cookie.docker.run('tar xJf /opt/cookie/cache/toolchains/%s.tar.xz -C /opt/target' % pname)
+					cookie.docker.run('tar -C /opt/target -xJf /opt/cookie/cache/toolchains/%s.tar.xz' % profile.toolchain())
 				else:
 					cookie.logger.debug('compiling the profile toolchain')
-					raise Exception('target toolchain compilation not implemented')
-					#cookie.sha1.save('%s/crosstool-ng.config' % profile.path(), '%s/toolchains/%s.sha1' % (cookie.layout.cache(), profile))
+					cookie.docker.run('cp /opt/cookie/toolchains/%s.config /opt/target/.config' % profile.toolchain())
+					cookie.docker.run('ct-ng -C /opt/target build')
+					cookie.docker.run('tar -C /opt/target -cJf /opt/cookie/cache/toolchains/%s.tar.xz toolchain' % profile.toolchain())
+					cookie.docker.run('rm -rf /opt/target/.build /opt/target/build.log /opt/target/.config')
+					cookie.sha1.save(source_sha1, target_file)
 			except Exception, e:
 				self.destroy(name)
 				raise e
