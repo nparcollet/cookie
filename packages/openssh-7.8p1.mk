@@ -1,5 +1,5 @@
 P_NAME			= openssh
-P_VERSION		= 7.8
+P_VERSION		= 7.8p1
 P_DESCRIPTION	= OpenSSH is a 100% complete SSH protocol 2.0 implementation and includes sftp client and server support.
 P_URL			= https://ftp.fr.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-7.8p1.tar.gz
 P_ARCHIVE		= openssh-7.8p1.tar.gz
