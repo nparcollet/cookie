@@ -4,6 +4,7 @@ import os
 import shutil
 import re
 import cookie
+import json
 
 class profiles:
 
@@ -12,7 +13,7 @@ class profiles:
 		def __init__(self, name, board):
 			self._name  = name
 			self._board = board
-			self._path  = '%s/%s' % (cookie.layout.profiles(), name)
+			self._infos = json.load(open('%s/%s/profile.conf' % (cookie.layout.profiles(), name)))
 
 		def name(self):
 			return self._name
@@ -20,24 +21,18 @@ class profiles:
 		def board(self):
 			return self._board
 
-		def path(self):
-			return self._path
-
-		def buildenv(self):
-			return  { line[0:line.find('=')].strip(): line[line.find('=')+1:].strip() for line in tuple(open('%s/%s.env' % (self._path, self._board), 'r')) if len(line.strip()) > 0 and line.strip()[0] != '#' and line.find('=') > 0}
-
-		def arch(self):
-			return self.buildenv()['ARCH']
-
-		def host(self):
-			return self.buildenv()['HOST']
+		def image(self, field):
+			return self._infos['image'][field]
 
 		def toolchain(self):
-			return self.buildenv()['TOOLCHAIN']
+			return self._infos['boards'][self._board]["toolchain"]
+
+		def arch(self):
+			return self._infos['boards'][self._board]["arch"]
 
 		def packages(self):
 			list = []
-			path = '%s/packages.conf' % (self._path)
+			path = '%s/%s/packages.conf' % (cookie.layout.profiles(), self._name)
 			with open(path, 'r') as handle:
 				for l in handle.readlines():
 					selector = re.split('[\t ]+', l)[0].strip()
@@ -47,12 +42,8 @@ class profiles:
 
 	@classmethod
 	def boards(self, name):
-		result = []
-		data = open('%s/%s/boards.conf' % (cookie.layout.profiles(), name)).read().split()
-		for line in data:
-			if (line != '' and line[0] != '#'):
-				result.append(line.strip());
-		return result;
+		data = json.load(open('%s/%s/profile.conf' % (cookie.layout.profiles(), name)))
+		return [ k for k, v in data['boards'].items() ]
 
 	@classmethod
 	def list(self):

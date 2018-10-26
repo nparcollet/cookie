@@ -29,6 +29,6 @@ PATH=$PATH:/opt/target/toolchain/bin
 PATH=$PATH:$COOKIE/bin
 export PATH
 
-# Source Custom Environment Information
-[ -d /root/profile.d ] && for e in $(ls /root/profile.d/*.env); do echo "Sourcing ${e}"; . ${e}; done
+# Source Build Environment Variable if it is defined
+[[ -v COOKIE_TOOLCHAIN ]] && . /opt/cookie/toolchains/${COOKIE_TOOLCHAIN}.env 
 

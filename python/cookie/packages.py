@@ -22,7 +22,6 @@ class packages:
 			self._provides      = [ o.strip() for o in self._meta['PROVIDES'].split() ] if 'PROVIDES'    in self._meta else []
 			self._target		= None
 			self._profile		= None
-			self._env			= { 'ARCH':'amd64' }
 
 		def selector(self):
 			return '%s-%s' % (self.name(), self.version())
@@ -30,7 +29,6 @@ class packages:
 		def attach(self, name):
 			self._target	= cookie.targets.get(name)
 			self._profile	= cookie.profiles.get(self._target.profile(), self._target.board())
-			self._env		= self._profile.buildenv()
 			self._arch		= self._profile.arch()
 
 		def provides(self):
@@ -97,14 +95,16 @@ class packages:
 			else:
 				if not os.path.isdir(self.workdir()): os.makedirs(self.workdir())
 				srcdir = '%s/%s' % (self.workdir(), self._meta['SRCDIR']) if 'SRCDIR' in self._meta else '%s/srcdir' % self.workdir()
+				envfile = '%s/%s.env' % (cookie.layout.toolchains(), self._profile.toolchain())
 				s = cookie.shell()
 				s.loadenv()
-				s.addenv(self._env)
-				s.setenv('P_WORKDIR', self.workdir())
-				s.setenv('P_DESTDIR', self.destdir())
-				s.setenv('P_SYSROOT', self.rootfs())
+				s.setenv('P_WORKDIR',   self.workdir())
+				s.setenv('P_DESTDIR',   self.destdir())
+				s.setenv('P_SYSROOT',   self.rootfs())
+				s.setenv('P_TOOLCHAIN', self._profile.toolchain())
+				s.setenv('P_ARCH',      self._profile.arch())
 				s.setenv('P_NPROCS',  '4') # TODO: Get this programmatically ...
-				s.run('make -C %s -f %s %s' % (srcdir if os.path.isdir(srcdir) else self.workdir(), self.makefile(), rule))
+				s.run('. %s && make -C %s -f %s %s' % (envfile, srcdir if os.path.isdir(srcdir) else self.workdir(), self.makefile(), rule))
 
 		def clean(self):
 			cookie.logger.info('cleaning package workdir')

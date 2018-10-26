@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
-echo "Sourcing Profile information"
-source /opt/cookie/profiles/${COOKIE_PROFILE}/${COOKIE_BOARD}.env
+echo "Checking args"
+[ $1 > 0 ] || { echo "Syntax: $0 total_size boot_size (missing total size)"; exit 1; }
+[ $2 > 0 ] || { echo "Syntax: $0 total_size boot_size (missing boot size)"; exit 1; }
 
 echo "Defining locales"
 IMG_REDIST=/opt/target/redist
-IMG_FILE=${COOKIE}/cache/images/${COOKIE_PROFILE}.img
-IMG_TOTAL_SIZE=${IMAGE_TOTAL_SIZE}
-IMG_BOOT_SIZE=${IMAGE_BOOT_SIZE}
+IMG_FILE=${COOKIE}/cache/images/${COOKIE_PROFILE}-${COOKIE_BOARD}.img
+IMG_TOTAL_SIZE=${1}
+IMG_BOOT_SIZE=${2}
 IMG_ROOTFS_SIZE=$((${IMG_TOTAL_SIZE}-${IMG_BOOT_SIZE}))
 IMG_LOOP_DEVICE=/dev/loop0
 

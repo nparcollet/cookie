@@ -17,6 +17,6 @@ compile:
 
 install:
 	mkdir -p $(P_DESTDIR)
-	cp -a /opt/target/toolchain/$(TOOLCHAIN)/sysroot/* $(P_DESTDIR)/
-	cp -a /opt/target/toolchain/$(TOOLCHAIN)/debug-root/usr/bin/*  $(P_DESTDIR)/usr/bin/
-	cp -a /opt/target/toolchain/$(TOOLCHAIN)/debug-root/usr/lib/*  $(P_DESTDIR)/usr/lib/
+	cp -a /opt/target/toolchain/$(P_TOOLCHAIN)/sysroot/* $(P_DESTDIR)/
+	cp -a /opt/target/toolchain/$(P_TOOLCHAIN)/debug-root/usr/bin/*  $(P_DESTDIR)/usr/bin/
+	cp -a /opt/target/toolchain/$(P_TOOLCHAIN)/debug-root/usr/lib/*  $(P_DESTDIR)/usr/lib/

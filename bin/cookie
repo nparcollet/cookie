@@ -201,6 +201,23 @@ class cookie_cmd(cookie.command):
 		except Exception, e:
 			cookie.logger.abort('%s merge failed: %s' % (self.name(), str(e)))
 
+	def do_mkimage(self, args):
+		"""
+		Create a final image for the current target. This will read the image information from the
+		profile configuration then invoke the mkimage command accordingly. This command works both
+		from the host system and from within the cookie shell, but will always operate within the
+		build environment.
+		"""
+		try:
+			if len(args) != 0:
+				cookie.logger.abort('syntax: %s mkimage' % (self.name()))
+			elif os.getenv('COOKIE_ENV') != '1':
+				cookie.docker.run('cookie mkimage')
+			else:
+				cookie.targets.get(cookie.targets.current()).mkimage()
+		except Exception, e:
+			cookie.logger.abort('%s remove failed: %s' % (self.name(), str(e)))
+
 	def do_search(self, args):
 		"""
 		Search for all packages that match the given selector and display the resulting list to the
@@ -404,6 +421,7 @@ class cookie_cmd(cookie.command):
 					cookie.logger.debug(t)
 		except Exception, e:
 			cookie.logger.abort('%s git failed: %s' % (self.name(), e.message))
+
 
 cmd = cookie_cmd()
 cmd.run()

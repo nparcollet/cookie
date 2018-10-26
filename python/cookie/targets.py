@@ -32,9 +32,6 @@ class targets():
 		def created_on(self):
 			return str(self._infos['created_on'])
 
-		def arch(self):
-			return cookie.profiles.get(self.name(), self.board()).arch()
-
 		def packages(self):
 			try:
 				path = '%s/installed/packages.json' % self._path
@@ -145,6 +142,10 @@ class targets():
 			for pkg in ord:
 				cookie.logger.info('adding package %s' % pkg.selector())
 				self.add(pkg.selector())
+
+		def mkimage(self):
+			prf = cookie.profiles.get(self.profile(), self.board())
+			cookie.shell().run('mkimage %s %s' % (prf.image('size'), prf.image('boot')))
 
 	@classmethod
 	def list(self):
