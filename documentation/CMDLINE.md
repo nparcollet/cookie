@@ -13,6 +13,7 @@ The following are global commands of the cookie environment:
 - cookie shell (*): enter the build environment shell bound to the current target (if any)
 - cookie profiles: list the existing profiles along with there supproted hardware
 - cookie mkimage: create an image from the current target (must have been merged first)
+- cookie help: show all command and there exhaustive description
 
 (*) These command can only by run from the HOST environment
 
