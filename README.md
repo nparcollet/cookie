@@ -2,15 +2,15 @@
 
 Cookie is a complete cross compilation environment that is host agnostic and can run on most of the
 OS out there. That includes Windows, Mac OS and of course the Linux distributions. It allows to
-build firmwares for various platforms.
+build firmware images for various platforms.
 
 Cookie focus on Raspberry PI boards, that are widely available out there, but can be easily adapted
-to work with other platforms. The different RPI profiles can be used to generate firmwares usable
-with the board in the blink of an eye. They serve both as an example to learn how to work with the
-environment and a base for customization to work on more complex creations.
+to work with other platforms. It provides different profiles that define what an image contains and
+how to build it. These profiles serve both as an example to learn how to work with the environment
+and as a base for customization to work on more complex creations.
 
 Cookie is not an OS, in the sense of Raspbian or OpenElec. It is not installed directly on your
-board and the firmware created with Cookie does not need to have a package manager. Instead, Cookie
+board and the image created with Cookie does not need to have a package manager. Instead, Cookie
 is the package manager, and you have full control over what make up the firmware. In this sense it
 is similar to Buildroot.
 
@@ -32,21 +32,73 @@ of systems. As of today, the following are required:
 - git
 - python
 - docker
+- console
+
+These tools are available on most OS and are relatively easy to install and setup. Simply check
+online for these component as they all come with installation guides.
 
 # SETUP
 
-The installation is pretty straight forward. First you need to clone this repository using the
-following command:
+With all the dependencies in place, the setup of cookie itself is also pretty straight forward. The
+following setup is a one time operation. Once complete, the **cookie** command will be available
+from the **console** of your system.
 
-	> git clone https://github.com/nparcollet/cookie.git
+**Retrieve cookie source code**
 
-Secondly, some adjustment are required to your console environment:
+The first step of setup consist in cloning this repository. Assuming you want to install the code in
+the **/path/to/cookie** directory, the following command can be issued:
 
-	- Add **COOKIE=/path/to/cookie** to the environment
-	- Add **$COOKIE/bin** to the **PATH** variable of the environment
-	- Add **PYTHONPATH=$COOKIE/python** to the environment
+	> git clone https://github.com/nparcollet/cookie.git /path/to/cookie
 
-Once this is done, cookie is fully functional and can be used from the console of your system.
+**Setup the console environment**
+
+The second and last step is about setting up the environment so that the **cookie** command is
+accessible easily from anywhere in the console. Because the way to define these variables depends on
+your host system, there is no universal command that can be used. For instance on Linux and Mac you
+are more likely to have to add some **export** entries in the **~/.bash_profile** file. On Windows,
+this is done throu the system settings applet. Following is the list of changes that are expected on
+the environment:
+
+	- **COOKIE=/path/to/cookie** is to point the location where the repository was cloned
+	- **${COOKIE}/bin** is to be added to the **PATH** variable of the environment
+	- **PYTHONPATH=$COOKIE/python** is to be defined so that cookie python modules can be loaded
+
+## QUICKSTART
+
+The actual process of going from the description of an image to actually generating this image and
+flashing it onto the board is long and complex, however it can be summarized with the following
+simple diagram:
+
+![Overview](documentation/overview.png)
+
+With this in mind, you can create a demo image with the following commands:
+
+	> cookie bootstrap update
+	> cookie create demo rpi3b
+	> cookie merge
+	> cookie mkredist
+
+The result of these 4 commands is a brand new image named **demo-rpi3b.img** located in the
+**${COOKIE}/cache/images** directory. Please note that cookie job stop at the generation of the
+image. There are already tools out there that can be used to put this image on an SDCard so that
+it can be loaded by the PI board. I recomment the use of **etcher** (https://etcher.io), an easy to
+use multiplatform tool used to flash images to SD cards.
+
+**Note**: The execution of these commands might take a while, after all, we are compiling everything
+from scratch, including the toolchain.
+
+## DOCUMENTATION
+
+There is a lot more to cookie than just following the quick start. It is highly recommended to read
+the following documents in order to get a good grasp of what can be done and how. These documents
+are ordered in a logical order and will drive you throu this journey:
+
+[Build Environment](docs/BOOTSTRAP.md)
+
+
+
+
+# XXX TO SORT XXX
 
 # BOOTSTRAP
 
@@ -74,19 +126,6 @@ creating a PI image manually from there. In particular, changes you make when ac
 environment through the shell will be discarded once you exit it. This guarantee that the system
 will remain sanitized, and one can freely experiment there.
 
-# QUICKSTART
-
-Let's get to it. Below is a sequence of command that will allow you to generate a firmware and to
-install it on an sdcard:
-
-> cookie create rpi3b webserver
-> cookie merge
-> cookie deploy /dev/sdb
-
-After that, simply put the sdcard in your board and you are good to go. This is of course very
-minimalist and just to give you a taste of what can be done. A more complete documentation is
-available below and explain the ins and outs of the cookie environment.
-
 # GUIDES
 
 [Command Line Reference](docs/CMDLINE.md)
@@ -97,15 +136,6 @@ available below and explain the ins and outs of the cookie environment.
 [The rules to create and use packages](docs/PACKAGES.md)
 [Understanding cookie python module](docs/PYTHON.md)
 [Targets ins and outs](docs/TARGETS.md)
-
-
-
-
-
-
-
-
-
 
 # RECIPES
 
@@ -125,19 +155,3 @@ Recipes are stored in the **profile** directory of this repository. This is also
 create new ones. Profiles can be listed with the following command:
 
 	> cookie profile list
-
-# QUICKSTART
-
-
-	> cookie target create webserver rpi3b
-	> cookie target build
-	> cookie target deploy /dev/sdb
-
-The operations might take a while. Once they are complete, take your SDCard, put it on your PI
-board, and put the power on. You will see on the screen the IP of the PI board. Access it with
-any browser. That it, a functionnal custom made webserver. It comes with a FTP server so that
-you can upload content, and support both PHP and MySql.
-
-# DOCUMENTATION
-
-The complete documentation is accessible though this link: [documentation](documentation/README.md)
