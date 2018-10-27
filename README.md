@@ -99,14 +99,14 @@ are ordered in a logical order and will drive you throu this journey:
 
 - [Build Environment](documentation/BOOTSTRAP.md)
 - [Working with Profiles](documentation/PROFILES.md)
-- [Targets ins and outs](documentation/TARGETS.md)
+- [Target ins and outs](documentation/TARGETS.md)
+- [Package Managment](documentation/PACKAGES.md)
 - [Flashing an image](documentation/FLASHING.md)
 
 # GUIDES
 
 - [Command Line Reference](documentation/CMDLINE.md)
 - [Managing and customizing the kernel](documentation/KERNEL.md)
-- [The rules to create and use packages](documentation/PACKAGES.md)
 - [Understanding cookie python module](documentation/PYTHON.md)
 - [Debugging the Image](documentation/DEBUG.md)
 
