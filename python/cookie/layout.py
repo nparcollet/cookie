@@ -19,10 +19,6 @@ class layout:
 		return '%s/%s' % (self.targets(), name)
 
 	@classmethod
-	def patches(self):
-		return '%s/patches' % self.root()
-
-	@classmethod
 	def profiles(self):
 		return '%s/profiles' % self.root()
 

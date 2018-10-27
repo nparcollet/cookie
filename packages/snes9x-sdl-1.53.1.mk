@@ -16,7 +16,7 @@ fetch:
 
 setup:
 	cookie git checkout $(P_NAME) $(P_GITREV) $(P_SRCDIR)
-	cookie patch $(P_SRCDIR) snes9x-sdl-1.53.1-rework-sdl2.patch
+	cookie patch $(P_SRCDIR) snes9x-sdl-1.53.1.patch
 
 compile:
 	cd sdl && autoreconf -if
