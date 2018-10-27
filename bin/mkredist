@@ -17,4 +17,7 @@ rsync -aHAXx 					\
 	${ROOTFS_DIR}/ ${REDIST_DIR}/
 
 echo "Stripping libraries and binaries"
-find /opt/target/redist -type f -executable | xargs arm-rpi-linux-gnueabihf-strip
+for i in $(find /opt/target/redist -type f -executable);
+do
+	file $i | grep -q ELF && ${COOKIE_TOOLCHAIN}-strip $i
+done
