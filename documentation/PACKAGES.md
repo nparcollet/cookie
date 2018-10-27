@@ -13,7 +13,7 @@ must follow a strict naming convention defined as:
 
     package-name-x.y.z.mk
     
-## Selector
+## Package Selector
 
 Within cookie, packages are identified using package selectors. That is, one can refer to a package using
 **package-name**, or with **package-name-x.y.z**. However, independently of the selector, cookie will
@@ -22,7 +22,52 @@ resolve it to an actual package name including it's name and version.
 **Limitation**: As of today, selectors does not support version limitation, a in "any package named
 package-name with a version lower than x".
 
-## Environment
+## Searching Packages
+
+Using a package selector and the search command, one can list the existing version for a given
+package as follow:
+
+    > cookie search package_selector
+
+**Note**: Because selector does not currently handle version comparaison, the usefullness of this
+command is limited.
+
+## Building a package
+
+Each package need to define how it is built. This is done using simple make rules with fixed names
+and an expected behavior. Some of those rules are common to all packages and does not need to be
+written in the package file, some are required. There are listed below:
+
+**clean (auto)**: expected to clean the build directory at ${P_WORKDIR}
+**fetch**: expected to retrieve the sources
+**setup**: expected to extract and patch the soures
+**compile**: expected to build the component
+**install**: expected to install the component in ${P_DESTDIR}
+**mkarchive (auto)**: expected to create an archive from the result of install
+**merge (auto)**: expected to install the archive content in ${P_SYSROOT}
+**unmerge (auto)**: expected to remove the archive content from ${P_SYSROOT}
+
+Within the environment, it is possible to call these rules individually using the build command,
+given that one understand that it might fail because previous operation where not performed. In
+any case, executing the operation in this way ensure that it is done with the same context as if
+the package was installed automatically, and is very usefull for debugging:
+
+    > cookie build package_selector rule
+
+## Package Dependencies
+
+The dependencies of a package are listed in the P_DEPENDS field of the Makefile. It is currently
+only used when calling the merge command and will check that other packages are present before
+adding the new one. The depends can work in conjunction with the P_PROVIDES field that packages
+can define. This is usefull when having custom packages installing standard component we wish
+to depend on. For instance, let's image we have a package P the depends on kernel, but that our
+kernel package is named my-kernel. The latest simply needs to add a P_PROVIDES=kernel to ensure
+dependencies can be properly checked. From the console, one can check the dependencies of a
+package using the following command:
+
+    > cookie depends package_selector
+
+## Build Environment
 
 In order to behave properly, the packages expect the environment to be properly defined. This include
 having the environment variable setup properly and matching the required toolchain lie **HOST** or **CC**,
@@ -36,11 +81,11 @@ information:
     P_NPROCS: the number of CPU available for build operations
     P_TOOLCHAIN: the toolchain to use to build the package
     P_ARCH: the architecture to build for
-
+    
 ## Identification
 
-At the top of each package, a set of attribute must be defined and help with the identification of
-the package. These are listed below:
+In addition to the Makefile rules, each package is required to define a set of information that aim at
+identifying the package properly. They are listed below:
 
     P_NAME: the name of the package
     P_VERSION: the version of the package
@@ -50,45 +95,54 @@ the package. These are listed below:
     P_DEPENDS: a list of other package names this package depends on
     P_PROVIDES: a "name" that other package can depends on instead of the actual package name (virtual)
 
-## Rules
-
-After the identification, each package need to define how it is build. This is done using simple
-make rules with fixed names and an expected behavior. Those rules are defined below:
-
-- clean: expected to clean the build directory at ${P_WORKDIR}
-- fetch: expected to retrieve the sources
-- setup: expected to extract and patch the soures
-- compile: expected to build the component
-- install: expected to install the component in ${P_DESTDIR}
-- mkarchive: expected to create an archive from the result of install
-- merge: expected to install the archive content in ${P_SYSROOT}
-- unmerge: expected to remove the archive content from ${P_SYSROOT}
-
-**Note**: The **clean**, **mkarchive**, **merge** and **unmerge** command are implicit and do
-not need to be defined in the package. In fact, doing so might result in a broken package.
-
 ## Tools
 
-Cookie provide a set of tool command that are expected to be used in makefile for performing
-certain operation. This is requried to ensure a smooth integration within the environment.
+Cookie provide a set of tool command that must be used in package **Makefile** in order to perform
+certain operation. This is to ensure a smooth integration within the environment.
 
-**Cookie Fetch**
-    This command is to be used in the FETCH rule to retrieve remote archive. It will take care
-    of caching the result in ${COOKIE}}/cache for later use, avoiding having to downlad several
-    time the same thing.
+### Working with source archives
 
-**Cookie Unpack**
-    This command is to be used in the SETUP rule to unpack an archive. It is used in conjunction
-    with cookie fetch since it will only look in the cache.
+When downloading an archive, the following command need to be used, as to ensure the package is
+integrated with the cache mechanism of cookie:
 
-**Cookie Git**
-    This command is to be used in the FETCH phase to clone a repository (with cookie git clone)
-    and in the SETUP phase (with cookie git checkout) to checkout the proper version. It is
-    similar to fetch/unpack in the sense that repositories are cached locally.
+    > cookie fetch [url] [archive_name]
 
-**Cookie Import**
-    This command is to be used when importing configuration files from the profile.
+Once the archive is downlaoded, it is to be extracted with:
 
-**Cookie Patch**
-    This command is to be used when patching sources using a patch located in the profile.
+    > cookie unpack [archive_name] [destdir]
 
+### Working with git repositories
+
+When cloning a repository, the following command need to be used, as to ensure the repository
+is integrated with the cache mechanism of cookie:
+
+    > cookie git clone [url] [repository_name]
+
+Once clone, the required version can be checked out with:
+
+    > cookie git checkout [repository_name] [destdir]
+
+### Working with profile content
+
+When a file need to be imported from the profile, for instance the .config of a package, the
+following command need to be used:
+
+    > cookie import [config.name] [destdir]/config.name
+
+Similarly, to apply a patch on the package sources, the following is to be used and expect the
+name of the patch to be package-name-x.y.z.patch:
+
+    > cookie patch [patchdir]
+
+## Binary Packages
+
+As part of the cookie environment, there is a cache mechanism that allow to reuse packages that
+are already built directly. The means that add a component A will first build it. But then, in
+the event it is removed and readded, since it is already built it will simply be installed. This
+allow to save a lot of time when debugging. Aside from the binary archive, there is a signature
+file of the Makefile that is used to determine if the archive is still valid in regard to the
+Makefile.
+
+**Limitation**: this mechanism is not yet 100% reliable and only used by the cookie merge
+command. To force the recompilation of a package, simply remove the archive and its sha1 file
+from the archive directory, or modify the package Makefile.
