@@ -266,12 +266,12 @@ class cookie_cmd(cookie.command):
 				cookie.logger.abort('syntax: %s depends <selector>' % self.name())
 			else:
 				def do_one(d, l):
-					for k, v in d.items():
-						cookie.logger.debug('%s%s' % (' ' * l, k))
-						do_one(v, l + 4)
+					for p in d:
+						cookie.logger.debug('%s%s' % (' ' * l, p))
+						do_one(cookie.packages.elect(p).depends(), l + 4)
 				pkg = cookie.packages.elect(args[0])
 				cookie.logger.info('Dependencies for %s' % pkg.selector())
-				do_one(pkg.depends_r(), 0)
+				do_one(pkg.depends(), 0)
 		except Exception, e:
 			cookie.logger.abort('%s depends failed: %s' % (self.name(), str(e)))
 
