@@ -83,8 +83,14 @@ image. There are already tools out there that can be used to put this image on a
 it can be loaded by the PI board. I recomment the use of **etcher** (https://etcher.io), an easy to
 use multiplatform tool used to flash images to SD cards.
 
-This image is of course very limited. Basically, it contains a kernel, busybox, and an ssh server
-allowing you to connect the board remotely.
+This image is of course very limited. Basically, it contains a kernel and busybox. It has a single
+**root** user defined and use the password **password**. There is a network service that will
+connect using DHCP, and it automatically detect when USB Keys are connected/disconnected. You can
+open a terminal on the board using the following mechanisms:
+
+- Connecting a Screen and Keyboard to the board
+- Using Telnet (If you know the board IP)
+- Using SSH (If you know the board IP)
 
 **Important**: The execution of these commands might take a while, especially the first time. After
 all, we are compiling everything from scratch, including the toolchain. In cookie, a lot of elements
