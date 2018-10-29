@@ -11,36 +11,53 @@ class layout:
 			return None
 
 	@classmethod
-	def targets(self):
-		return '%s/targets' % self.root()
-
-	@classmethod
-	def target(self, name):
-		return '%s/%s' % (self.targets(), name)
-
-	@classmethod
 	def profiles(self):
-		return '%s/profiles' % self.root()
+		d = '%s/profiles' % self.root()
+		if not os.path.isdir(d):
+			os.makedirs(d)
+		return d
 
 	@classmethod
 	def packages(self):
-		return '%s/packages' % self.root()
+		d = '%s/packages' % self.root()
+		if not os.path.isdir(d):
+			os.makedirs(d)
+		return d
+
+	@classmethod
+	def bootstrap(self):
+		d = '%s/bootstrap' % self.root()
+		if not os.path.isdir(d):
+			os.makedirs(d)
+		return d
 
 	@classmethod
 	def toolchains(self):
-		return '%s/toolchains' % self.root()
+		d = '%s/toolchains' % self.root()
+		if not os.path.isdir(d):
+			os.makedirs(d)
+		return d
 
 	@classmethod
 	def cache(self):
-		return '%s/cache' % self.root()
+		d = '%s/cache' % self.root()
+		if not os.path.isdir(d):
+			os.makedirs(d)
+		return d
 
 	@classmethod
 	def distfiles(self):
-		return '%s/distfiles' % self.cache()
+		d = '%s/distfiles' % self.cache()
+		if not os.path.isdir(d):
+			os.makedirs(d)
+		return d
 
 	@classmethod
 	def gitsources(self):
-		return '%s/gitsources' % self.cache()
+		d = '%s/gitsources' % self.cache()
+		if not os.path.isdir(d):
+			os.makedirs(d)
+		return d
 
 	@classmethod
 	def distfile(self, name):
@@ -49,7 +66,3 @@ class layout:
 	@classmethod
 	def gitsource(self, name):
 		return '%s/%s' % (self.gitsources(), name)
-
-	@classmethod
-	def bootstrap(self):
-		return '%s/bootstrap' % self.root()
