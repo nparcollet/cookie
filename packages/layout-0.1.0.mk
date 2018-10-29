@@ -24,3 +24,6 @@ install:
 	find $(P_DESTDIR) -name '*.keep' | xargs rm
 	rm -rf $(P_DESTDIR)/.git
 	rm $(P_DESTDIR)/README.md
+	mkdir -p $(P_DESTDIR)/boot
+	cookie import cmdline.txt $(P_DESTDIR)/boot/cmdline.txt
+	cookie import config.txt $(P_DESTDIR)/boot/config.txt
