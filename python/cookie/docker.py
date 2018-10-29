@@ -27,30 +27,19 @@ class docker:
 			'--mount=source=%s,target=%s' % (tgt.volume(), tgt.path()) if tgt else '',
 			'cookie'
 		]) + ' ' + args
-		return subprocess.call(cmd.split())
+		subprocess.check_call(cmd.split())
 
 	@classmethod
 	def console(self):
 		cookie.logger.info('Entering interactive console')
-		return cookie.docker.run('/bin/bash')
+		cookie.docker.run('/bin/bash')
 
 	@classmethod
 	def update(self):
 		cookie.logger.info('Creating or updating cookie docker image')
-		s = cookie.shell()
-		(status, out, err) = s.run('docker build -t cookie %s' % cookie.layout.bootstrap())
-		if status != 0:
-			cookie.logger.abort(' '.join(err))
-		else:
-			cookie.logger.info('Cookie docker image was updated')
-
+		cookie.shell().run('docker build -t cookie %s' % cookie.layout.bootstrap())
 
 	@classmethod
 	def remove(self):
 		cookie.logger.info('Removing cookie docker image')
-		s = cookie.shell()
-		(status, out, err) = s.run('docker rmi -f cookie')
-		if status != 0:
-			cookie.logger.abort(' '.join(err))
-		else:
-			cookie.logger.info('Cookie docker image was removed')
+		cookie.shell().run('docker rmi -f cookie')
