@@ -115,5 +115,6 @@ are ordered in a logical order and will drive you throu this journey:
 - [Managing and customizing the kernel](documentation/KERNEL.md)
 - [Understanding cookie python module](documentation/PYTHON.md)
 - [Debugging the Image](documentation/DEBUG.md)
+- [Known Issues](documentation/TROUBLESHOOTING.md)
 
 
