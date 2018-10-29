@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	strace				\
 	libtirpc1			\
 	rpcbind				\
+	gettext				\
 	nfs-common
 
 # Cross Tool NG 1.23.0
@@ -65,9 +66,6 @@ RUN 	cd /root 									\
 	&& rm -rf /root/ganesha.patch /root/nfs-ganesha
 ADD ganesha.conf /etc/ganesha/ganesha.conf
 EXPOSE 2049 38465-38467 662 111/udp 111
-
-
-RUN apt-get install -y --no-install-recommends gettext
 
 # Cookie Environment
 VOLUME /opt/cookie
