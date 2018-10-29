@@ -34,7 +34,7 @@ class cookie_cmd(cookie.command):
 				else:
 					cookie.logger.abort('Unknown subcommand "%s"' % a)
 			except Exception, e:
-					cookie.logger.abort(e)
+				cookie.logger.abort('%s bootstrap failed: %s' %(self.name(), str(e)))
 
 	def do_shell(self, args):
 		"""
@@ -50,7 +50,7 @@ class cookie_cmd(cookie.command):
 			try:
 				cookie.docker.console()
 			except Exception, e:
-				cookie.logger.abort(e)
+				cookie.logger.abort('%s shell failed: %s' %(self.name(), str(e)))
 
 	def do_profiles(self, args):
 		"""
@@ -66,7 +66,7 @@ class cookie_cmd(cookie.command):
 					boards  = cookie.profiles.boards(pname)
 					cookie.logger.debug('%s [%s]' % (pname, ','.join(boards)))
 		except Exception, e:
-			cookie.logger.abort('%s profiles failed: %s' (self.name(), e.message))
+			cookie.logger.abort('%s profiles failed: %s' (self.name(), str(e)))
 
 	def do_list(self, args):
 		"""
@@ -163,7 +163,7 @@ class cookie_cmd(cookie.command):
 			else:
 				cookie.targets.get(cookie.targets.current()).remove(args[0])
 		except Exception, e:
-			cookie.logger.abort('%s remove failed: %s' % (self.name(), e.message))
+			cookie.logger.abort('%s remove failed: %s' % (self.name(), str(e)))
 
 	def do_packages(self, args):
 		"""
@@ -182,7 +182,7 @@ class cookie_cmd(cookie.command):
 				for p in all:
 					cookie.logger.debug(p)
 		except Exception, e:
-			cookie.logger.abort('%s packages failed: %s' % (self.name(), e.message))
+			cookie.logger.abort('%s packages failed: %s' % (self.name(), str(e)))
 
 	def do_merge(self, args):
 		"""
@@ -216,7 +216,7 @@ class cookie_cmd(cookie.command):
 			else:
 				cookie.targets.get(cookie.targets.current()).mkimage()
 		except Exception, e:
-			cookie.logger.abort('%s remove failed: %s' % (self.name(), str(e)))
+			cookie.logger.abort('%s mkimage failed: %s' % (self.name(), str(e)))
 
 	def do_search(self, args):
 		"""
@@ -275,11 +275,6 @@ class cookie_cmd(cookie.command):
 		except Exception, e:
 			cookie.logger.abort('%s depends failed: %s' % (self.name(), str(e)))
 
-	#
-	# Commands normally used within packages. As such, it is important that they exit with a proper
-	# status code in order to be fully integrated with Makefile
-	#
-
 	def do_patch(self, args):
 		"""
 		Apply a patch to a source. All patches are expected to be located in the cookie patches
@@ -295,7 +290,7 @@ class cookie_cmd(cookie.command):
 				cookie.shell().run(cmd)
 				sys.exit(0)
 		except Exception, e:
-				sys.exit(1)
+			cookie.logger.abort('%s patch failed: %s' % (self.name(), str(e)))
 
 	def do_import(self, args):
 		"""
@@ -313,8 +308,7 @@ class cookie_cmd(cookie.command):
 				shutil.copy(i, o)
 			sys.exit(0)
 		except Exception, e:
-			cookie.logger.error(str(e))
-			sys.exit(1)
+			cookie.logger.abort('%s import failed: %s' % (self.name(), str(e)))
 
 	def do_fetch(self, args):
 		"""
@@ -339,7 +333,7 @@ class cookie_cmd(cookie.command):
 			try:
 				cookie.distfiles.extract(args[0], args[1])
 			except Exception, e:
-				cookie.logger.abort(e)
+				cookie.logger.abort('%s extract failed: %s' % (self.name(), str(e)))
 
 	def do_distfiles(self, args):
 		"""
@@ -382,7 +376,7 @@ class cookie_cmd(cookie.command):
 			elif args[0] == 'extract':
 				cookie.distfiles.extract(args[1], args[2])
 		except Exception, e:
-			cookie.logger.abort('%s git failed: %s' % (self.name(), e.message))
+			cookie.logger.abort('%s git distfiles: %s' % (self.name(), str(e)))
 
 	def do_git(self, args):
 		"""
@@ -421,7 +415,7 @@ class cookie_cmd(cookie.command):
 				for t in cookie.gitsources.list():
 					cookie.logger.debug(t)
 		except Exception, e:
-			cookie.logger.abort('%s git failed: %s' % (self.name(), e.message))
+			cookie.logger.abort('%s git failed: %s' % (self.name(), str(e)))
 
 
 cmd = cookie_cmd()
