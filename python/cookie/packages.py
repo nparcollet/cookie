@@ -127,6 +127,16 @@ class packages:
 		def setup(self):
 			self.make('setup')
 
+		def patch(self):
+			cookie.logger.info('running patch on package')
+			profile = self._target.profile() if self._target else None
+			srcdir = '%s/%s' % (self.workdir(), self._meta['SRCDIR']) if 'SRCDIR' in self._meta else '%s/srcdir' % self.workdir()
+			patchfile = '%s/%s/%s-%s.patch' % (cookie.layout.profiles(), profile, self._name, self._version)
+			if os.path.isdir(srcdir) and os.path.isfile(patchfile):
+				cookie.shell().run('patch -d %s -p1 < %s' % (srcdir, patchfile))
+			else:
+				cookie.logger.debug('Package does not need patching')
+
 		def compile(self):
 			self.make('compile')
 

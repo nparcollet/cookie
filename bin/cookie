@@ -239,11 +239,11 @@ class cookie_cmd(cookie.command):
 		Perform build operations on the current target. This take a package selector has a first
 		argument that is used to determine which package to work on. In addition, the operation to
 		perform is given as a second argument and is expected to be one of: clean, fetch, setup,
-		compile, install, check, mkdev, merge, unmerge. This command can be used to manually test
-		the different package compilation and installation phases.
+		patch, compile, install, check, mkdev, merge, unmerge. This command can be used to manually
+		test the different package compilation and installation phases.
 		"""
 		try:
-			if len(args) != 2 or args[1] not in [ 'clean', 'fetch', 'setup', 'compile', 'install', 'check', 'mkarchive', 'merge', 'unmerge' ]:
+			if len(args) != 2 or args[1] not in [ 'clean', 'fetch', 'setup', 'patch', 'compile', 'install', 'check', 'mkarchive', 'merge', 'unmerge' ]:
 				cookie.logger.abort('syntax: %s build selector clean|fetch|setup|compile|install|check|mkdeb|merge|unmerge' % self.name())
 			else:
 				pkg = cookie.packages.elect(args[0])
@@ -251,6 +251,7 @@ class cookie_cmd(cookie.command):
 				if		args[1] == 'clean'		: pkg.clean()
 				elif	args[1] == 'fetch'		: pkg.fetch()
 				elif	args[1] == 'setup'		: pkg.setup()
+				elif	args[1] == 'patch'		: pkg.patch()
 				elif	args[1] == 'compile'	: pkg.compile()
 				elif	args[1] == 'install'	: pkg.install()
 				elif	args[1] == 'check'		: pkg.check()
@@ -274,23 +275,6 @@ class cookie_cmd(cookie.command):
 				do_one(pkg.depends(), 0)
 		except Exception, e:
 			cookie.logger.abort('%s depends failed: %s' % (self.name(), str(e)))
-
-	def do_patch(self, args):
-		"""
-		Apply a patch to a source. All patches are expected to be located in the cookie patches
-		directory. This function is intended to be called from the package file when a patch is
-		needed. Note that the use of patches is discouraged and to be used sparsingly.
-		"""
-		try:
-			if len(args) != 2:
-				raise Exception('syntax: %s patch <work_dir> <patch_name>' % self.name())
-			else:
-				tgt = cookie.targets.get(cookie.targets.current())
-				cmd = 'cd %s && patch -p1 < %s/%s/%s' % (args[0], cookie.layout.profiles(), tgt.profile(), args[1])
-				cookie.shell().run(cmd)
-				sys.exit(0)
-		except Exception, e:
-			cookie.logger.abort('%s patch failed: %s' % (self.name(), str(e)))
 
 	def do_import(self, args):
 		"""

@@ -62,6 +62,7 @@ class targets():
 				pkg.check()
 				pkg.fetch()
 				pkg.setup()
+				pkg.patch()
 				pkg.compile()
 				pkg.install()
 				pkg.mkarchive()
