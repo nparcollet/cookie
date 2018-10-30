@@ -1,0 +1,111 @@
+diff --git a/src/core/linux/SDL_evdev.c b/src/core/linux/SDL_evdev.c
+index bbd7518..9dfab13 100644
+--- a/src/core/linux/SDL_evdev.c
++++ b/src/core/linux/SDL_evdev.c
+@@ -37,6 +37,9 @@
+ #include <fcntl.h>
+ #include <sys/ioctl.h>
+ #include <linux/input.h>
++#include <dirent.h>
++#include <string.h>
++#include <errno.h>
+
+ #include "SDL.h"
+ #include "SDL_assert.h"
+@@ -107,9 +110,9 @@ static _THIS = NULL;
+ static SDL_Scancode SDL_EVDEV_translate_keycode(int keycode);
+ static void SDL_EVDEV_sync_device(SDL_evdevlist_item *item);
+ static int SDL_EVDEV_device_removed(const char *dev_path);
++static int SDL_EVDEV_device_added(const char *dev_path, int udev_class);
+
+ #if SDL_USE_LIBUDEV
+-static int SDL_EVDEV_device_added(const char *dev_path, int udev_class);
+ static void SDL_EVDEV_udev_callback(SDL_UDEV_deviceevent udev_type, int udev_class,
+     const char *dev_path);
+ #endif /* SDL_USE_LIBUDEV */
+@@ -125,6 +128,18 @@ static Uint8 EVDEV_MouseButtons[] = {
+     SDL_BUTTON_X2 + 3           /*  BTN_TASK        0x117 */
+ };
+
++#if ! SDL_USE_LIBUDEV
++typedef enum
++{
++    SDL_UDEV_DEVICE_UNKNOWN     = 0x0000,
++    SDL_UDEV_DEVICE_MOUSE       = 0x0001,
++    SDL_UDEV_DEVICE_KEYBOARD    = 0x0002,
++    SDL_UDEV_DEVICE_JOYSTICK    = 0x0004,
++    SDL_UDEV_DEVICE_SOUND       = 0x0008,
++    SDL_UDEV_DEVICE_TOUCHSCREEN = 0x0010
++} SDL_UDEV_deviceclass;
++#endif
++
+ int
+ SDL_EVDEV_Init(void)
+ {
+@@ -153,6 +153,33 @@ SDL_EVDEV_Init(void)
+         SDL_UDEV_Scan();
+ #else
+         /* TODO: Scan the devices manually, like a caveman */
++	{
++	DIR *dir;
++ 	struct dirent *entry;
++	if ((dir = opendir("/dev/input"))) {
++		while ((entry = readdir(dir)) != NULL) {
++			if (strncmp(entry->d_name, "event", 5) == 0) {
++				char path[256];
++				char name[256];
++				int fd;
++				snprintf(path, 256, "/dev/input/%s", entry->d_name);
++				if ((fd = open(path, O_RDONLY)) < 0) {
++					SDL_Log("Unable to open device %s", entry->d_name);
++				} else if(ioctl(fd, EVIOCGNAME(sizeof(name)), name) < 0) {
++					SDL_Log("Unable to retrieve device type for %s", entry->d_name);
++				} else if (0 == strcasestr(name, "keyboard")) {
++					SDL_Log("Not a keyboard");
++				} else {
++					close(fd);
++					SDL_EVDEV_device_added(path, SDL_UDEV_DEVICE_KEYBOARD);
++				}
++			}
++		}
++		closedir(dir);
++	} else {
++		SDL_Log("Unable to list event devices");
++	}
++	}
+ #endif /* SDL_USE_LIBUDEV */
+
+         _this->kbd = SDL_EVDEV_kbd_init();
+@@ -405,7 +445,6 @@ SDL_EVDEV_translate_keycode(int keycode)
+     return scancode;
+ }
+
+-#ifdef SDL_USE_LIBUDEV
+ static int
+ SDL_EVDEV_init_touchscreen(SDL_evdevlist_item* item)
+ {
+@@ -484,7 +523,6 @@ SDL_EVDEV_init_touchscreen(SDL_evdevlist_item* item)
+
+     return 0;
+ }
+-#endif /* SDL_USE_LIBUDEV */
+
+ static void
+ SDL_EVDEV_destroy_touchscreen(SDL_evdevlist_item* item) {
+@@ -604,7 +642,7 @@ SDL_EVDEV_sync_device(SDL_evdevlist_item *item)
+ #endif /* EVIOCGMTSLOTS */
+ }
+
+-#if SDL_USE_LIBUDEV
++
+ static int
+ SDL_EVDEV_device_added(const char *dev_path, int udev_class)
+ {
+@@ -657,7 +695,6 @@ SDL_EVDEV_device_added(const char *dev_path, int udev_class)
+
+     return _this->num_devices++;
+ }
+-#endif /* SDL_USE_LIBUDEV */
+
+ static int
+ SDL_EVDEV_device_removed(const char *dev_path)
