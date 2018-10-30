@@ -1,356 +1,4661 @@
-diff --git a/sdl/configure.ac b/sdl/configure.ac
-index 670ea05..ea73ec5 100644
---- a/sdl/configure.ac
-+++ b/sdl/configure.ac
-@@ -4,7 +4,7 @@ AC_REVISION([$Revision: 1.53 $])
- 
- AC_CONFIG_SRCDIR([sdlmain.cpp])
- 
--AC_CANONICAL_TARGET
+diff --git a/sdl2/Makefile.in b/sdl2/Makefile.in
+index e69de29..dd1013e 100644
+--- a/sdl2/Makefile.in
++++ b/sdl2/Makefile.in
+@@ -0,0 +1,96 @@
++@S9XDEBUGGER@
++@S9XNETPLAY@
++@S9XZIP@
++@S9XJMA@
++
++# Fairly good and special-char-safe descriptor of the os being built on.
++OS         = `uname -s -r -m|sed \"s/ /-/g\"|tr \"[A-Z]\" \"[a-z]\"|tr \"/()\" \"___\"`
++BUILDDIR   = .
++
++OBJECTS    = ../apu/apu.o ../apu/SNES_SPC.o ../apu/SNES_SPC_misc.o ../apu/SNES_SPC_state.o ../apu/SPC_DSP.o ../apu/SPC_Filter.o ../bsx.o ../c4.o ../c4emu.o ../cheats.o ../cheats2.o ../clip.o ../conffile.o ../controls.o ../cpu.o ../cpuexec.o ../cpuops.o ../crosshairs.o ../dma.o ../dsp.o ../dsp1.o ../dsp2.o ../dsp3.o ../dsp4.o ../fxinst.o ../fxemu.o ../gfx.o ../globals.o ../logger.o ../memmap.o ../movie.o ../obc1.o ../ppu.o ../reader.o ../sa1.o ../sa1cpu.o ../screenshot.o ../sdd1.o ../sdd1emu.o ../seta.o ../seta010.o ../seta011.o ../seta018.o ../snapshot.o ../snes9x.o ../spc7110.o ../srtc.o ../tile.o ../filter/2xsai.o ../filter/blit.o ../filter/epx.o ../filter/hq2x.o ../filter/snes_ntsc.o sdlmain.o sdlinput.o sdlvideo.o sdlaudio.o
++
++ifdef S9XDEBUGGER
++OBJECTS   += ../debug.o ../fxdbg.o
++endif
++
++ifdef S9XNETPLAY
++OBJECTS   += ../netplay.o ../server.o
++endif
++
++ifdef S9XZIP
++OBJECTS   += ../loadzip.o ../unzip/ioapi.o ../unzip/unzip.o
++endif
++
++ifdef S9XJMA
++OBJECTS   += ../jma/7zlzma.o ../jma/crc32.o ../jma/iiostrm.o ../jma/inbyte.o ../jma/jma.o ../jma/lzma.o ../jma/lzmadec.o ../jma/s9x-jma.o ../jma/winout.o
++endif
++
++CCC        = @CXX@
++CC         = @CC@
++GASM       = @CXX@
++INCLUDES   = -I. -I.. -I../apu/ -I../unzip/ -I../jma/ -I../filter/
++
++CCFLAGS    = @S9XFLGS@ @S9XDEFS@ $(DEFS) -DUSE_OPENGL
++CFLAGS     = $(CCFLAGS)
++
++.SUFFIXES: .o .cpp .c .cc .h .m .i .s .obj
++
++all: Makefile configure snes9x-sdl
++
++Makefile: configure Makefile.in
++	@echo "Makefile is older than configure or in-file. Run configure or touch Makefile."
++	exit 1
++
++configure: configure.ac
++	@echo "configure is older than in-file. Run autoconf or touch configure."
++	exit 1
++
++snes9x-sdl: $(OBJECTS)
++	$(CCC) $(INCLUDES) -o $@ $(OBJECTS) -lm @S9XLIBS@
++
++../jma/s9x-jma.o: ../jma/s9x-jma.cpp
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
++../jma/7zlzma.o: ../jma/7zlzma.cpp
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
++../jma/crc32.o: ../jma/crc32.cpp
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
++../jma/iiostrm.o: ../jma/iiostrm.cpp
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
++../jma/inbyte.o: ../jma/inbyte.cpp
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
++../jma/jma.o: ../jma/jma.cpp
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
++../jma/lzma.o: ../jma/lzma.cpp
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
++../jma/lzmadec.o: ../jma/lzmadec.cpp
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
++../jma/winout.o: ../jma/winout.cpp
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) -fexceptions $*.cpp -o $@
++
++.cpp.o:
++	$(CCC) $(INCLUDES) -c $(CCFLAGS) $*.cpp -o $@
++
++.c.o:
++	$(CC) $(INCLUDES) -c $(CCFLAGS) $*.c -o $@
++
++.cpp.S:
++	$(GASM) $(INCLUDES) -S $(CCFLAGS) $*.cpp -o $@
++
++.cpp.i:
++	$(GASM) $(INCLUDES) -E $(CCFLAGS) $*.cpp -o $@
++
++.S.o:
++	$(GASM) $(INCLUDES) -c $(CCFLAGS) $*.S -o $@
++
++.S.i:
++	$(GASM) $(INCLUDES) -c -E $(CCFLAGS) $*.S -o $@
++
++.s.o:
++	@echo Compiling $*.s
++	sh-elf-as -little $*.s -o $@
++
++.obj.o:
++	cp $*.obj $*.o
++
++clean:
++	rm -f $(OBJECTS)
+diff --git a/sdl2/config.guess b/sdl2/config.guess
+index e69de29..e5716ee 100644
+--- a/sdl2/config.guess
++++ b/sdl2/config.guess
+@@ -0,0 +1,1555 @@
++#! /bin/sh
++# Attempt to guess a canonical system name.
++#   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
++#   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
++#   Free Software Foundation, Inc.
++
++timestamp='2009-02-03'
++
++# This file is free software; you can redistribute it and/or modify it
++# under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
++# 02110-1301, USA.
++#
++# As a special exception to the GNU General Public License, if you
++# distribute this file as part of a program that contains a
++# configuration script generated by Autoconf, you may include it under
++# the same distribution terms that you use for the rest of that program.
++
++
++# Originally written by Per Bothner <per@bothner.com>.
++# Please send patches to <config-patches@gnu.org>.  Submit a context
++# diff and a properly formatted ChangeLog entry.
++#
++# This script attempts to guess a canonical system name similar to
++# config.sub.  If it succeeds, it prints the system name on stdout, and
++# exits with 0.  Otherwise, it exits with 1.
++#
++# The plan is that this can be called by configure scripts if you
++# don't specify an explicit build system type.
++
++me=`echo "$0" | sed -e 's,.*/,,'`
++
++usage="\
++Usage: $0 [OPTION]
++
++Output the configuration name of the system \`$me' is run on.
++
++Operation modes:
++  -h, --help         print this help, then exit
++  -t, --time-stamp   print date of last modification, then exit
++  -v, --version      print version number, then exit
++
++Report bugs and patches to <config-patches@gnu.org>."
++
++version="\
++GNU config.guess ($timestamp)
++
++Originally written by Per Bothner.
++Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
++2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
++
++This is free software; see the source for copying conditions.  There is NO
++warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
++
++help="
++Try \`$me --help' for more information."
++
++# Parse command line
++while test $# -gt 0 ; do
++  case $1 in
++    --time-stamp | --time* | -t )
++       echo "$timestamp" ; exit ;;
++    --version | -v )
++       echo "$version" ; exit ;;
++    --help | --h* | -h )
++       echo "$usage"; exit ;;
++    -- )     # Stop option processing
++       shift; break ;;
++    - )	# Use stdin as input.
++       break ;;
++    -* )
++       echo "$me: invalid option $1$help" >&2
++       exit 1 ;;
++    * )
++       break ;;
++  esac
++done
++
++if test $# != 0; then
++  echo "$me: too many arguments$help" >&2
++  exit 1
++fi
++
++trap 'exit 1' 1 2 15
++
++# CC_FOR_BUILD -- compiler used by this script. Note that the use of a
++# compiler to aid in system detection is discouraged as it requires
++# temporary files to be created and, as you can see below, it is a
++# headache to deal with in a portable fashion.
++
++# Historically, `CC_FOR_BUILD' used to be named `HOST_CC'. We still
++# use `HOST_CC' if defined, but it is deprecated.
++
++# Portable tmp directory creation inspired by the Autoconf team.
++
++set_cc_for_build='
++trap "exitcode=\$?; (rm -f \$tmpfiles 2>/dev/null; rmdir \$tmp 2>/dev/null) && exit \$exitcode" 0 ;
++trap "rm -f \$tmpfiles 2>/dev/null; rmdir \$tmp 2>/dev/null; exit 1" 1 2 13 15 ;
++: ${TMPDIR=/tmp} ;
++ { tmp=`(umask 077 && mktemp -d "$TMPDIR/cgXXXXXX") 2>/dev/null` && test -n "$tmp" && test -d "$tmp" ; } ||
++ { test -n "$RANDOM" && tmp=$TMPDIR/cg$$-$RANDOM && (umask 077 && mkdir $tmp) ; } ||
++ { tmp=$TMPDIR/cg-$$ && (umask 077 && mkdir $tmp) && echo "Warning: creating insecure temp directory" >&2 ; } ||
++ { echo "$me: cannot create a temporary directory in $TMPDIR" >&2 ; exit 1 ; } ;
++dummy=$tmp/dummy ;
++tmpfiles="$dummy.c $dummy.o $dummy.rel $dummy" ;
++case $CC_FOR_BUILD,$HOST_CC,$CC in
++ ,,)    echo "int x;" > $dummy.c ;
++	for c in cc gcc c89 c99 ; do
++	  if ($c -c -o $dummy.o $dummy.c) >/dev/null 2>&1 ; then
++	     CC_FOR_BUILD="$c"; break ;
++	  fi ;
++	done ;
++	if test x"$CC_FOR_BUILD" = x ; then
++	  CC_FOR_BUILD=no_compiler_found ;
++	fi
++	;;
++ ,,*)   CC_FOR_BUILD=$CC ;;
++ ,*,*)  CC_FOR_BUILD=$HOST_CC ;;
++esac ; set_cc_for_build= ;'
++
++# This is needed to find uname on a Pyramid OSx when run in the BSD universe.
++# (ghazi@noc.rutgers.edu 1994-08-24)
++if (test -f /.attbin/uname) >/dev/null 2>&1 ; then
++	PATH=$PATH:/.attbin ; export PATH
++fi
++
++UNAME_MACHINE=`(uname -m) 2>/dev/null` || UNAME_MACHINE=unknown
++UNAME_RELEASE=`(uname -r) 2>/dev/null` || UNAME_RELEASE=unknown
++UNAME_SYSTEM=`(uname -s) 2>/dev/null`  || UNAME_SYSTEM=unknown
++UNAME_VERSION=`(uname -v) 2>/dev/null` || UNAME_VERSION=unknown
++
++# Note: order is significant - the case branches are not exclusive.
++
++case "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" in
++    *:NetBSD:*:*)
++	# NetBSD (nbsd) targets should (where applicable) match one or
++	# more of the tupples: *-*-netbsdelf*, *-*-netbsdaout*,
++	# *-*-netbsdecoff* and *-*-netbsd*.  For targets that recently
++	# switched to ELF, *-*-netbsd* would select the old
++	# object file format.  This provides both forward
++	# compatibility and a consistent mechanism for selecting the
++	# object file format.
++	#
++	# Note: NetBSD doesn't particularly care about the vendor
++	# portion of the name.  We always set it to "unknown".
++	sysctl="sysctl -n hw.machine_arch"
++	UNAME_MACHINE_ARCH=`(/sbin/$sysctl 2>/dev/null || \
++	    /usr/sbin/$sysctl 2>/dev/null || echo unknown)`
++	case "${UNAME_MACHINE_ARCH}" in
++	    armeb) machine=armeb-unknown ;;
++	    arm*) machine=arm-unknown ;;
++	    sh3el) machine=shl-unknown ;;
++	    sh3eb) machine=sh-unknown ;;
++	    sh5el) machine=sh5le-unknown ;;
++	    *) machine=${UNAME_MACHINE_ARCH}-unknown ;;
++	esac
++	# The Operating System including object format, if it has switched
++	# to ELF recently, or will in the future.
++	case "${UNAME_MACHINE_ARCH}" in
++	    arm*|i386|m68k|ns32k|sh3*|sparc|vax)
++		eval $set_cc_for_build
++		if echo __ELF__ | $CC_FOR_BUILD -E - 2>/dev/null \
++			| grep __ELF__ >/dev/null
++		then
++		    # Once all utilities can be ECOFF (netbsdecoff) or a.out (netbsdaout).
++		    # Return netbsd for either.  FIX?
++		    os=netbsd
++		else
++		    os=netbsdelf
++		fi
++		;;
++	    *)
++	        os=netbsd
++		;;
++	esac
++	# The OS release
++	# Debian GNU/NetBSD machines have a different userland, and
++	# thus, need a distinct triplet. However, they do not need
++	# kernel version information, so it can be replaced with a
++	# suitable tag, in the style of linux-gnu.
++	case "${UNAME_VERSION}" in
++	    Debian*)
++		release='-gnu'
++		;;
++	    *)
++		release=`echo ${UNAME_RELEASE}|sed -e 's/[-_].*/\./'`
++		;;
++	esac
++	# Since CPU_TYPE-MANUFACTURER-KERNEL-OPERATING_SYSTEM:
++	# contains redundant information, the shorter form:
++	# CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM is used.
++	echo "${machine}-${os}${release}"
++	exit ;;
++    *:OpenBSD:*:*)
++	UNAME_MACHINE_ARCH=`arch | sed 's/OpenBSD.//'`
++	echo ${UNAME_MACHINE_ARCH}-unknown-openbsd${UNAME_RELEASE}
++	exit ;;
++    *:ekkoBSD:*:*)
++	echo ${UNAME_MACHINE}-unknown-ekkobsd${UNAME_RELEASE}
++	exit ;;
++    *:SolidBSD:*:*)
++	echo ${UNAME_MACHINE}-unknown-solidbsd${UNAME_RELEASE}
++	exit ;;
++    macppc:MirBSD:*:*)
++	echo powerpc-unknown-mirbsd${UNAME_RELEASE}
++	exit ;;
++    *:MirBSD:*:*)
++	echo ${UNAME_MACHINE}-unknown-mirbsd${UNAME_RELEASE}
++	exit ;;
++    alpha:OSF1:*:*)
++	case $UNAME_RELEASE in
++	*4.0)
++		UNAME_RELEASE=`/usr/sbin/sizer -v | awk '{print $3}'`
++		;;
++	*5.*)
++	        UNAME_RELEASE=`/usr/sbin/sizer -v | awk '{print $4}'`
++		;;
++	esac
++	# According to Compaq, /usr/sbin/psrinfo has been available on
++	# OSF/1 and Tru64 systems produced since 1995.  I hope that
++	# covers most systems running today.  This code pipes the CPU
++	# types through head -n 1, so we only detect the type of CPU 0.
++	ALPHA_CPU_TYPE=`/usr/sbin/psrinfo -v | sed -n -e 's/^  The alpha \(.*\) processor.*$/\1/p' | head -n 1`
++	case "$ALPHA_CPU_TYPE" in
++	    "EV4 (21064)")
++		UNAME_MACHINE="alpha" ;;
++	    "EV4.5 (21064)")
++		UNAME_MACHINE="alpha" ;;
++	    "LCA4 (21066/21068)")
++		UNAME_MACHINE="alpha" ;;
++	    "EV5 (21164)")
++		UNAME_MACHINE="alphaev5" ;;
++	    "EV5.6 (21164A)")
++		UNAME_MACHINE="alphaev56" ;;
++	    "EV5.6 (21164PC)")
++		UNAME_MACHINE="alphapca56" ;;
++	    "EV5.7 (21164PC)")
++		UNAME_MACHINE="alphapca57" ;;
++	    "EV6 (21264)")
++		UNAME_MACHINE="alphaev6" ;;
++	    "EV6.7 (21264A)")
++		UNAME_MACHINE="alphaev67" ;;
++	    "EV6.8CB (21264C)")
++		UNAME_MACHINE="alphaev68" ;;
++	    "EV6.8AL (21264B)")
++		UNAME_MACHINE="alphaev68" ;;
++	    "EV6.8CX (21264D)")
++		UNAME_MACHINE="alphaev68" ;;
++	    "EV6.9A (21264/EV69A)")
++		UNAME_MACHINE="alphaev69" ;;
++	    "EV7 (21364)")
++		UNAME_MACHINE="alphaev7" ;;
++	    "EV7.9 (21364A)")
++		UNAME_MACHINE="alphaev79" ;;
++	esac
++	# A Pn.n version is a patched version.
++	# A Vn.n version is a released version.
++	# A Tn.n version is a released field test version.
++	# A Xn.n version is an unreleased experimental baselevel.
++	# 1.2 uses "1.2" for uname -r.
++	echo ${UNAME_MACHINE}-dec-osf`echo ${UNAME_RELEASE} | sed -e 's/^[PVTX]//' | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'`
++	exit ;;
++    Alpha\ *:Windows_NT*:*)
++	# How do we know it's Interix rather than the generic POSIX subsystem?
++	# Should we change UNAME_MACHINE based on the output of uname instead
++	# of the specific Alpha model?
++	echo alpha-pc-interix
++	exit ;;
++    21064:Windows_NT:50:3)
++	echo alpha-dec-winnt3.5
++	exit ;;
++    Amiga*:UNIX_System_V:4.0:*)
++	echo m68k-unknown-sysv4
++	exit ;;
++    *:[Aa]miga[Oo][Ss]:*:*)
++	echo ${UNAME_MACHINE}-unknown-amigaos
++	exit ;;
++    *:[Mm]orph[Oo][Ss]:*:*)
++	echo ${UNAME_MACHINE}-unknown-morphos
++	exit ;;
++    *:OS/390:*:*)
++	echo i370-ibm-openedition
++	exit ;;
++    *:z/VM:*:*)
++	echo s390-ibm-zvmoe
++	exit ;;
++    *:OS400:*:*)
++        echo powerpc-ibm-os400
++	exit ;;
++    arm:RISC*:1.[012]*:*|arm:riscix:1.[012]*:*)
++	echo arm-acorn-riscix${UNAME_RELEASE}
++	exit ;;
++    arm:riscos:*:*|arm:RISCOS:*:*)
++	echo arm-unknown-riscos
++	exit ;;
++    SR2?01:HI-UX/MPP:*:* | SR8000:HI-UX/MPP:*:*)
++	echo hppa1.1-hitachi-hiuxmpp
++	exit ;;
++    Pyramid*:OSx*:*:* | MIS*:OSx*:*:* | MIS*:SMP_DC-OSx*:*:*)
++	# akee@wpdis03.wpafb.af.mil (Earle F. Ake) contributed MIS and NILE.
++	if test "`(/bin/universe) 2>/dev/null`" = att ; then
++		echo pyramid-pyramid-sysv3
++	else
++		echo pyramid-pyramid-bsd
++	fi
++	exit ;;
++    NILE*:*:*:dcosx)
++	echo pyramid-pyramid-svr4
++	exit ;;
++    DRS?6000:unix:4.0:6*)
++	echo sparc-icl-nx6
++	exit ;;
++    DRS?6000:UNIX_SV:4.2*:7* | DRS?6000:isis:4.2*:7*)
++	case `/usr/bin/uname -p` in
++	    sparc) echo sparc-icl-nx7; exit ;;
++	esac ;;
++    sun4H:SunOS:5.*:*)
++	echo sparc-hal-solaris2`echo ${UNAME_RELEASE}|sed -e 's/[^.]*//'`
++	exit ;;
++    sun4*:SunOS:5.*:* | tadpole*:SunOS:5.*:*)
++	echo sparc-sun-solaris2`echo ${UNAME_RELEASE}|sed -e 's/[^.]*//'`
++	exit ;;
++    i86pc:SunOS:5.*:* | i86xen:SunOS:5.*:*)
++	eval $set_cc_for_build
++	SUN_ARCH="i386"
++	# If there is a compiler, see if it is configured for 64-bit objects.
++	# Note that the Sun cc does not turn __LP64__ into 1 like gcc does.
++	# This test works for both compilers.
++	if [ "$CC_FOR_BUILD" != 'no_compiler_found' ]; then
++	    if (echo '#ifdef __amd64'; echo IS_64BIT_ARCH; echo '#endif') | \
++		(CCOPTS= $CC_FOR_BUILD -E - 2>/dev/null) | \
++		grep IS_64BIT_ARCH >/dev/null
++	    then
++		SUN_ARCH="x86_64"
++	    fi
++	fi
++	echo ${SUN_ARCH}-pc-solaris2`echo ${UNAME_RELEASE}|sed -e 's/[^.]*//'`
++	exit ;;
++    sun4*:SunOS:6*:*)
++	# According to config.sub, this is the proper way to canonicalize
++	# SunOS6.  Hard to guess exactly what SunOS6 will be like, but
++	# it's likely to be more like Solaris than SunOS4.
++	echo sparc-sun-solaris3`echo ${UNAME_RELEASE}|sed -e 's/[^.]*//'`
++	exit ;;
++    sun4*:SunOS:*:*)
++	case "`/usr/bin/arch -k`" in
++	    Series*|S4*)
++		UNAME_RELEASE=`uname -v`
++		;;
++	esac
++	# Japanese Language versions have a version number like `4.1.3-JL'.
++	echo sparc-sun-sunos`echo ${UNAME_RELEASE}|sed -e 's/-/_/'`
++	exit ;;
++    sun3*:SunOS:*:*)
++	echo m68k-sun-sunos${UNAME_RELEASE}
++	exit ;;
++    sun*:*:4.2BSD:*)
++	UNAME_RELEASE=`(sed 1q /etc/motd | awk '{print substr($5,1,3)}') 2>/dev/null`
++	test "x${UNAME_RELEASE}" = "x" && UNAME_RELEASE=3
++	case "`/bin/arch`" in
++	    sun3)
++		echo m68k-sun-sunos${UNAME_RELEASE}
++		;;
++	    sun4)
++		echo sparc-sun-sunos${UNAME_RELEASE}
++		;;
++	esac
++	exit ;;
++    aushp:SunOS:*:*)
++	echo sparc-auspex-sunos${UNAME_RELEASE}
++	exit ;;
++    # The situation for MiNT is a little confusing.  The machine name
++    # can be virtually everything (everything which is not
++    # "atarist" or "atariste" at least should have a processor
++    # > m68000).  The system name ranges from "MiNT" over "FreeMiNT"
++    # to the lowercase version "mint" (or "freemint").  Finally
++    # the system name "TOS" denotes a system which is actually not
++    # MiNT.  But MiNT is downward compatible to TOS, so this should
++    # be no problem.
++    atarist[e]:*MiNT:*:* | atarist[e]:*mint:*:* | atarist[e]:*TOS:*:*)
++        echo m68k-atari-mint${UNAME_RELEASE}
++	exit ;;
++    atari*:*MiNT:*:* | atari*:*mint:*:* | atarist[e]:*TOS:*:*)
++	echo m68k-atari-mint${UNAME_RELEASE}
++        exit ;;
++    *falcon*:*MiNT:*:* | *falcon*:*mint:*:* | *falcon*:*TOS:*:*)
++        echo m68k-atari-mint${UNAME_RELEASE}
++	exit ;;
++    milan*:*MiNT:*:* | milan*:*mint:*:* | *milan*:*TOS:*:*)
++        echo m68k-milan-mint${UNAME_RELEASE}
++        exit ;;
++    hades*:*MiNT:*:* | hades*:*mint:*:* | *hades*:*TOS:*:*)
++        echo m68k-hades-mint${UNAME_RELEASE}
++        exit ;;
++    *:*MiNT:*:* | *:*mint:*:* | *:*TOS:*:*)
++        echo m68k-unknown-mint${UNAME_RELEASE}
++        exit ;;
++    m68k:machten:*:*)
++	echo m68k-apple-machten${UNAME_RELEASE}
++	exit ;;
++    powerpc:machten:*:*)
++	echo powerpc-apple-machten${UNAME_RELEASE}
++	exit ;;
++    RISC*:Mach:*:*)
++	echo mips-dec-mach_bsd4.3
++	exit ;;
++    RISC*:ULTRIX:*:*)
++	echo mips-dec-ultrix${UNAME_RELEASE}
++	exit ;;
++    VAX*:ULTRIX*:*:*)
++	echo vax-dec-ultrix${UNAME_RELEASE}
++	exit ;;
++    2020:CLIX:*:* | 2430:CLIX:*:*)
++	echo clipper-intergraph-clix${UNAME_RELEASE}
++	exit ;;
++    mips:*:*:UMIPS | mips:*:*:RISCos)
++	eval $set_cc_for_build
++	sed 's/^	//' << EOF >$dummy.c
++#ifdef __cplusplus
++#include <stdio.h>  /* for printf() prototype */
++	int main (int argc, char *argv[]) {
++#else
++	int main (argc, argv) int argc; char *argv[]; {
++#endif
++	#if defined (host_mips) && defined (MIPSEB)
++	#if defined (SYSTYPE_SYSV)
++	  printf ("mips-mips-riscos%ssysv\n", argv[1]); exit (0);
++	#endif
++	#if defined (SYSTYPE_SVR4)
++	  printf ("mips-mips-riscos%ssvr4\n", argv[1]); exit (0);
++	#endif
++	#if defined (SYSTYPE_BSD43) || defined(SYSTYPE_BSD)
++	  printf ("mips-mips-riscos%sbsd\n", argv[1]); exit (0);
++	#endif
++	#endif
++	  exit (-1);
++	}
++EOF
++	$CC_FOR_BUILD -o $dummy $dummy.c &&
++	  dummyarg=`echo "${UNAME_RELEASE}" | sed -n 's/\([0-9]*\).*/\1/p'` &&
++	  SYSTEM_NAME=`$dummy $dummyarg` &&
++	    { echo "$SYSTEM_NAME"; exit; }
++	echo mips-mips-riscos${UNAME_RELEASE}
++	exit ;;
++    Motorola:PowerMAX_OS:*:*)
++	echo powerpc-motorola-powermax
++	exit ;;
++    Motorola:*:4.3:PL8-*)
++	echo powerpc-harris-powermax
++	exit ;;
++    Night_Hawk:*:*:PowerMAX_OS | Synergy:PowerMAX_OS:*:*)
++	echo powerpc-harris-powermax
++	exit ;;
++    Night_Hawk:Power_UNIX:*:*)
++	echo powerpc-harris-powerunix
++	exit ;;
++    m88k:CX/UX:7*:*)
++	echo m88k-harris-cxux7
++	exit ;;
++    m88k:*:4*:R4*)
++	echo m88k-motorola-sysv4
++	exit ;;
++    m88k:*:3*:R3*)
++	echo m88k-motorola-sysv3
++	exit ;;
++    AViiON:dgux:*:*)
++        # DG/UX returns AViiON for all architectures
++        UNAME_PROCESSOR=`/usr/bin/uname -p`
++	if [ $UNAME_PROCESSOR = mc88100 ] || [ $UNAME_PROCESSOR = mc88110 ]
++	then
++	    if [ ${TARGET_BINARY_INTERFACE}x = m88kdguxelfx ] || \
++	       [ ${TARGET_BINARY_INTERFACE}x = x ]
++	    then
++		echo m88k-dg-dgux${UNAME_RELEASE}
++	    else
++		echo m88k-dg-dguxbcs${UNAME_RELEASE}
++	    fi
++	else
++	    echo i586-dg-dgux${UNAME_RELEASE}
++	fi
++ 	exit ;;
++    M88*:DolphinOS:*:*)	# DolphinOS (SVR3)
++	echo m88k-dolphin-sysv3
++	exit ;;
++    M88*:*:R3*:*)
++	# Delta 88k system running SVR3
++	echo m88k-motorola-sysv3
++	exit ;;
++    XD88*:*:*:*) # Tektronix XD88 system running UTekV (SVR3)
++	echo m88k-tektronix-sysv3
++	exit ;;
++    Tek43[0-9][0-9]:UTek:*:*) # Tektronix 4300 system running UTek (BSD)
++	echo m68k-tektronix-bsd
++	exit ;;
++    *:IRIX*:*:*)
++	echo mips-sgi-irix`echo ${UNAME_RELEASE}|sed -e 's/-/_/g'`
++	exit ;;
++    ????????:AIX?:[12].1:2)   # AIX 2.2.1 or AIX 2.1.1 is RT/PC AIX.
++	echo romp-ibm-aix     # uname -m gives an 8 hex-code CPU id
++	exit ;;               # Note that: echo "'`uname -s`'" gives 'AIX '
++    i*86:AIX:*:*)
++	echo i386-ibm-aix
++	exit ;;
++    ia64:AIX:*:*)
++	if [ -x /usr/bin/oslevel ] ; then
++		IBM_REV=`/usr/bin/oslevel`
++	else
++		IBM_REV=${UNAME_VERSION}.${UNAME_RELEASE}
++	fi
++	echo ${UNAME_MACHINE}-ibm-aix${IBM_REV}
++	exit ;;
++    *:AIX:2:3)
++	if grep bos325 /usr/include/stdio.h >/dev/null 2>&1; then
++		eval $set_cc_for_build
++		sed 's/^		//' << EOF >$dummy.c
++		#include <sys/systemcfg.h>
++
++		main()
++			{
++			if (!__power_pc())
++				exit(1);
++			puts("powerpc-ibm-aix3.2.5");
++			exit(0);
++			}
++EOF
++		if $CC_FOR_BUILD -o $dummy $dummy.c && SYSTEM_NAME=`$dummy`
++		then
++			echo "$SYSTEM_NAME"
++		else
++			echo rs6000-ibm-aix3.2.5
++		fi
++	elif grep bos324 /usr/include/stdio.h >/dev/null 2>&1; then
++		echo rs6000-ibm-aix3.2.4
++	else
++		echo rs6000-ibm-aix3.2
++	fi
++	exit ;;
++    *:AIX:*:[456])
++	IBM_CPU_ID=`/usr/sbin/lsdev -C -c processor -S available | sed 1q | awk '{ print $1 }'`
++	if /usr/sbin/lsattr -El ${IBM_CPU_ID} | grep ' POWER' >/dev/null 2>&1; then
++		IBM_ARCH=rs6000
++	else
++		IBM_ARCH=powerpc
++	fi
++	if [ -x /usr/bin/oslevel ] ; then
++		IBM_REV=`/usr/bin/oslevel`
++	else
++		IBM_REV=${UNAME_VERSION}.${UNAME_RELEASE}
++	fi
++	echo ${IBM_ARCH}-ibm-aix${IBM_REV}
++	exit ;;
++    *:AIX:*:*)
++	echo rs6000-ibm-aix
++	exit ;;
++    ibmrt:4.4BSD:*|romp-ibm:BSD:*)
++	echo romp-ibm-bsd4.4
++	exit ;;
++    ibmrt:*BSD:*|romp-ibm:BSD:*)            # covers RT/PC BSD and
++	echo romp-ibm-bsd${UNAME_RELEASE}   # 4.3 with uname added to
++	exit ;;                             # report: romp-ibm BSD 4.3
++    *:BOSX:*:*)
++	echo rs6000-bull-bosx
++	exit ;;
++    DPX/2?00:B.O.S.:*:*)
++	echo m68k-bull-sysv3
++	exit ;;
++    9000/[34]??:4.3bsd:1.*:*)
++	echo m68k-hp-bsd
++	exit ;;
++    hp300:4.4BSD:*:* | 9000/[34]??:4.3bsd:2.*:*)
++	echo m68k-hp-bsd4.4
++	exit ;;
++    9000/[34678]??:HP-UX:*:*)
++	HPUX_REV=`echo ${UNAME_RELEASE}|sed -e 's/[^.]*.[0B]*//'`
++	case "${UNAME_MACHINE}" in
++	    9000/31? )            HP_ARCH=m68000 ;;
++	    9000/[34]?? )         HP_ARCH=m68k ;;
++	    9000/[678][0-9][0-9])
++		if [ -x /usr/bin/getconf ]; then
++		    sc_cpu_version=`/usr/bin/getconf SC_CPU_VERSION 2>/dev/null`
++                    sc_kernel_bits=`/usr/bin/getconf SC_KERNEL_BITS 2>/dev/null`
++                    case "${sc_cpu_version}" in
++                      523) HP_ARCH="hppa1.0" ;; # CPU_PA_RISC1_0
++                      528) HP_ARCH="hppa1.1" ;; # CPU_PA_RISC1_1
++                      532)                      # CPU_PA_RISC2_0
++                        case "${sc_kernel_bits}" in
++                          32) HP_ARCH="hppa2.0n" ;;
++                          64) HP_ARCH="hppa2.0w" ;;
++			  '') HP_ARCH="hppa2.0" ;;   # HP-UX 10.20
++                        esac ;;
++                    esac
++		fi
++		if [ "${HP_ARCH}" = "" ]; then
++		    eval $set_cc_for_build
++		    sed 's/^              //' << EOF >$dummy.c
++
++              #define _HPUX_SOURCE
++              #include <stdlib.h>
++              #include <unistd.h>
++
++              int main ()
++              {
++              #if defined(_SC_KERNEL_BITS)
++                  long bits = sysconf(_SC_KERNEL_BITS);
++              #endif
++                  long cpu  = sysconf (_SC_CPU_VERSION);
++
++                  switch (cpu)
++              	{
++              	case CPU_PA_RISC1_0: puts ("hppa1.0"); break;
++              	case CPU_PA_RISC1_1: puts ("hppa1.1"); break;
++              	case CPU_PA_RISC2_0:
++              #if defined(_SC_KERNEL_BITS)
++              	    switch (bits)
++              		{
++              		case 64: puts ("hppa2.0w"); break;
++              		case 32: puts ("hppa2.0n"); break;
++              		default: puts ("hppa2.0"); break;
++              		} break;
++              #else  /* !defined(_SC_KERNEL_BITS) */
++              	    puts ("hppa2.0"); break;
++              #endif
++              	default: puts ("hppa1.0"); break;
++              	}
++                  exit (0);
++              }
++EOF
++		    (CCOPTS= $CC_FOR_BUILD -o $dummy $dummy.c 2>/dev/null) && HP_ARCH=`$dummy`
++		    test -z "$HP_ARCH" && HP_ARCH=hppa
++		fi ;;
++	esac
++	if [ ${HP_ARCH} = "hppa2.0w" ]
++	then
++	    eval $set_cc_for_build
++
++	    # hppa2.0w-hp-hpux* has a 64-bit kernel and a compiler generating
++	    # 32-bit code.  hppa64-hp-hpux* has the same kernel and a compiler
++	    # generating 64-bit code.  GNU and HP use different nomenclature:
++	    #
++	    # $ CC_FOR_BUILD=cc ./config.guess
++	    # => hppa2.0w-hp-hpux11.23
++	    # $ CC_FOR_BUILD="cc +DA2.0w" ./config.guess
++	    # => hppa64-hp-hpux11.23
++
++	    if echo __LP64__ | (CCOPTS= $CC_FOR_BUILD -E - 2>/dev/null) |
++		grep __LP64__ >/dev/null
++	    then
++		HP_ARCH="hppa2.0w"
++	    else
++		HP_ARCH="hppa64"
++	    fi
++	fi
++	echo ${HP_ARCH}-hp-hpux${HPUX_REV}
++	exit ;;
++    ia64:HP-UX:*:*)
++	HPUX_REV=`echo ${UNAME_RELEASE}|sed -e 's/[^.]*.[0B]*//'`
++	echo ia64-hp-hpux${HPUX_REV}
++	exit ;;
++    3050*:HI-UX:*:*)
++	eval $set_cc_for_build
++	sed 's/^	//' << EOF >$dummy.c
++	#include <unistd.h>
++	int
++	main ()
++	{
++	  long cpu = sysconf (_SC_CPU_VERSION);
++	  /* The order matters, because CPU_IS_HP_MC68K erroneously returns
++	     true for CPU_PA_RISC1_0.  CPU_IS_PA_RISC returns correct
++	     results, however.  */
++	  if (CPU_IS_PA_RISC (cpu))
++	    {
++	      switch (cpu)
++		{
++		  case CPU_PA_RISC1_0: puts ("hppa1.0-hitachi-hiuxwe2"); break;
++		  case CPU_PA_RISC1_1: puts ("hppa1.1-hitachi-hiuxwe2"); break;
++		  case CPU_PA_RISC2_0: puts ("hppa2.0-hitachi-hiuxwe2"); break;
++		  default: puts ("hppa-hitachi-hiuxwe2"); break;
++		}
++	    }
++	  else if (CPU_IS_HP_MC68K (cpu))
++	    puts ("m68k-hitachi-hiuxwe2");
++	  else puts ("unknown-hitachi-hiuxwe2");
++	  exit (0);
++	}
++EOF
++	$CC_FOR_BUILD -o $dummy $dummy.c && SYSTEM_NAME=`$dummy` &&
++		{ echo "$SYSTEM_NAME"; exit; }
++	echo unknown-hitachi-hiuxwe2
++	exit ;;
++    9000/7??:4.3bsd:*:* | 9000/8?[79]:4.3bsd:*:* )
++	echo hppa1.1-hp-bsd
++	exit ;;
++    9000/8??:4.3bsd:*:*)
++	echo hppa1.0-hp-bsd
++	exit ;;
++    *9??*:MPE/iX:*:* | *3000*:MPE/iX:*:*)
++	echo hppa1.0-hp-mpeix
++	exit ;;
++    hp7??:OSF1:*:* | hp8?[79]:OSF1:*:* )
++	echo hppa1.1-hp-osf
++	exit ;;
++    hp8??:OSF1:*:*)
++	echo hppa1.0-hp-osf
++	exit ;;
++    i*86:OSF1:*:*)
++	if [ -x /usr/sbin/sysversion ] ; then
++	    echo ${UNAME_MACHINE}-unknown-osf1mk
++	else
++	    echo ${UNAME_MACHINE}-unknown-osf1
++	fi
++	exit ;;
++    parisc*:Lites*:*:*)
++	echo hppa1.1-hp-lites
++	exit ;;
++    C1*:ConvexOS:*:* | convex:ConvexOS:C1*:*)
++	echo c1-convex-bsd
++        exit ;;
++    C2*:ConvexOS:*:* | convex:ConvexOS:C2*:*)
++	if getsysinfo -f scalar_acc
++	then echo c32-convex-bsd
++	else echo c2-convex-bsd
++	fi
++        exit ;;
++    C34*:ConvexOS:*:* | convex:ConvexOS:C34*:*)
++	echo c34-convex-bsd
++        exit ;;
++    C38*:ConvexOS:*:* | convex:ConvexOS:C38*:*)
++	echo c38-convex-bsd
++        exit ;;
++    C4*:ConvexOS:*:* | convex:ConvexOS:C4*:*)
++	echo c4-convex-bsd
++        exit ;;
++    CRAY*Y-MP:*:*:*)
++	echo ymp-cray-unicos${UNAME_RELEASE} | sed -e 's/\.[^.]*$/.X/'
++	exit ;;
++    CRAY*[A-Z]90:*:*:*)
++	echo ${UNAME_MACHINE}-cray-unicos${UNAME_RELEASE} \
++	| sed -e 's/CRAY.*\([A-Z]90\)/\1/' \
++	      -e y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/ \
++	      -e 's/\.[^.]*$/.X/'
++	exit ;;
++    CRAY*TS:*:*:*)
++	echo t90-cray-unicos${UNAME_RELEASE} | sed -e 's/\.[^.]*$/.X/'
++	exit ;;
++    CRAY*T3E:*:*:*)
++	echo alphaev5-cray-unicosmk${UNAME_RELEASE} | sed -e 's/\.[^.]*$/.X/'
++	exit ;;
++    CRAY*SV1:*:*:*)
++	echo sv1-cray-unicos${UNAME_RELEASE} | sed -e 's/\.[^.]*$/.X/'
++	exit ;;
++    *:UNICOS/mp:*:*)
++	echo craynv-cray-unicosmp${UNAME_RELEASE} | sed -e 's/\.[^.]*$/.X/'
++	exit ;;
++    F30[01]:UNIX_System_V:*:* | F700:UNIX_System_V:*:*)
++	FUJITSU_PROC=`uname -m | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz'`
++        FUJITSU_SYS=`uname -p | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | sed -e 's/\///'`
++        FUJITSU_REL=`echo ${UNAME_RELEASE} | sed -e 's/ /_/'`
++        echo "${FUJITSU_PROC}-fujitsu-${FUJITSU_SYS}${FUJITSU_REL}"
++        exit ;;
++    5000:UNIX_System_V:4.*:*)
++        FUJITSU_SYS=`uname -p | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | sed -e 's/\///'`
++        FUJITSU_REL=`echo ${UNAME_RELEASE} | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz' | sed -e 's/ /_/'`
++        echo "sparc-fujitsu-${FUJITSU_SYS}${FUJITSU_REL}"
++	exit ;;
++    i*86:BSD/386:*:* | i*86:BSD/OS:*:* | *:Ascend\ Embedded/OS:*:*)
++	echo ${UNAME_MACHINE}-pc-bsdi${UNAME_RELEASE}
++	exit ;;
++    sparc*:BSD/OS:*:*)
++	echo sparc-unknown-bsdi${UNAME_RELEASE}
++	exit ;;
++    *:BSD/OS:*:*)
++	echo ${UNAME_MACHINE}-unknown-bsdi${UNAME_RELEASE}
++	exit ;;
++    *:FreeBSD:*:*)
++	case ${UNAME_MACHINE} in
++	    pc98)
++		echo i386-unknown-freebsd`echo ${UNAME_RELEASE}|sed -e 's/[-(].*//'` ;;
++	    amd64)
++		echo x86_64-unknown-freebsd`echo ${UNAME_RELEASE}|sed -e 's/[-(].*//'` ;;
++	    *)
++		echo ${UNAME_MACHINE}-unknown-freebsd`echo ${UNAME_RELEASE}|sed -e 's/[-(].*//'` ;;
++	esac
++	exit ;;
++    i*:CYGWIN*:*)
++	echo ${UNAME_MACHINE}-pc-cygwin
++	exit ;;
++    *:MINGW*:*)
++	echo ${UNAME_MACHINE}-pc-mingw32
++	exit ;;
++    i*:windows32*:*)
++    	# uname -m includes "-pc" on this system.
++    	echo ${UNAME_MACHINE}-mingw32
++	exit ;;
++    i*:PW*:*)
++	echo ${UNAME_MACHINE}-pc-pw32
++	exit ;;
++    *:Interix*:[3456]*)
++    	case ${UNAME_MACHINE} in
++	    x86)
++		echo i586-pc-interix${UNAME_RELEASE}
++		exit ;;
++	    EM64T | authenticamd | genuineintel)
++		echo x86_64-unknown-interix${UNAME_RELEASE}
++		exit ;;
++	    IA64)
++		echo ia64-unknown-interix${UNAME_RELEASE}
++		exit ;;
++	esac ;;
++    [345]86:Windows_95:* | [345]86:Windows_98:* | [345]86:Windows_NT:*)
++	echo i${UNAME_MACHINE}-pc-mks
++	exit ;;
++    i*:Windows_NT*:* | Pentium*:Windows_NT*:*)
++	# How do we know it's Interix rather than the generic POSIX subsystem?
++	# It also conflicts with pre-2.0 versions of AT&T UWIN. Should we
++	# UNAME_MACHINE based on the output of uname instead of i386?
++	echo i586-pc-interix
++	exit ;;
++    i*:UWIN*:*)
++	echo ${UNAME_MACHINE}-pc-uwin
++	exit ;;
++    amd64:CYGWIN*:*:* | x86_64:CYGWIN*:*:*)
++	echo x86_64-unknown-cygwin
++	exit ;;
++    p*:CYGWIN*:*)
++	echo powerpcle-unknown-cygwin
++	exit ;;
++    prep*:SunOS:5.*:*)
++	echo powerpcle-unknown-solaris2`echo ${UNAME_RELEASE}|sed -e 's/[^.]*//'`
++	exit ;;
++    *:GNU:*:*)
++	# the GNU system
++	echo `echo ${UNAME_MACHINE}|sed -e 's,[-/].*$,,'`-unknown-gnu`echo ${UNAME_RELEASE}|sed -e 's,/.*$,,'`
++	exit ;;
++    *:GNU/*:*:*)
++	# other systems with GNU libc and userland
++	echo ${UNAME_MACHINE}-unknown-`echo ${UNAME_SYSTEM} | sed 's,^[^/]*/,,' | tr '[A-Z]' '[a-z]'``echo ${UNAME_RELEASE}|sed -e 's/[-(].*//'`-gnu
++	exit ;;
++    i*86:Minix:*:*)
++	echo ${UNAME_MACHINE}-pc-minix
++	exit ;;
++    arm*:Linux:*:*)
++	eval $set_cc_for_build
++	if echo __ARM_EABI__ | $CC_FOR_BUILD -E - 2>/dev/null \
++	    | grep -q __ARM_EABI__
++	then
++	    echo ${UNAME_MACHINE}-unknown-linux-gnu
++	else
++	    echo ${UNAME_MACHINE}-unknown-linux-gnueabi
++	fi
++	exit ;;
++    avr32*:Linux:*:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
++    cris:Linux:*:*)
++	echo cris-axis-linux-gnu
++	exit ;;
++    crisv32:Linux:*:*)
++	echo crisv32-axis-linux-gnu
++	exit ;;
++    frv:Linux:*:*)
++    	echo frv-unknown-linux-gnu
++	exit ;;
++    ia64:Linux:*:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
++    m32r*:Linux:*:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
++    m68*:Linux:*:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
++    mips:Linux:*:*)
++	eval $set_cc_for_build
++	sed 's/^	//' << EOF >$dummy.c
++	#undef CPU
++	#undef mips
++	#undef mipsel
++	#if defined(__MIPSEL__) || defined(__MIPSEL) || defined(_MIPSEL) || defined(MIPSEL)
++	CPU=mipsel
++	#else
++	#if defined(__MIPSEB__) || defined(__MIPSEB) || defined(_MIPSEB) || defined(MIPSEB)
++	CPU=mips
++	#else
++	CPU=
++	#endif
++	#endif
++EOF
++	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '
++	    /^CPU/{
++		s: ::g
++		p
++	    }'`"
++	test x"${CPU}" != x && { echo "${CPU}-unknown-linux-gnu"; exit; }
++	;;
++    mips64:Linux:*:*)
++	eval $set_cc_for_build
++	sed 's/^	//' << EOF >$dummy.c
++	#undef CPU
++	#undef mips64
++	#undef mips64el
++	#if defined(__MIPSEL__) || defined(__MIPSEL) || defined(_MIPSEL) || defined(MIPSEL)
++	CPU=mips64el
++	#else
++	#if defined(__MIPSEB__) || defined(__MIPSEB) || defined(_MIPSEB) || defined(MIPSEB)
++	CPU=mips64
++	#else
++	CPU=
++	#endif
++	#endif
++EOF
++	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '
++	    /^CPU/{
++		s: ::g
++		p
++	    }'`"
++	test x"${CPU}" != x && { echo "${CPU}-unknown-linux-gnu"; exit; }
++	;;
++    or32:Linux:*:*)
++	echo or32-unknown-linux-gnu
++	exit ;;
++    ppc:Linux:*:*)
++	echo powerpc-unknown-linux-gnu
++	exit ;;
++    ppc64:Linux:*:*)
++	echo powerpc64-unknown-linux-gnu
++	exit ;;
++    alpha:Linux:*:*)
++	case `sed -n '/^cpu model/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo` in
++	  EV5)   UNAME_MACHINE=alphaev5 ;;
++	  EV56)  UNAME_MACHINE=alphaev56 ;;
++	  PCA56) UNAME_MACHINE=alphapca56 ;;
++	  PCA57) UNAME_MACHINE=alphapca56 ;;
++	  EV6)   UNAME_MACHINE=alphaev6 ;;
++	  EV67)  UNAME_MACHINE=alphaev67 ;;
++	  EV68*) UNAME_MACHINE=alphaev68 ;;
++        esac
++	objdump --private-headers /bin/sh | grep ld.so.1 >/dev/null
++	if test "$?" = 0 ; then LIBC="libc1" ; else LIBC="" ; fi
++	echo ${UNAME_MACHINE}-unknown-linux-gnu${LIBC}
++	exit ;;
++    padre:Linux:*:*)
++	echo sparc-unknown-linux-gnu
++	exit ;;
++    parisc:Linux:*:* | hppa:Linux:*:*)
++	# Look for CPU level
++	case `grep '^cpu[^a-z]*:' /proc/cpuinfo 2>/dev/null | cut -d' ' -f2` in
++	  PA7*) echo hppa1.1-unknown-linux-gnu ;;
++	  PA8*) echo hppa2.0-unknown-linux-gnu ;;
++	  *)    echo hppa-unknown-linux-gnu ;;
++	esac
++	exit ;;
++    parisc64:Linux:*:* | hppa64:Linux:*:*)
++	echo hppa64-unknown-linux-gnu
++	exit ;;
++    s390:Linux:*:* | s390x:Linux:*:*)
++	echo ${UNAME_MACHINE}-ibm-linux
++	exit ;;
++    sh64*:Linux:*:*)
++    	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
++    sh*:Linux:*:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
++    sparc:Linux:*:* | sparc64:Linux:*:*)
++	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
++    vax:Linux:*:*)
++	echo ${UNAME_MACHINE}-dec-linux-gnu
++	exit ;;
++    x86_64:Linux:*:*)
++	echo x86_64-unknown-linux-gnu
++	exit ;;
++    xtensa*:Linux:*:*)
++    	echo ${UNAME_MACHINE}-unknown-linux-gnu
++	exit ;;
++    i*86:Linux:*:*)
++	# The BFD linker knows what the default object file format is, so
++	# first see if it will tell us. cd to the root directory to prevent
++	# problems with other programs or directories called `ld' in the path.
++	# Set LC_ALL=C to ensure ld outputs messages in English.
++	ld_supported_targets=`cd /; LC_ALL=C ld --help 2>&1 \
++			 | sed -ne '/supported targets:/!d
++				    s/[ 	][ 	]*/ /g
++				    s/.*supported targets: *//
++				    s/ .*//
++				    p'`
++        case "$ld_supported_targets" in
++	  elf32-i386)
++		TENTATIVE="${UNAME_MACHINE}-pc-linux-gnu"
++		;;
++	  a.out-i386-linux)
++		echo "${UNAME_MACHINE}-pc-linux-gnuaout"
++		exit ;;
++	  "")
++		# Either a pre-BFD a.out linker (linux-gnuoldld) or
++		# one that does not give us useful --help.
++		echo "${UNAME_MACHINE}-pc-linux-gnuoldld"
++		exit ;;
++	esac
++	# Determine whether the default compiler is a.out or elf
++	eval $set_cc_for_build
++	sed 's/^	//' << EOF >$dummy.c
++	#include <features.h>
++	#ifdef __ELF__
++	# ifdef __GLIBC__
++	#  if __GLIBC__ >= 2
++	LIBC=gnu
++	#  else
++	LIBC=gnulibc1
++	#  endif
++	# else
++	LIBC=gnulibc1
++	# endif
++	#else
++	#if defined(__INTEL_COMPILER) || defined(__PGI) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
++	LIBC=gnu
++	#else
++	LIBC=gnuaout
++	#endif
++	#endif
++	#ifdef __dietlibc__
++	LIBC=dietlibc
++	#endif
++EOF
++	eval "`$CC_FOR_BUILD -E $dummy.c 2>/dev/null | sed -n '
++	    /^LIBC/{
++		s: ::g
++		p
++	    }'`"
++	test x"${LIBC}" != x && {
++		echo "${UNAME_MACHINE}-pc-linux-${LIBC}"
++		exit
++	}
++	test x"${TENTATIVE}" != x && { echo "${TENTATIVE}"; exit; }
++	;;
++    i*86:DYNIX/ptx:4*:*)
++	# ptx 4.0 does uname -s correctly, with DYNIX/ptx in there.
++	# earlier versions are messed up and put the nodename in both
++	# sysname and nodename.
++	echo i386-sequent-sysv4
++	exit ;;
++    i*86:UNIX_SV:4.2MP:2.*)
++        # Unixware is an offshoot of SVR4, but it has its own version
++        # number series starting with 2...
++        # I am not positive that other SVR4 systems won't match this,
++	# I just have to hope.  -- rms.
++        # Use sysv4.2uw... so that sysv4* matches it.
++	echo ${UNAME_MACHINE}-pc-sysv4.2uw${UNAME_VERSION}
++	exit ;;
++    i*86:OS/2:*:*)
++	# If we were able to find `uname', then EMX Unix compatibility
++	# is probably installed.
++	echo ${UNAME_MACHINE}-pc-os2-emx
++	exit ;;
++    i*86:XTS-300:*:STOP)
++	echo ${UNAME_MACHINE}-unknown-stop
++	exit ;;
++    i*86:atheos:*:*)
++	echo ${UNAME_MACHINE}-unknown-atheos
++	exit ;;
++    i*86:syllable:*:*)
++	echo ${UNAME_MACHINE}-pc-syllable
++	exit ;;
++    i*86:LynxOS:2.*:* | i*86:LynxOS:3.[01]*:* | i*86:LynxOS:4.0*:*)
++	echo i386-unknown-lynxos${UNAME_RELEASE}
++	exit ;;
++    i*86:*DOS:*:*)
++	echo ${UNAME_MACHINE}-pc-msdosdjgpp
++	exit ;;
++    i*86:*:4.*:* | i*86:SYSTEM_V:4.*:*)
++	UNAME_REL=`echo ${UNAME_RELEASE} | sed 's/\/MP$//'`
++	if grep Novell /usr/include/link.h >/dev/null 2>/dev/null; then
++		echo ${UNAME_MACHINE}-univel-sysv${UNAME_REL}
++	else
++		echo ${UNAME_MACHINE}-pc-sysv${UNAME_REL}
++	fi
++	exit ;;
++    i*86:*:5:[678]*)
++    	# UnixWare 7.x, OpenUNIX and OpenServer 6.
++	case `/bin/uname -X | grep "^Machine"` in
++	    *486*)	     UNAME_MACHINE=i486 ;;
++	    *Pentium)	     UNAME_MACHINE=i586 ;;
++	    *Pent*|*Celeron) UNAME_MACHINE=i686 ;;
++	esac
++	echo ${UNAME_MACHINE}-unknown-sysv${UNAME_RELEASE}${UNAME_SYSTEM}${UNAME_VERSION}
++	exit ;;
++    i*86:*:3.2:*)
++	if test -f /usr/options/cb.name; then
++		UNAME_REL=`sed -n 's/.*Version //p' </usr/options/cb.name`
++		echo ${UNAME_MACHINE}-pc-isc$UNAME_REL
++	elif /bin/uname -X 2>/dev/null >/dev/null ; then
++		UNAME_REL=`(/bin/uname -X|grep Release|sed -e 's/.*= //')`
++		(/bin/uname -X|grep i80486 >/dev/null) && UNAME_MACHINE=i486
++		(/bin/uname -X|grep '^Machine.*Pentium' >/dev/null) \
++			&& UNAME_MACHINE=i586
++		(/bin/uname -X|grep '^Machine.*Pent *II' >/dev/null) \
++			&& UNAME_MACHINE=i686
++		(/bin/uname -X|grep '^Machine.*Pentium Pro' >/dev/null) \
++			&& UNAME_MACHINE=i686
++		echo ${UNAME_MACHINE}-pc-sco$UNAME_REL
++	else
++		echo ${UNAME_MACHINE}-pc-sysv32
++	fi
++	exit ;;
++    pc:*:*:*)
++	# Left here for compatibility:
++        # uname -m prints for DJGPP always 'pc', but it prints nothing about
++        # the processor, so we play safe by assuming i386.
++	echo i386-pc-msdosdjgpp
++        exit ;;
++    Intel:Mach:3*:*)
++	echo i386-pc-mach3
++	exit ;;
++    paragon:*:*:*)
++	echo i860-intel-osf1
++	exit ;;
++    i860:*:4.*:*) # i860-SVR4
++	if grep Stardent /usr/include/sys/uadmin.h >/dev/null 2>&1 ; then
++	  echo i860-stardent-sysv${UNAME_RELEASE} # Stardent Vistra i860-SVR4
++	else # Add other i860-SVR4 vendors below as they are discovered.
++	  echo i860-unknown-sysv${UNAME_RELEASE}  # Unknown i860-SVR4
++	fi
++	exit ;;
++    mini*:CTIX:SYS*5:*)
++	# "miniframe"
++	echo m68010-convergent-sysv
++	exit ;;
++    mc68k:UNIX:SYSTEM5:3.51m)
++	echo m68k-convergent-sysv
++	exit ;;
++    M680?0:D-NIX:5.3:*)
++	echo m68k-diab-dnix
++	exit ;;
++    M68*:*:R3V[5678]*:*)
++	test -r /sysV68 && { echo 'm68k-motorola-sysv'; exit; } ;;
++    3[345]??:*:4.0:3.0 | 3[34]??A:*:4.0:3.0 | 3[34]??,*:*:4.0:3.0 | 3[34]??/*:*:4.0:3.0 | 4400:*:4.0:3.0 | 4850:*:4.0:3.0 | SKA40:*:4.0:3.0 | SDS2:*:4.0:3.0 | SHG2:*:4.0:3.0 | S7501*:*:4.0:3.0)
++	OS_REL=''
++	test -r /etc/.relid \
++	&& OS_REL=.`sed -n 's/[^ ]* [^ ]* \([0-9][0-9]\).*/\1/p' < /etc/.relid`
++	/bin/uname -p 2>/dev/null | grep 86 >/dev/null \
++	  && { echo i486-ncr-sysv4.3${OS_REL}; exit; }
++	/bin/uname -p 2>/dev/null | /bin/grep entium >/dev/null \
++	  && { echo i586-ncr-sysv4.3${OS_REL}; exit; } ;;
++    3[34]??:*:4.0:* | 3[34]??,*:*:4.0:*)
++        /bin/uname -p 2>/dev/null | grep 86 >/dev/null \
++          && { echo i486-ncr-sysv4; exit; } ;;
++    NCR*:*:4.2:* | MPRAS*:*:4.2:*)
++	OS_REL='.3'
++	test -r /etc/.relid \
++	    && OS_REL=.`sed -n 's/[^ ]* [^ ]* \([0-9][0-9]\).*/\1/p' < /etc/.relid`
++	/bin/uname -p 2>/dev/null | grep 86 >/dev/null \
++	    && { echo i486-ncr-sysv4.3${OS_REL}; exit; }
++	/bin/uname -p 2>/dev/null | /bin/grep entium >/dev/null \
++	    && { echo i586-ncr-sysv4.3${OS_REL}; exit; }
++	/bin/uname -p 2>/dev/null | /bin/grep pteron >/dev/null \
++	    && { echo i586-ncr-sysv4.3${OS_REL}; exit; } ;;
++    m68*:LynxOS:2.*:* | m68*:LynxOS:3.0*:*)
++	echo m68k-unknown-lynxos${UNAME_RELEASE}
++	exit ;;
++    mc68030:UNIX_System_V:4.*:*)
++	echo m68k-atari-sysv4
++	exit ;;
++    TSUNAMI:LynxOS:2.*:*)
++	echo sparc-unknown-lynxos${UNAME_RELEASE}
++	exit ;;
++    rs6000:LynxOS:2.*:*)
++	echo rs6000-unknown-lynxos${UNAME_RELEASE}
++	exit ;;
++    PowerPC:LynxOS:2.*:* | PowerPC:LynxOS:3.[01]*:* | PowerPC:LynxOS:4.0*:*)
++	echo powerpc-unknown-lynxos${UNAME_RELEASE}
++	exit ;;
++    SM[BE]S:UNIX_SV:*:*)
++	echo mips-dde-sysv${UNAME_RELEASE}
++	exit ;;
++    RM*:ReliantUNIX-*:*:*)
++	echo mips-sni-sysv4
++	exit ;;
++    RM*:SINIX-*:*:*)
++	echo mips-sni-sysv4
++	exit ;;
++    *:SINIX-*:*:*)
++	if uname -p 2>/dev/null >/dev/null ; then
++		UNAME_MACHINE=`(uname -p) 2>/dev/null`
++		echo ${UNAME_MACHINE}-sni-sysv4
++	else
++		echo ns32k-sni-sysv
++	fi
++	exit ;;
++    PENTIUM:*:4.0*:*) # Unisys `ClearPath HMP IX 4000' SVR4/MP effort
++                      # says <Richard.M.Bartel@ccMail.Census.GOV>
++        echo i586-unisys-sysv4
++        exit ;;
++    *:UNIX_System_V:4*:FTX*)
++	# From Gerald Hewes <hewes@openmarket.com>.
++	# How about differentiating between stratus architectures? -djm
++	echo hppa1.1-stratus-sysv4
++	exit ;;
++    *:*:*:FTX*)
++	# From seanf@swdc.stratus.com.
++	echo i860-stratus-sysv4
++	exit ;;
++    i*86:VOS:*:*)
++	# From Paul.Green@stratus.com.
++	echo ${UNAME_MACHINE}-stratus-vos
++	exit ;;
++    *:VOS:*:*)
++	# From Paul.Green@stratus.com.
++	echo hppa1.1-stratus-vos
++	exit ;;
++    mc68*:A/UX:*:*)
++	echo m68k-apple-aux${UNAME_RELEASE}
++	exit ;;
++    news*:NEWS-OS:6*:*)
++	echo mips-sony-newsos6
++	exit ;;
++    R[34]000:*System_V*:*:* | R4000:UNIX_SYSV:*:* | R*000:UNIX_SV:*:*)
++	if [ -d /usr/nec ]; then
++	        echo mips-nec-sysv${UNAME_RELEASE}
++	else
++	        echo mips-unknown-sysv${UNAME_RELEASE}
++	fi
++        exit ;;
++    BeBox:BeOS:*:*)	# BeOS running on hardware made by Be, PPC only.
++	echo powerpc-be-beos
++	exit ;;
++    BeMac:BeOS:*:*)	# BeOS running on Mac or Mac clone, PPC only.
++	echo powerpc-apple-beos
++	exit ;;
++    BePC:BeOS:*:*)	# BeOS running on Intel PC compatible.
++	echo i586-pc-beos
++	exit ;;
++    BePC:Haiku:*:*)	# Haiku running on Intel PC compatible.
++	echo i586-pc-haiku
++	exit ;;
++    SX-4:SUPER-UX:*:*)
++	echo sx4-nec-superux${UNAME_RELEASE}
++	exit ;;
++    SX-5:SUPER-UX:*:*)
++	echo sx5-nec-superux${UNAME_RELEASE}
++	exit ;;
++    SX-6:SUPER-UX:*:*)
++	echo sx6-nec-superux${UNAME_RELEASE}
++	exit ;;
++    SX-7:SUPER-UX:*:*)
++	echo sx7-nec-superux${UNAME_RELEASE}
++	exit ;;
++    SX-8:SUPER-UX:*:*)
++	echo sx8-nec-superux${UNAME_RELEASE}
++	exit ;;
++    SX-8R:SUPER-UX:*:*)
++	echo sx8r-nec-superux${UNAME_RELEASE}
++	exit ;;
++    Power*:Rhapsody:*:*)
++	echo powerpc-apple-rhapsody${UNAME_RELEASE}
++	exit ;;
++    *:Rhapsody:*:*)
++	echo ${UNAME_MACHINE}-apple-rhapsody${UNAME_RELEASE}
++	exit ;;
++    *:Darwin:*:*)
++	UNAME_PROCESSOR=`uname -p` || UNAME_PROCESSOR=unknown
++	case $UNAME_PROCESSOR in
++	    unknown) UNAME_PROCESSOR=powerpc ;;
++	esac
++	echo ${UNAME_PROCESSOR}-apple-darwin${UNAME_RELEASE}
++	exit ;;
++    *:procnto*:*:* | *:QNX:[0123456789]*:*)
++	UNAME_PROCESSOR=`uname -p`
++	if test "$UNAME_PROCESSOR" = "x86"; then
++		UNAME_PROCESSOR=i386
++		UNAME_MACHINE=pc
++	fi
++	echo ${UNAME_PROCESSOR}-${UNAME_MACHINE}-nto-qnx${UNAME_RELEASE}
++	exit ;;
++    *:QNX:*:4*)
++	echo i386-pc-qnx
++	exit ;;
++    NSE-?:NONSTOP_KERNEL:*:*)
++	echo nse-tandem-nsk${UNAME_RELEASE}
++	exit ;;
++    NSR-?:NONSTOP_KERNEL:*:*)
++	echo nsr-tandem-nsk${UNAME_RELEASE}
++	exit ;;
++    *:NonStop-UX:*:*)
++	echo mips-compaq-nonstopux
++	exit ;;
++    BS2000:POSIX*:*:*)
++	echo bs2000-siemens-sysv
++	exit ;;
++    DS/*:UNIX_System_V:*:*)
++	echo ${UNAME_MACHINE}-${UNAME_SYSTEM}-${UNAME_RELEASE}
++	exit ;;
++    *:Plan9:*:*)
++	# "uname -m" is not consistent, so use $cputype instead. 386
++	# is converted to i386 for consistency with other x86
++	# operating systems.
++	if test "$cputype" = "386"; then
++	    UNAME_MACHINE=i386
++	else
++	    UNAME_MACHINE="$cputype"
++	fi
++	echo ${UNAME_MACHINE}-unknown-plan9
++	exit ;;
++    *:TOPS-10:*:*)
++	echo pdp10-unknown-tops10
++	exit ;;
++    *:TENEX:*:*)
++	echo pdp10-unknown-tenex
++	exit ;;
++    KS10:TOPS-20:*:* | KL10:TOPS-20:*:* | TYPE4:TOPS-20:*:*)
++	echo pdp10-dec-tops20
++	exit ;;
++    XKL-1:TOPS-20:*:* | TYPE5:TOPS-20:*:*)
++	echo pdp10-xkl-tops20
++	exit ;;
++    *:TOPS-20:*:*)
++	echo pdp10-unknown-tops20
++	exit ;;
++    *:ITS:*:*)
++	echo pdp10-unknown-its
++	exit ;;
++    SEI:*:*:SEIUX)
++        echo mips-sei-seiux${UNAME_RELEASE}
++	exit ;;
++    *:DragonFly:*:*)
++	echo ${UNAME_MACHINE}-unknown-dragonfly`echo ${UNAME_RELEASE}|sed -e 's/[-(].*//'`
++	exit ;;
++    *:*VMS:*:*)
++    	UNAME_MACHINE=`(uname -p) 2>/dev/null`
++	case "${UNAME_MACHINE}" in
++	    A*) echo alpha-dec-vms ; exit ;;
++	    I*) echo ia64-dec-vms ; exit ;;
++	    V*) echo vax-dec-vms ; exit ;;
++	esac ;;
++    *:XENIX:*:SysV)
++	echo i386-pc-xenix
++	exit ;;
++    i*86:skyos:*:*)
++	echo ${UNAME_MACHINE}-pc-skyos`echo ${UNAME_RELEASE}` | sed -e 's/ .*$//'
++	exit ;;
++    i*86:rdos:*:*)
++	echo ${UNAME_MACHINE}-pc-rdos
++	exit ;;
++    i*86:AROS:*:*)
++	echo ${UNAME_MACHINE}-pc-aros
++	exit ;;
++esac
++
++#echo '(No uname command or uname output not recognized.)' 1>&2
++#echo "${UNAME_MACHINE}:${UNAME_SYSTEM}:${UNAME_RELEASE}:${UNAME_VERSION}" 1>&2
++
++eval $set_cc_for_build
++cat >$dummy.c <<EOF
++#ifdef _SEQUENT_
++# include <sys/types.h>
++# include <sys/utsname.h>
++#endif
++main ()
++{
++#if defined (sony)
++#if defined (MIPSEB)
++  /* BFD wants "bsd" instead of "newsos".  Perhaps BFD should be changed,
++     I don't know....  */
++  printf ("mips-sony-bsd\n"); exit (0);
++#else
++#include <sys/param.h>
++  printf ("m68k-sony-newsos%s\n",
++#ifdef NEWSOS4
++          "4"
++#else
++	  ""
++#endif
++         ); exit (0);
++#endif
++#endif
++
++#if defined (__arm) && defined (__acorn) && defined (__unix)
++  printf ("arm-acorn-riscix\n"); exit (0);
++#endif
++
++#if defined (hp300) && !defined (hpux)
++  printf ("m68k-hp-bsd\n"); exit (0);
++#endif
++
++#if defined (NeXT)
++#if !defined (__ARCHITECTURE__)
++#define __ARCHITECTURE__ "m68k"
++#endif
++  int version;
++  version=`(hostinfo | sed -n 's/.*NeXT Mach \([0-9]*\).*/\1/p') 2>/dev/null`;
++  if (version < 4)
++    printf ("%s-next-nextstep%d\n", __ARCHITECTURE__, version);
++  else
++    printf ("%s-next-openstep%d\n", __ARCHITECTURE__, version);
++  exit (0);
++#endif
++
++#if defined (MULTIMAX) || defined (n16)
++#if defined (UMAXV)
++  printf ("ns32k-encore-sysv\n"); exit (0);
++#else
++#if defined (CMU)
++  printf ("ns32k-encore-mach\n"); exit (0);
++#else
++  printf ("ns32k-encore-bsd\n"); exit (0);
++#endif
++#endif
++#endif
++
++#if defined (__386BSD__)
++  printf ("i386-pc-bsd\n"); exit (0);
++#endif
++
++#if defined (sequent)
++#if defined (i386)
++  printf ("i386-sequent-dynix\n"); exit (0);
++#endif
++#if defined (ns32000)
++  printf ("ns32k-sequent-dynix\n"); exit (0);
++#endif
++#endif
++
++#if defined (_SEQUENT_)
++    struct utsname un;
++
++    uname(&un);
++
++    if (strncmp(un.version, "V2", 2) == 0) {
++	printf ("i386-sequent-ptx2\n"); exit (0);
++    }
++    if (strncmp(un.version, "V1", 2) == 0) { /* XXX is V1 correct? */
++	printf ("i386-sequent-ptx1\n"); exit (0);
++    }
++    printf ("i386-sequent-ptx\n"); exit (0);
++
++#endif
++
++#if defined (vax)
++# if !defined (ultrix)
++#  include <sys/param.h>
++#  if defined (BSD)
++#   if BSD == 43
++      printf ("vax-dec-bsd4.3\n"); exit (0);
++#   else
++#    if BSD == 199006
++      printf ("vax-dec-bsd4.3reno\n"); exit (0);
++#    else
++      printf ("vax-dec-bsd\n"); exit (0);
++#    endif
++#   endif
++#  else
++    printf ("vax-dec-bsd\n"); exit (0);
++#  endif
++# else
++    printf ("vax-dec-ultrix\n"); exit (0);
++# endif
++#endif
++
++#if defined (alliant) && defined (i860)
++  printf ("i860-alliant-bsd\n"); exit (0);
++#endif
++
++  exit (1);
++}
++EOF
++
++$CC_FOR_BUILD -o $dummy $dummy.c 2>/dev/null && SYSTEM_NAME=`$dummy` &&
++	{ echo "$SYSTEM_NAME"; exit; }
++
++# Apollos put the system type in the environment.
++
++test -d /usr/apollo && { echo ${ISP}-apollo-${SYSTYPE}; exit; }
++
++# Convex versions that predate uname can use getsysinfo(1)
++
++if [ -x /usr/convex/getsysinfo ]
++then
++    case `getsysinfo -f cpu_type` in
++    c1*)
++	echo c1-convex-bsd
++	exit ;;
++    c2*)
++	if getsysinfo -f scalar_acc
++	then echo c32-convex-bsd
++	else echo c2-convex-bsd
++	fi
++	exit ;;
++    c34*)
++	echo c34-convex-bsd
++	exit ;;
++    c38*)
++	echo c38-convex-bsd
++	exit ;;
++    c4*)
++	echo c4-convex-bsd
++	exit ;;
++    esac
++fi
++
++cat >&2 <<EOF
++$0: unable to guess system type
++
++This script, last modified $timestamp, has failed to recognize
++the operating system you are using. It is advised that you
++download the most up to date version of the config scripts from
++
++  http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD
++and
++  http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD
++
++If the version you run ($0) is already up to date, please
++send the following data and any information you think might be
++pertinent to <config-patches@gnu.org> in order to provide the needed
++information to handle your system.
++
++config.guess timestamp = $timestamp
++
++uname -m = `(uname -m) 2>/dev/null || echo unknown`
++uname -r = `(uname -r) 2>/dev/null || echo unknown`
++uname -s = `(uname -s) 2>/dev/null || echo unknown`
++uname -v = `(uname -v) 2>/dev/null || echo unknown`
++
++/usr/bin/uname -p = `(/usr/bin/uname -p) 2>/dev/null`
++/bin/uname -X     = `(/bin/uname -X) 2>/dev/null`
++
++hostinfo               = `(hostinfo) 2>/dev/null`
++/bin/universe          = `(/bin/universe) 2>/dev/null`
++/usr/bin/arch -k       = `(/usr/bin/arch -k) 2>/dev/null`
++/bin/arch              = `(/bin/arch) 2>/dev/null`
++/usr/bin/oslevel       = `(/usr/bin/oslevel) 2>/dev/null`
++/usr/convex/getsysinfo = `(/usr/convex/getsysinfo) 2>/dev/null`
++
++UNAME_MACHINE = ${UNAME_MACHINE}
++UNAME_RELEASE = ${UNAME_RELEASE}
++UNAME_SYSTEM  = ${UNAME_SYSTEM}
++UNAME_VERSION = ${UNAME_VERSION}
++EOF
++
++exit 1
++
++# Local variables:
++# eval: (add-hook 'write-file-hooks 'time-stamp)
++# time-stamp-start: "timestamp='"
++# time-stamp-format: "%:y-%02m-%02d"
++# time-stamp-end: "'"
++# End:
+diff --git a/sdl2/config.info b/sdl2/config.info
+index e69de29..ee092bd 100644
+--- a/sdl2/config.info
++++ b/sdl2/config.info
+@@ -0,0 +1,16 @@
++
++build information:
++cc...............,,,. arm-rpi3b-linux-gnueabihf-gcc
++c++.................. arm-rpi3b-linux-gnueabihf-g++
++options.............. --sysroot=/opt/target/rootfs --sysroot=/opt/target/rootfs -Wl,-rpath-link=/opt/target/rootfs/usr/lib -L/opt/target/rootfs/usr/lib -L/opt/target/rootfs/lib -O3 -fomit-frame-pointer -mfpu=neon -Wa,-march=armv7a -fprefetch-loop-arrays -fno-exceptions -fno-rtti -pedantic -Wall -W -Wno-unused-parameter -DUSE_VCHIQ_ARM -D_REENTRANT -I/opt/target/rootfs/usr/include/SDL2 -I/opt/target/rootfs/opt/target/rootfs/usr/include/interface/vmcs_host/linux -I/opt/target/rootfs/opt/target/rootfs/usr/include/interface/vcos/pthreads -I/opt/target/rootfs/opt/target/rootfs/usr/include/interface/vmcs_host/linux -I/opt/target/rootfs/opt/target/rootfs/usr/include/interface/vcos/pthreads 
++defines.............. -DZLIB -DJMA_SUPPORT -I/opt/target/rootfs/usr/include/libpng16 -DHAVE_LIBPNG -DHAVE_MKSTEMP -DHAVE_STRINGS_H -DHAVE_SYS_IOCTL_H -DHAVE_STDINT_H -DRIGHTSHIFT_IS_SAR
++libs................. -L/opt/target/rootfs/usr/lib -lz -L/opt/target/rootfs/usr/lib -lpng16 -lz -Wl,-rpath,/usr/lib -Wl,--enable-new-dtags -lSDL2 -lbrcmEGL -lbrcmGLESv2 -lbcm_host -lvchostif -lbcm_host -lvcos -lvchiq_arm
++
++features:
++screenshot support... yes
++netplay support...... no
++GZIP support......... yes
++ZIP support.......... no
++JMA support.......... yes
++debugger............. no
++
+diff --git a/sdl2/config.sub b/sdl2/config.sub
+index e69de29..d546a94 100644
+--- a/sdl2/config.sub
++++ b/sdl2/config.sub
+@@ -0,0 +1,1685 @@
++#! /bin/sh
++# Configuration validation subroutine script.
++#   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
++#   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
++#   Free Software Foundation, Inc.
++
++timestamp='2009-02-03'
++
++# This file is (in principle) common to ALL GNU software.
++# The presence of a machine in this file suggests that SOME GNU software
++# can handle that machine.  It does not imply ALL GNU software can.
++#
++# This file is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA
++# 02110-1301, USA.
++#
++# As a special exception to the GNU General Public License, if you
++# distribute this file as part of a program that contains a
++# configuration script generated by Autoconf, you may include it under
++# the same distribution terms that you use for the rest of that program.
++
++
++# Please send patches to <config-patches@gnu.org>.  Submit a context
++# diff and a properly formatted ChangeLog entry.
++#
++# Configuration subroutine to validate and canonicalize a configuration type.
++# Supply the specified configuration type as an argument.
++# If it is invalid, we print an error message on stderr and exit with code 1.
++# Otherwise, we print the canonical config type on stdout and succeed.
++
++# This file is supposed to be the same for all GNU packages
++# and recognize all the CPU types, system types and aliases
++# that are meaningful with *any* GNU software.
++# Each package is responsible for reporting which valid configurations
++# it does not support.  The user should be able to distinguish
++# a failure to support a valid configuration from a meaningless
++# configuration.
++
++# The goal of this file is to map all the various variations of a given
++# machine specification into a single specification in the form:
++#	CPU_TYPE-MANUFACTURER-OPERATING_SYSTEM
++# or in some cases, the newer four-part form:
++#	CPU_TYPE-MANUFACTURER-KERNEL-OPERATING_SYSTEM
++# It is wrong to echo any other type of specification.
++
++me=`echo "$0" | sed -e 's,.*/,,'`
++
++usage="\
++Usage: $0 [OPTION] CPU-MFR-OPSYS
++       $0 [OPTION] ALIAS
++
++Canonicalize a configuration name.
++
++Operation modes:
++  -h, --help         print this help, then exit
++  -t, --time-stamp   print date of last modification, then exit
++  -v, --version      print version number, then exit
++
++Report bugs and patches to <config-patches@gnu.org>."
++
++version="\
++GNU config.sub ($timestamp)
++
++Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
++2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
++
++This is free software; see the source for copying conditions.  There is NO
++warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
++
++help="
++Try \`$me --help' for more information."
++
++# Parse command line
++while test $# -gt 0 ; do
++  case $1 in
++    --time-stamp | --time* | -t )
++       echo "$timestamp" ; exit ;;
++    --version | -v )
++       echo "$version" ; exit ;;
++    --help | --h* | -h )
++       echo "$usage"; exit ;;
++    -- )     # Stop option processing
++       shift; break ;;
++    - )	# Use stdin as input.
++       break ;;
++    -* )
++       echo "$me: invalid option $1$help"
++       exit 1 ;;
++
++    *local*)
++       # First pass through any local machine types.
++       echo $1
++       exit ;;
++
++    * )
++       break ;;
++  esac
++done
++
++case $# in
++ 0) echo "$me: missing argument$help" >&2
++    exit 1;;
++ 1) ;;
++ *) echo "$me: too many arguments$help" >&2
++    exit 1;;
++esac
++
++# Separate what the user gave into CPU-COMPANY and OS or KERNEL-OS (if any).
++# Here we must recognize all the valid KERNEL-OS combinations.
++maybe_os=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\2/'`
++case $maybe_os in
++  nto-qnx* | linux-gnu* | linux-dietlibc | linux-newlib* | linux-uclibc* | \
++  uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | knetbsd*-gnu* | netbsd*-gnu* | \
++  kopensolaris*-gnu* | \
++  storm-chaos* | os2-emx* | rtmk-nova*)
++    os=-$maybe_os
++    basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`
++    ;;
++  *)
++    basic_machine=`echo $1 | sed 's/-[^-]*$//'`
++    if [ $basic_machine != $1 ]
++    then os=`echo $1 | sed 's/.*-/-/'`
++    else os=; fi
++    ;;
++esac
++
++### Let's recognize common machines as not being operating systems so
++### that things like config.sub decstation-3100 work.  We also
++### recognize some manufacturers as not being operating systems, so we
++### can provide default operating systems below.
++case $os in
++	-sun*os*)
++		# Prevent following clause from handling this invalid input.
++		;;
++	-dec* | -mips* | -sequent* | -encore* | -pc532* | -sgi* | -sony* | \
++	-att* | -7300* | -3300* | -delta* | -motorola* | -sun[234]* | \
++	-unicom* | -ibm* | -next | -hp | -isi* | -apollo | -altos* | \
++	-convergent* | -ncr* | -news | -32* | -3600* | -3100* | -hitachi* |\
++	-c[123]* | -convex* | -sun | -crds | -omron* | -dg | -ultra | -tti* | \
++	-harris | -dolphin | -highlevel | -gould | -cbm | -ns | -masscomp | \
++	-apple | -axis | -knuth | -cray)
++		os=
++		basic_machine=$1
++		;;
++	-sim | -cisco | -oki | -wec | -winbond)
++		os=
++		basic_machine=$1
++		;;
++	-scout)
++		;;
++	-wrs)
++		os=-vxworks
++		basic_machine=$1
++		;;
++	-chorusos*)
++		os=-chorusos
++		basic_machine=$1
++		;;
++ 	-chorusrdb)
++ 		os=-chorusrdb
++		basic_machine=$1
++ 		;;
++	-hiux*)
++		os=-hiuxwe2
++		;;
++	-sco6)
++		os=-sco5v6
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-sco5)
++		os=-sco3.2v5
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-sco4)
++		os=-sco3.2v4
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-sco3.2.[4-9]*)
++		os=`echo $os | sed -e 's/sco3.2./sco3.2v/'`
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-sco3.2v[4-9]*)
++		# Don't forget version if it is 3.2v4 or newer.
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-sco5v6*)
++		# Don't forget version if it is 3.2v4 or newer.
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-sco*)
++		os=-sco3.2v2
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-udk*)
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-isc)
++		os=-isc2.2
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-clix*)
++		basic_machine=clipper-intergraph
++		;;
++	-isc*)
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-pc/'`
++		;;
++	-lynx*)
++		os=-lynxos
++		;;
++	-ptx*)
++		basic_machine=`echo $1 | sed -e 's/86-.*/86-sequent/'`
++		;;
++	-windowsnt*)
++		os=`echo $os | sed -e 's/windowsnt/winnt/'`
++		;;
++	-psos*)
++		os=-psos
++		;;
++	-mint | -mint[0-9]*)
++		basic_machine=m68k-atari
++		os=-mint
++		;;
++esac
++
++# Decode aliases for certain CPU-COMPANY combinations.
++case $basic_machine in
++	# Recognize the basic CPU types without company name.
++	# Some are omitted here because they have special meanings below.
++	1750a | 580 \
++	| a29k \
++	| alpha | alphaev[4-8] | alphaev56 | alphaev6[78] | alphapca5[67] \
++	| alpha64 | alpha64ev[4-8] | alpha64ev56 | alpha64ev6[78] | alpha64pca5[67] \
++	| am33_2.0 \
++	| arc | arm | arm[bl]e | arme[lb] | armv[2345] | armv[345][lb] | avr | avr32 \
++	| bfin \
++	| c4x | clipper \
++	| d10v | d30v | dlx | dsp16xx \
++	| fido | fr30 | frv \
++	| h8300 | h8500 | hppa | hppa1.[01] | hppa2.0 | hppa2.0[nw] | hppa64 \
++	| i370 | i860 | i960 | ia64 \
++	| ip2k | iq2000 \
++	| lm32 \
++	| m32c | m32r | m32rle | m68000 | m68k | m88k \
++	| maxq | mb | microblaze | mcore | mep | metag \
++	| mips | mipsbe | mipseb | mipsel | mipsle \
++	| mips16 \
++	| mips64 | mips64el \
++	| mips64octeon | mips64octeonel \
++	| mips64orion | mips64orionel \
++	| mips64r5900 | mips64r5900el \
++	| mips64vr | mips64vrel \
++	| mips64vr4100 | mips64vr4100el \
++	| mips64vr4300 | mips64vr4300el \
++	| mips64vr5000 | mips64vr5000el \
++	| mips64vr5900 | mips64vr5900el \
++	| mipsisa32 | mipsisa32el \
++	| mipsisa32r2 | mipsisa32r2el \
++	| mipsisa64 | mipsisa64el \
++	| mipsisa64r2 | mipsisa64r2el \
++	| mipsisa64sb1 | mipsisa64sb1el \
++	| mipsisa64sr71k | mipsisa64sr71kel \
++	| mipstx39 | mipstx39el \
++	| mn10200 | mn10300 \
++	| mt \
++	| msp430 \
++	| nios | nios2 \
++	| ns16k | ns32k \
++	| or32 \
++	| pdp10 | pdp11 | pj | pjl \
++	| powerpc | powerpc64 | powerpc64le | powerpcle | ppcbe \
++	| pyramid \
++	| score \
++	| sh | sh[1234] | sh[24]a | sh[24]aeb | sh[23]e | sh[34]eb | sheb | shbe | shle | sh[1234]le | sh3ele \
++	| sh64 | sh64le \
++	| sparc | sparc64 | sparc64b | sparc64v | sparc86x | sparclet | sparclite \
++	| sparcv8 | sparcv9 | sparcv9b | sparcv9v \
++	| spu | strongarm \
++	| tahoe | thumb | tic4x | tic80 | tron \
++	| v850 | v850e \
++	| we32k \
++	| x86 | xc16x | xscale | xscalee[bl] | xstormy16 | xtensa \
++	| z8k | z80)
++		basic_machine=$basic_machine-unknown
++		;;
++	m6811 | m68hc11 | m6812 | m68hc12)
++		# Motorola 68HC11/12.
++		basic_machine=$basic_machine-unknown
++		os=-none
++		;;
++	m88110 | m680[12346]0 | m683?2 | m68360 | m5200 | v70 | w65 | z8k)
++		;;
++	ms1)
++		basic_machine=mt-unknown
++		;;
++
++	# We use `pc' rather than `unknown'
++	# because (1) that's what they normally are, and
++	# (2) the word "unknown" tends to confuse beginning users.
++	i*86 | x86_64)
++	  basic_machine=$basic_machine-pc
++	  ;;
++	# Object if more than one company name word.
++	*-*-*)
++		echo Invalid configuration \`$1\': machine \`$basic_machine\' not recognized 1>&2
++		exit 1
++		;;
++	# Recognize the basic CPU types with company name.
++	580-* \
++	| a29k-* \
++	| alpha-* | alphaev[4-8]-* | alphaev56-* | alphaev6[78]-* \
++	| alpha64-* | alpha64ev[4-8]-* | alpha64ev56-* | alpha64ev6[78]-* \
++	| alphapca5[67]-* | alpha64pca5[67]-* | arc-* \
++	| arm-*  | armbe-* | armle-* | armeb-* | armv*-* \
++	| avr-* | avr32-* \
++	| bfin-* | bs2000-* \
++	| c[123]* | c30-* | [cjt]90-* | c4x-* | c54x-* | c55x-* | c6x-* \
++	| clipper-* | craynv-* | cydra-* \
++	| d10v-* | d30v-* | dlx-* \
++	| elxsi-* \
++	| f30[01]-* | f700-* | fido-* | fr30-* | frv-* | fx80-* \
++	| h8300-* | h8500-* \
++	| hppa-* | hppa1.[01]-* | hppa2.0-* | hppa2.0[nw]-* | hppa64-* \
++	| i*86-* | i860-* | i960-* | ia64-* \
++	| ip2k-* | iq2000-* \
++	| lm32-* \
++	| m32c-* | m32r-* | m32rle-* \
++	| m68000-* | m680[012346]0-* | m68360-* | m683?2-* | m68k-* \
++	| m88110-* | m88k-* | maxq-* | mcore-* | metag-* \
++	| mips-* | mipsbe-* | mipseb-* | mipsel-* | mipsle-* \
++	| mips16-* \
++	| mips64-* | mips64el-* \
++	| mips64octeon-* | mips64octeonel-* \
++	| mips64orion-* | mips64orionel-* \
++	| mips64r5900-* | mips64r5900el-* \
++	| mips64vr-* | mips64vrel-* \
++	| mips64vr4100-* | mips64vr4100el-* \
++	| mips64vr4300-* | mips64vr4300el-* \
++	| mips64vr5000-* | mips64vr5000el-* \
++	| mips64vr5900-* | mips64vr5900el-* \
++	| mipsisa32-* | mipsisa32el-* \
++	| mipsisa32r2-* | mipsisa32r2el-* \
++	| mipsisa64-* | mipsisa64el-* \
++	| mipsisa64r2-* | mipsisa64r2el-* \
++	| mipsisa64sb1-* | mipsisa64sb1el-* \
++	| mipsisa64sr71k-* | mipsisa64sr71kel-* \
++	| mipstx39-* | mipstx39el-* \
++	| mmix-* \
++	| mt-* \
++	| msp430-* \
++	| nios-* | nios2-* \
++	| none-* | np1-* | ns16k-* | ns32k-* \
++	| orion-* \
++	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
++	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* | ppcbe-* \
++	| pyramid-* \
++	| romp-* | rs6000-* \
++	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
++	| shle-* | sh[1234]le-* | sh3ele-* | sh64-* | sh64le-* \
++	| sparc-* | sparc64-* | sparc64b-* | sparc64v-* | sparc86x-* | sparclet-* \
++	| sparclite-* \
++	| sparcv8-* | sparcv9-* | sparcv9b-* | sparcv9v-* | strongarm-* | sv1-* | sx?-* \
++	| tahoe-* | thumb-* \
++	| tic30-* | tic4x-* | tic54x-* | tic55x-* | tic6x-* | tic80-* | tile-* \
++	| tron-* \
++	| v850-* | v850e-* | vax-* \
++	| we32k-* \
++	| x86-* | x86_64-* | xc16x-* | xps100-* | xscale-* | xscalee[bl]-* \
++	| xstormy16-* | xtensa*-* \
++	| ymp-* \
++	| z8k-* | z80-*)
++		;;
++	# Recognize the basic CPU types without company name, with glob match.
++	xtensa*)
++		basic_machine=$basic_machine-unknown
++		;;
++	# Recognize the various machine names and aliases which stand
++	# for a CPU type and a company and sometimes even an OS.
++	386bsd)
++		basic_machine=i386-unknown
++		os=-bsd
++		;;
++	3b1 | 7300 | 7300-att | att-7300 | pc7300 | safari | unixpc)
++		basic_machine=m68000-att
++		;;
++	3b*)
++		basic_machine=we32k-att
++		;;
++	a29khif)
++		basic_machine=a29k-amd
++		os=-udi
++		;;
++    	abacus)
++		basic_machine=abacus-unknown
++		;;
++	adobe68k)
++		basic_machine=m68010-adobe
++		os=-scout
++		;;
++	alliant | fx80)
++		basic_machine=fx80-alliant
++		;;
++	altos | altos3068)
++		basic_machine=m68k-altos
++		;;
++	am29k)
++		basic_machine=a29k-none
++		os=-bsd
++		;;
++	amd64)
++		basic_machine=x86_64-pc
++		;;
++	amd64-*)
++		basic_machine=x86_64-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	amdahl)
++		basic_machine=580-amdahl
++		os=-sysv
++		;;
++	amiga | amiga-*)
++		basic_machine=m68k-unknown
++		;;
++	amigaos | amigados)
++		basic_machine=m68k-unknown
++		os=-amigaos
++		;;
++	amigaunix | amix)
++		basic_machine=m68k-unknown
++		os=-sysv4
++		;;
++	apollo68)
++		basic_machine=m68k-apollo
++		os=-sysv
++		;;
++	apollo68bsd)
++		basic_machine=m68k-apollo
++		os=-bsd
++		;;
++	aros)
++		basic_machine=i386-pc
++		os=-aros
++		;;
++	aux)
++		basic_machine=m68k-apple
++		os=-aux
++		;;
++	balance)
++		basic_machine=ns32k-sequent
++		os=-dynix
++		;;
++	blackfin)
++		basic_machine=bfin-unknown
++		os=-linux
++		;;
++	blackfin-*)
++		basic_machine=bfin-`echo $basic_machine | sed 's/^[^-]*-//'`
++		os=-linux
++		;;
++	c90)
++		basic_machine=c90-cray
++		os=-unicos
++		;;
++        cegcc)
++		basic_machine=arm-unknown
++		os=-cegcc
++		;;
++	convex-c1)
++		basic_machine=c1-convex
++		os=-bsd
++		;;
++	convex-c2)
++		basic_machine=c2-convex
++		os=-bsd
++		;;
++	convex-c32)
++		basic_machine=c32-convex
++		os=-bsd
++		;;
++	convex-c34)
++		basic_machine=c34-convex
++		os=-bsd
++		;;
++	convex-c38)
++		basic_machine=c38-convex
++		os=-bsd
++		;;
++	cray | j90)
++		basic_machine=j90-cray
++		os=-unicos
++		;;
++	craynv)
++		basic_machine=craynv-cray
++		os=-unicosmp
++		;;
++	cr16)
++		basic_machine=cr16-unknown
++		os=-elf
++		;;
++	crds | unos)
++		basic_machine=m68k-crds
++		;;
++	crisv32 | crisv32-* | etraxfs*)
++		basic_machine=crisv32-axis
++		;;
++	cris | cris-* | etrax*)
++		basic_machine=cris-axis
++		;;
++	crx)
++		basic_machine=crx-unknown
++		os=-elf
++		;;
++	da30 | da30-*)
++		basic_machine=m68k-da30
++		;;
++	decstation | decstation-3100 | pmax | pmax-* | pmin | dec3100 | decstatn)
++		basic_machine=mips-dec
++		;;
++	decsystem10* | dec10*)
++		basic_machine=pdp10-dec
++		os=-tops10
++		;;
++	decsystem20* | dec20*)
++		basic_machine=pdp10-dec
++		os=-tops20
++		;;
++	delta | 3300 | motorola-3300 | motorola-delta \
++	      | 3300-motorola | delta-motorola)
++		basic_machine=m68k-motorola
++		;;
++	delta88)
++		basic_machine=m88k-motorola
++		os=-sysv3
++		;;
++	dicos)
++		basic_machine=i686-pc
++		os=-dicos
++		;;
++	djgpp)
++		basic_machine=i586-pc
++		os=-msdosdjgpp
++		;;
++	dpx20 | dpx20-*)
++		basic_machine=rs6000-bull
++		os=-bosx
++		;;
++	dpx2* | dpx2*-bull)
++		basic_machine=m68k-bull
++		os=-sysv3
++		;;
++	ebmon29k)
++		basic_machine=a29k-amd
++		os=-ebmon
++		;;
++	elxsi)
++		basic_machine=elxsi-elxsi
++		os=-bsd
++		;;
++	encore | umax | mmax)
++		basic_machine=ns32k-encore
++		;;
++	es1800 | OSE68k | ose68k | ose | OSE)
++		basic_machine=m68k-ericsson
++		os=-ose
++		;;
++	fx2800)
++		basic_machine=i860-alliant
++		;;
++	genix)
++		basic_machine=ns32k-ns
++		;;
++	gmicro)
++		basic_machine=tron-gmicro
++		os=-sysv
++		;;
++	go32)
++		basic_machine=i386-pc
++		os=-go32
++		;;
++	h3050r* | hiux*)
++		basic_machine=hppa1.1-hitachi
++		os=-hiuxwe2
++		;;
++	h8300hms)
++		basic_machine=h8300-hitachi
++		os=-hms
++		;;
++	h8300xray)
++		basic_machine=h8300-hitachi
++		os=-xray
++		;;
++	h8500hms)
++		basic_machine=h8500-hitachi
++		os=-hms
++		;;
++	harris)
++		basic_machine=m88k-harris
++		os=-sysv3
++		;;
++	hp300-*)
++		basic_machine=m68k-hp
++		;;
++	hp300bsd)
++		basic_machine=m68k-hp
++		os=-bsd
++		;;
++	hp300hpux)
++		basic_machine=m68k-hp
++		os=-hpux
++		;;
++	hp3k9[0-9][0-9] | hp9[0-9][0-9])
++		basic_machine=hppa1.0-hp
++		;;
++	hp9k2[0-9][0-9] | hp9k31[0-9])
++		basic_machine=m68000-hp
++		;;
++	hp9k3[2-9][0-9])
++		basic_machine=m68k-hp
++		;;
++	hp9k6[0-9][0-9] | hp6[0-9][0-9])
++		basic_machine=hppa1.0-hp
++		;;
++	hp9k7[0-79][0-9] | hp7[0-79][0-9])
++		basic_machine=hppa1.1-hp
++		;;
++	hp9k78[0-9] | hp78[0-9])
++		# FIXME: really hppa2.0-hp
++		basic_machine=hppa1.1-hp
++		;;
++	hp9k8[67]1 | hp8[67]1 | hp9k80[24] | hp80[24] | hp9k8[78]9 | hp8[78]9 | hp9k893 | hp893)
++		# FIXME: really hppa2.0-hp
++		basic_machine=hppa1.1-hp
++		;;
++	hp9k8[0-9][13679] | hp8[0-9][13679])
++		basic_machine=hppa1.1-hp
++		;;
++	hp9k8[0-9][0-9] | hp8[0-9][0-9])
++		basic_machine=hppa1.0-hp
++		;;
++	hppa-next)
++		os=-nextstep3
++		;;
++	hppaosf)
++		basic_machine=hppa1.1-hp
++		os=-osf
++		;;
++	hppro)
++		basic_machine=hppa1.1-hp
++		os=-proelf
++		;;
++	i370-ibm* | ibm*)
++		basic_machine=i370-ibm
++		;;
++# I'm not sure what "Sysv32" means.  Should this be sysv3.2?
++	i*86v32)
++		basic_machine=`echo $1 | sed -e 's/86.*/86-pc/'`
++		os=-sysv32
++		;;
++	i*86v4*)
++		basic_machine=`echo $1 | sed -e 's/86.*/86-pc/'`
++		os=-sysv4
++		;;
++	i*86v)
++		basic_machine=`echo $1 | sed -e 's/86.*/86-pc/'`
++		os=-sysv
++		;;
++	i*86sol2)
++		basic_machine=`echo $1 | sed -e 's/86.*/86-pc/'`
++		os=-solaris2
++		;;
++	i386mach)
++		basic_machine=i386-mach
++		os=-mach
++		;;
++	i386-vsta | vsta)
++		basic_machine=i386-unknown
++		os=-vsta
++		;;
++	iris | iris4d)
++		basic_machine=mips-sgi
++		case $os in
++		    -irix*)
++			;;
++		    *)
++			os=-irix4
++			;;
++		esac
++		;;
++	isi68 | isi)
++		basic_machine=m68k-isi
++		os=-sysv
++		;;
++	m68knommu)
++		basic_machine=m68k-unknown
++		os=-linux
++		;;
++	m68knommu-*)
++		basic_machine=m68k-`echo $basic_machine | sed 's/^[^-]*-//'`
++		os=-linux
++		;;
++	m88k-omron*)
++		basic_machine=m88k-omron
++		;;
++	magnum | m3230)
++		basic_machine=mips-mips
++		os=-sysv
++		;;
++	merlin)
++		basic_machine=ns32k-utek
++		os=-sysv
++		;;
++	mingw32)
++		basic_machine=i386-pc
++		os=-mingw32
++		;;
++	mingw32ce)
++		basic_machine=arm-unknown
++		os=-mingw32ce
++		;;
++	miniframe)
++		basic_machine=m68000-convergent
++		;;
++	*mint | -mint[0-9]* | *MiNT | *MiNT[0-9]*)
++		basic_machine=m68k-atari
++		os=-mint
++		;;
++	mips3*-*)
++		basic_machine=`echo $basic_machine | sed -e 's/mips3/mips64/'`
++		;;
++	mips3*)
++		basic_machine=`echo $basic_machine | sed -e 's/mips3/mips64/'`-unknown
++		;;
++	monitor)
++		basic_machine=m68k-rom68k
++		os=-coff
++		;;
++	morphos)
++		basic_machine=powerpc-unknown
++		os=-morphos
++		;;
++	msdos)
++		basic_machine=i386-pc
++		os=-msdos
++		;;
++	ms1-*)
++		basic_machine=`echo $basic_machine | sed -e 's/ms1-/mt-/'`
++		;;
++	mvs)
++		basic_machine=i370-ibm
++		os=-mvs
++		;;
++	ncr3000)
++		basic_machine=i486-ncr
++		os=-sysv4
++		;;
++	netbsd386)
++		basic_machine=i386-unknown
++		os=-netbsd
++		;;
++	netwinder)
++		basic_machine=armv4l-rebel
++		os=-linux
++		;;
++	news | news700 | news800 | news900)
++		basic_machine=m68k-sony
++		os=-newsos
++		;;
++	news1000)
++		basic_machine=m68030-sony
++		os=-newsos
++		;;
++	news-3600 | risc-news)
++		basic_machine=mips-sony
++		os=-newsos
++		;;
++	necv70)
++		basic_machine=v70-nec
++		os=-sysv
++		;;
++	next | m*-next )
++		basic_machine=m68k-next
++		case $os in
++		    -nextstep* )
++			;;
++		    -ns2*)
++		      os=-nextstep2
++			;;
++		    *)
++		      os=-nextstep3
++			;;
++		esac
++		;;
++	nh3000)
++		basic_machine=m68k-harris
++		os=-cxux
++		;;
++	nh[45]000)
++		basic_machine=m88k-harris
++		os=-cxux
++		;;
++	nindy960)
++		basic_machine=i960-intel
++		os=-nindy
++		;;
++	mon960)
++		basic_machine=i960-intel
++		os=-mon960
++		;;
++	nonstopux)
++		basic_machine=mips-compaq
++		os=-nonstopux
++		;;
++	np1)
++		basic_machine=np1-gould
++		;;
++	nsr-tandem)
++		basic_machine=nsr-tandem
++		;;
++	op50n-* | op60c-*)
++		basic_machine=hppa1.1-oki
++		os=-proelf
++		;;
++	openrisc | openrisc-*)
++		basic_machine=or32-unknown
++		;;
++	os400)
++		basic_machine=powerpc-ibm
++		os=-os400
++		;;
++	OSE68000 | ose68000)
++		basic_machine=m68000-ericsson
++		os=-ose
++		;;
++	os68k)
++		basic_machine=m68k-none
++		os=-os68k
++		;;
++	pa-hitachi)
++		basic_machine=hppa1.1-hitachi
++		os=-hiuxwe2
++		;;
++	paragon)
++		basic_machine=i860-intel
++		os=-osf
++		;;
++	parisc)
++		basic_machine=hppa-unknown
++		os=-linux
++		;;
++	parisc-*)
++		basic_machine=hppa-`echo $basic_machine | sed 's/^[^-]*-//'`
++		os=-linux
++		;;
++	pbd)
++		basic_machine=sparc-tti
++		;;
++	pbb)
++		basic_machine=m68k-tti
++		;;
++	pc532 | pc532-*)
++		basic_machine=ns32k-pc532
++		;;
++	pc98)
++		basic_machine=i386-pc
++		;;
++	pc98-*)
++		basic_machine=i386-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	pentium | p5 | k5 | k6 | nexgen | viac3)
++		basic_machine=i586-pc
++		;;
++	pentiumpro | p6 | 6x86 | athlon | athlon_*)
++		basic_machine=i686-pc
++		;;
++	pentiumii | pentium2 | pentiumiii | pentium3)
++		basic_machine=i686-pc
++		;;
++	pentium4)
++		basic_machine=i786-pc
++		;;
++	pentium-* | p5-* | k5-* | k6-* | nexgen-* | viac3-*)
++		basic_machine=i586-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	pentiumpro-* | p6-* | 6x86-* | athlon-*)
++		basic_machine=i686-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	pentiumii-* | pentium2-* | pentiumiii-* | pentium3-*)
++		basic_machine=i686-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	pentium4-*)
++		basic_machine=i786-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	pn)
++		basic_machine=pn-gould
++		;;
++	power)	basic_machine=power-ibm
++		;;
++	ppc)	basic_machine=powerpc-unknown
++		;;
++	ppc-*)	basic_machine=powerpc-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	ppcle | powerpclittle | ppc-le | powerpc-little)
++		basic_machine=powerpcle-unknown
++		;;
++	ppcle-* | powerpclittle-*)
++		basic_machine=powerpcle-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	ppc64)	basic_machine=powerpc64-unknown
++		;;
++	ppc64-*) basic_machine=powerpc64-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	ppc64le | powerpc64little | ppc64-le | powerpc64-little)
++		basic_machine=powerpc64le-unknown
++		;;
++	ppc64le-* | powerpc64little-*)
++		basic_machine=powerpc64le-`echo $basic_machine | sed 's/^[^-]*-//'`
++		;;
++	ps2)
++		basic_machine=i386-ibm
++		;;
++	pw32)
++		basic_machine=i586-unknown
++		os=-pw32
++		;;
++	rdos)
++		basic_machine=i386-pc
++		os=-rdos
++		;;
++	rom68k)
++		basic_machine=m68k-rom68k
++		os=-coff
++		;;
++	rm[46]00)
++		basic_machine=mips-siemens
++		;;
++	rtpc | rtpc-*)
++		basic_machine=romp-ibm
++		;;
++	s390 | s390-*)
++		basic_machine=s390-ibm
++		;;
++	s390x | s390x-*)
++		basic_machine=s390x-ibm
++		;;
++	sa29200)
++		basic_machine=a29k-amd
++		os=-udi
++		;;
++	sb1)
++		basic_machine=mipsisa64sb1-unknown
++		;;
++	sb1el)
++		basic_machine=mipsisa64sb1el-unknown
++		;;
++	sde)
++		basic_machine=mipsisa32-sde
++		os=-elf
++		;;
++	sei)
++		basic_machine=mips-sei
++		os=-seiux
++		;;
++	sequent)
++		basic_machine=i386-sequent
++		;;
++	sh)
++		basic_machine=sh-hitachi
++		os=-hms
++		;;
++	sh5el)
++		basic_machine=sh5le-unknown
++		;;
++	sh64)
++		basic_machine=sh64-unknown
++		;;
++	sparclite-wrs | simso-wrs)
++		basic_machine=sparclite-wrs
++		os=-vxworks
++		;;
++	sps7)
++		basic_machine=m68k-bull
++		os=-sysv2
++		;;
++	spur)
++		basic_machine=spur-unknown
++		;;
++	st2000)
++		basic_machine=m68k-tandem
++		;;
++	stratus)
++		basic_machine=i860-stratus
++		os=-sysv4
++		;;
++	sun2)
++		basic_machine=m68000-sun
++		;;
++	sun2os3)
++		basic_machine=m68000-sun
++		os=-sunos3
++		;;
++	sun2os4)
++		basic_machine=m68000-sun
++		os=-sunos4
++		;;
++	sun3os3)
++		basic_machine=m68k-sun
++		os=-sunos3
++		;;
++	sun3os4)
++		basic_machine=m68k-sun
++		os=-sunos4
++		;;
++	sun4os3)
++		basic_machine=sparc-sun
++		os=-sunos3
++		;;
++	sun4os4)
++		basic_machine=sparc-sun
++		os=-sunos4
++		;;
++	sun4sol2)
++		basic_machine=sparc-sun
++		os=-solaris2
++		;;
++	sun3 | sun3-*)
++		basic_machine=m68k-sun
++		;;
++	sun4)
++		basic_machine=sparc-sun
++		;;
++	sun386 | sun386i | roadrunner)
++		basic_machine=i386-sun
++		;;
++	sv1)
++		basic_machine=sv1-cray
++		os=-unicos
++		;;
++	symmetry)
++		basic_machine=i386-sequent
++		os=-dynix
++		;;
++	t3e)
++		basic_machine=alphaev5-cray
++		os=-unicos
++		;;
++	t90)
++		basic_machine=t90-cray
++		os=-unicos
++		;;
++	tic54x | c54x*)
++		basic_machine=tic54x-unknown
++		os=-coff
++		;;
++	tic55x | c55x*)
++		basic_machine=tic55x-unknown
++		os=-coff
++		;;
++	tic6x | c6x*)
++		basic_machine=tic6x-unknown
++		os=-coff
++		;;
++	tile*)
++		basic_machine=tile-unknown
++		os=-linux-gnu
++		;;
++	tx39)
++		basic_machine=mipstx39-unknown
++		;;
++	tx39el)
++		basic_machine=mipstx39el-unknown
++		;;
++	toad1)
++		basic_machine=pdp10-xkl
++		os=-tops20
++		;;
++	tower | tower-32)
++		basic_machine=m68k-ncr
++		;;
++	tpf)
++		basic_machine=s390x-ibm
++		os=-tpf
++		;;
++	udi29k)
++		basic_machine=a29k-amd
++		os=-udi
++		;;
++	ultra3)
++		basic_machine=a29k-nyu
++		os=-sym1
++		;;
++	v810 | necv810)
++		basic_machine=v810-nec
++		os=-none
++		;;
++	vaxv)
++		basic_machine=vax-dec
++		os=-sysv
++		;;
++	vms)
++		basic_machine=vax-dec
++		os=-vms
++		;;
++	vpp*|vx|vx-*)
++		basic_machine=f301-fujitsu
++		;;
++	vxworks960)
++		basic_machine=i960-wrs
++		os=-vxworks
++		;;
++	vxworks68)
++		basic_machine=m68k-wrs
++		os=-vxworks
++		;;
++	vxworks29k)
++		basic_machine=a29k-wrs
++		os=-vxworks
++		;;
++	w65*)
++		basic_machine=w65-wdc
++		os=-none
++		;;
++	w89k-*)
++		basic_machine=hppa1.1-winbond
++		os=-proelf
++		;;
++	xbox)
++		basic_machine=i686-pc
++		os=-mingw32
++		;;
++	xps | xps100)
++		basic_machine=xps100-honeywell
++		;;
++	ymp)
++		basic_machine=ymp-cray
++		os=-unicos
++		;;
++	z8k-*-coff)
++		basic_machine=z8k-unknown
++		os=-sim
++		;;
++	z80-*-coff)
++		basic_machine=z80-unknown
++		os=-sim
++		;;
++	none)
++		basic_machine=none-none
++		os=-none
++		;;
++
++# Here we handle the default manufacturer of certain CPU types.  It is in
++# some cases the only manufacturer, in others, it is the most popular.
++	w89k)
++		basic_machine=hppa1.1-winbond
++		;;
++	op50n)
++		basic_machine=hppa1.1-oki
++		;;
++	op60c)
++		basic_machine=hppa1.1-oki
++		;;
++	romp)
++		basic_machine=romp-ibm
++		;;
++	mmix)
++		basic_machine=mmix-knuth
++		;;
++	rs6000)
++		basic_machine=rs6000-ibm
++		;;
++	vax)
++		basic_machine=vax-dec
++		;;
++	pdp10)
++		# there are many clones, so DEC is not a safe bet
++		basic_machine=pdp10-unknown
++		;;
++	pdp11)
++		basic_machine=pdp11-dec
++		;;
++	we32k)
++		basic_machine=we32k-att
++		;;
++	sh[1234] | sh[24]a | sh[24]aeb | sh[34]eb | sh[1234]le | sh[23]ele)
++		basic_machine=sh-unknown
++		;;
++	sparc | sparcv8 | sparcv9 | sparcv9b | sparcv9v)
++		basic_machine=sparc-sun
++		;;
++	cydra)
++		basic_machine=cydra-cydrome
++		;;
++	orion)
++		basic_machine=orion-highlevel
++		;;
++	orion105)
++		basic_machine=clipper-highlevel
++		;;
++	mac | mpw | mac-mpw)
++		basic_machine=m68k-apple
++		;;
++	pmac | pmac-mpw)
++		basic_machine=powerpc-apple
++		;;
++	*-unknown)
++		# Make sure to match an already-canonicalized machine name.
++		;;
++	*)
++		echo Invalid configuration \`$1\': machine \`$basic_machine\' not recognized 1>&2
++		exit 1
++		;;
++esac
++
++# Here we canonicalize certain aliases for manufacturers.
++case $basic_machine in
++	*-digital*)
++		basic_machine=`echo $basic_machine | sed 's/digital.*/dec/'`
++		;;
++	*-commodore*)
++		basic_machine=`echo $basic_machine | sed 's/commodore.*/cbm/'`
++		;;
++	*)
++		;;
++esac
++
++# Decode manufacturer-specific aliases for certain operating systems.
++
++if [ x"$os" != x"" ]
++then
++case $os in
++        # First match some system type aliases
++        # that might get confused with valid system types.
++	# -solaris* is a basic system type, with this one exception.
++	-solaris1 | -solaris1.*)
++		os=`echo $os | sed -e 's|solaris1|sunos4|'`
++		;;
++	-solaris)
++		os=-solaris2
++		;;
++	-svr4*)
++		os=-sysv4
++		;;
++	-unixware*)
++		os=-sysv4.2uw
++		;;
++	-gnu/linux*)
++		os=`echo $os | sed -e 's|gnu/linux|linux-gnu|'`
++		;;
++	# First accept the basic system types.
++	# The portable systems comes first.
++	# Each alternative MUST END IN A *, to match a version number.
++	# -sysv* is not here because it comes later, after sysvr4.
++	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -sunos | -sunos[34]*\
++	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -solaris* | -sym* \
++	      | -kopensolaris* \
++	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
++	      | -aos* | -aros* \
++	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
++	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
++	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \
++	      | -openbsd* | -solidbsd* \
++	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
++	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
++	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
++	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* \
++	      | -chorusos* | -chorusrdb* | -cegcc* \
++	      | -cygwin* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
++	      | -mingw32* | -linux-gnu* | -linux-newlib* | -linux-uclibc* \
++	      | -uxpv* | -beos* | -mpeix* | -udk* \
++	      | -interix* | -uwin* | -mks* | -rhapsody* | -darwin* | -opened* \
++	      | -openstep* | -oskit* | -conix* | -pw32* | -nonstopux* \
++	      | -storm-chaos* | -tops10* | -tenex* | -tops20* | -its* \
++	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
++	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
++	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
++	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops*)
++	# Remember, each alternative MUST END IN *, to match a version number.
++		;;
++	-qnx*)
++		case $basic_machine in
++		    x86-* | i*86-*)
++			;;
++		    *)
++			os=-nto$os
++			;;
++		esac
++		;;
++	-nto-qnx*)
++		;;
++	-nto*)
++		os=`echo $os | sed -e 's|nto|nto-qnx|'`
++		;;
++	-sim | -es1800* | -hms* | -xray | -os68k* | -none* | -v88r* \
++	      | -windows* | -osx | -abug | -netware* | -os9* | -beos* | -haiku* \
++	      | -macos* | -mpw* | -magic* | -mmixware* | -mon960* | -lnews*)
++		;;
++	-mac*)
++		os=`echo $os | sed -e 's|mac|macos|'`
++		;;
++	-linux-dietlibc)
++		os=-linux-dietlibc
++		;;
++	-linux*)
++		os=`echo $os | sed -e 's|linux|linux-gnu|'`
++		;;
++	-sunos5*)
++		os=`echo $os | sed -e 's|sunos5|solaris2|'`
++		;;
++	-sunos6*)
++		os=`echo $os | sed -e 's|sunos6|solaris3|'`
++		;;
++	-opened*)
++		os=-openedition
++		;;
++        -os400*)
++		os=-os400
++		;;
++	-wince*)
++		os=-wince
++		;;
++	-osfrose*)
++		os=-osfrose
++		;;
++	-osf*)
++		os=-osf
++		;;
++	-utek*)
++		os=-bsd
++		;;
++	-dynix*)
++		os=-bsd
++		;;
++	-acis*)
++		os=-aos
++		;;
++	-atheos*)
++		os=-atheos
++		;;
++	-syllable*)
++		os=-syllable
++		;;
++	-386bsd)
++		os=-bsd
++		;;
++	-ctix* | -uts*)
++		os=-sysv
++		;;
++	-nova*)
++		os=-rtmk-nova
++		;;
++	-ns2 )
++		os=-nextstep2
++		;;
++	-nsk*)
++		os=-nsk
++		;;
++	# Preserve the version number of sinix5.
++	-sinix5.*)
++		os=`echo $os | sed -e 's|sinix|sysv|'`
++		;;
++	-sinix*)
++		os=-sysv4
++		;;
++        -tpf*)
++		os=-tpf
++		;;
++	-triton*)
++		os=-sysv3
++		;;
++	-oss*)
++		os=-sysv3
++		;;
++	-svr4)
++		os=-sysv4
++		;;
++	-svr3)
++		os=-sysv3
++		;;
++	-sysvr4)
++		os=-sysv4
++		;;
++	# This must come after -sysvr4.
++	-sysv*)
++		;;
++	-ose*)
++		os=-ose
++		;;
++	-es1800*)
++		os=-ose
++		;;
++	-xenix)
++		os=-xenix
++		;;
++	-*mint | -mint[0-9]* | -*MiNT | -MiNT[0-9]*)
++		os=-mint
++		;;
++	-aros*)
++		os=-aros
++		;;
++	-kaos*)
++		os=-kaos
++		;;
++	-zvmoe)
++		os=-zvmoe
++		;;
++	-dicos*)
++		os=-dicos
++		;;
++	-none)
++		;;
++	*)
++		# Get rid of the `-' at the beginning of $os.
++		os=`echo $os | sed 's/[^-]*-//'`
++		echo Invalid configuration \`$1\': system \`$os\' not recognized 1>&2
++		exit 1
++		;;
++esac
++else
++
++# Here we handle the default operating systems that come with various machines.
++# The value should be what the vendor currently ships out the door with their
++# machine or put another way, the most popular os provided with the machine.
++
++# Note that if you're going to try to match "-MANUFACTURER" here (say,
++# "-sun"), then you have to tell the case statement up towards the top
++# that MANUFACTURER isn't an operating system.  Otherwise, code above
++# will signal an error saying that MANUFACTURER isn't an operating
++# system, and we'll never get to this point.
++
++case $basic_machine in
++        score-*)
++		os=-elf
++		;;
++        spu-*)
++		os=-elf
++		;;
++	*-acorn)
++		os=-riscix1.2
++		;;
++	arm*-rebel)
++		os=-linux
++		;;
++	arm*-semi)
++		os=-aout
++		;;
++        c4x-* | tic4x-*)
++        	os=-coff
++		;;
++	# This must come before the *-dec entry.
++	pdp10-*)
++		os=-tops20
++		;;
++	pdp11-*)
++		os=-none
++		;;
++	*-dec | vax-*)
++		os=-ultrix4.2
++		;;
++	m68*-apollo)
++		os=-domain
++		;;
++	i386-sun)
++		os=-sunos4.0.2
++		;;
++	m68000-sun)
++		os=-sunos3
++		# This also exists in the configure program, but was not the
++		# default.
++		# os=-sunos4
++		;;
++	m68*-cisco)
++		os=-aout
++		;;
++        mep-*)
++		os=-elf
++		;;
++	mips*-cisco)
++		os=-elf
++		;;
++	mips*-*)
++		os=-elf
++		;;
++	or32-*)
++		os=-coff
++		;;
++	*-tti)	# must be before sparc entry or we get the wrong os.
++		os=-sysv3
++		;;
++	sparc-* | *-sun)
++		os=-sunos4.1.1
++		;;
++	*-be)
++		os=-beos
++		;;
++	*-haiku)
++		os=-haiku
++		;;
++	*-ibm)
++		os=-aix
++		;;
++    	*-knuth)
++		os=-mmixware
++		;;
++	*-wec)
++		os=-proelf
++		;;
++	*-winbond)
++		os=-proelf
++		;;
++	*-oki)
++		os=-proelf
++		;;
++	*-hp)
++		os=-hpux
++		;;
++	*-hitachi)
++		os=-hiux
++		;;
++	i860-* | *-att | *-ncr | *-altos | *-motorola | *-convergent)
++		os=-sysv
++		;;
++	*-cbm)
++		os=-amigaos
++		;;
++	*-dg)
++		os=-dgux
++		;;
++	*-dolphin)
++		os=-sysv3
++		;;
++	m68k-ccur)
++		os=-rtu
++		;;
++	m88k-omron*)
++		os=-luna
++		;;
++	*-next )
++		os=-nextstep
++		;;
++	*-sequent)
++		os=-ptx
++		;;
++	*-crds)
++		os=-unos
++		;;
++	*-ns)
++		os=-genix
++		;;
++	i370-*)
++		os=-mvs
++		;;
++	*-next)
++		os=-nextstep3
++		;;
++	*-gould)
++		os=-sysv
++		;;
++	*-highlevel)
++		os=-bsd
++		;;
++	*-encore)
++		os=-bsd
++		;;
++	*-sgi)
++		os=-irix
++		;;
++	*-siemens)
++		os=-sysv4
++		;;
++	*-masscomp)
++		os=-rtu
++		;;
++	f30[01]-fujitsu | f700-fujitsu)
++		os=-uxpv
++		;;
++	*-rom68k)
++		os=-coff
++		;;
++	*-*bug)
++		os=-coff
++		;;
++	*-apple)
++		os=-macos
++		;;
++	*-atari*)
++		os=-mint
++		;;
++	*)
++		os=-none
++		;;
++esac
++fi
++
++# Here we handle the case where we know the os, and the CPU type, but not the
++# manufacturer.  We pick the logical manufacturer.
++vendor=unknown
++case $basic_machine in
++	*-unknown)
++		case $os in
++			-riscix*)
++				vendor=acorn
++				;;
++			-sunos*)
++				vendor=sun
++				;;
++			-aix*)
++				vendor=ibm
++				;;
++			-beos*)
++				vendor=be
++				;;
++			-hpux*)
++				vendor=hp
++				;;
++			-mpeix*)
++				vendor=hp
++				;;
++			-hiux*)
++				vendor=hitachi
++				;;
++			-unos*)
++				vendor=crds
++				;;
++			-dgux*)
++				vendor=dg
++				;;
++			-luna*)
++				vendor=omron
++				;;
++			-genix*)
++				vendor=ns
++				;;
++			-mvs* | -opened*)
++				vendor=ibm
++				;;
++			-os400*)
++				vendor=ibm
++				;;
++			-ptx*)
++				vendor=sequent
++				;;
++			-tpf*)
++				vendor=ibm
++				;;
++			-vxsim* | -vxworks* | -windiss*)
++				vendor=wrs
++				;;
++			-aux*)
++				vendor=apple
++				;;
++			-hms*)
++				vendor=hitachi
++				;;
++			-mpw* | -macos*)
++				vendor=apple
++				;;
++			-*mint | -mint[0-9]* | -*MiNT | -MiNT[0-9]*)
++				vendor=atari
++				;;
++			-vos*)
++				vendor=stratus
++				;;
++		esac
++		basic_machine=`echo $basic_machine | sed "s/unknown/$vendor/"`
++		;;
++esac
++
++echo $basic_machine$os
++exit
++
++# Local variables:
++# eval: (add-hook 'write-file-hooks 'time-stamp)
++# time-stamp-start: "timestamp='"
++# time-stamp-format: "%:y-%02m-%02d"
++# time-stamp-end: "'"
++# End:
+diff --git a/sdl2/configure.ac b/sdl2/configure.ac
+index e69de29..ea73ec5 100644
+--- a/sdl2/configure.ac
++++ b/sdl2/configure.ac
+@@ -0,0 +1,406 @@
++AC_PREREQ([2.60])
++AC_INIT([Snes9x], [1.53], [], [snes9x])
++AC_REVISION([$Revision: 1.53 $])
++
++AC_CONFIG_SRCDIR([sdlmain.cpp])
++
 +AC_CANONICAL_HOST
- 
- AC_PROG_CC
- AC_PROG_CXX
-@@ -38,7 +38,7 @@ AC_DEFUN([AC_S9X_COMPILER_FLAG],
- 				return (argc);
- 			}
- 		],
--		[snes9x_cv_option_$2="yes"], [snes9x_cv_option_$2="no"])
++
++AC_PROG_CC
++AC_PROG_CXX
++AC_LANG([C++])
++
++S9XFLGS=""
++S9XDEFS=""
++S9XLIBS=""
++
++AC_DEFUN([AC_S9X_COMPILER_FLAG],
++[
++	AC_MSG_CHECKING([whether g++ accepts $1])
++
++	AC_CACHE_VAL([snes9x_cv_option_$2],
++	[
++		OLD_CXXFLAGS="[$]CXXFLAGS"
++		CXXFLAGS="[$]OLD_CXXFLAGS $1"
++
++		AC_TRY_RUN(
++		[
++			int	foo;
++
++			int	main (int argc, char **argv)
++			{
++				/* The following code triggs gcc:s generation of aline opcodes,
++				   which some versions of as does not support. */
++
++				if (argc > 0)
++					argc = 0;
++
++				return (argc);
++			}
++		],
 +		[snes9x_cv_option_$2="yes"], [snes9x_cv_option_$2="no"], [snes9x_cv_option_$2="yes"])
- 	])
- 
- 	CXXFLAGS="[$]OLD_CXXFLAGS"
-@@ -154,9 +154,10 @@ AC_ARG_ENABLE([gzip],
- 	[], [enable_gzip="yes"])
- 
- if test "x$enable_gzip" = "xyes"; then
++	])
++
++	CXXFLAGS="[$]OLD_CXXFLAGS"
++
++	if test "x[$]snes9x_cv_option_$2" = "xyes"; then
++		S9XFLGS="[$]S9XFLGS $1"
++		AC_MSG_RESULT([yes])
++	else
++		AC_MSG_RESULT([no])
++		$3
++	fi
++])
++
++# *****************************
++# *** Execution begins here ***
++# *****************************
++
++# Remove -g and -O2 flags manually.
++
++if test "x$CFLAGS" != "x"; then
++	CFLAGS="`echo \"$CFLAGS\" | sed -e 's/-g//'`"
++	CFLAGS="`echo \"$CFLAGS\" | sed -e 's/-O2//'`"
++fi
++
++if test "x$CXXFLAGS" != "x"; then
++	CXXFLAGS="`echo \"$CXXFLAGS\" | sed -e 's/-g//'`"
++	CXXFLAGS="`echo \"$CXXFLAGS\" | sed -e 's/-O2//'`"
++fi
++
++# Test what compiler flags we should use.
++
++AC_ARG_ENABLE([debug],
++	[AS_HELP_STRING([--enable-debug],
++		[leave debug information in the final binary (default: no)])],
++	[], [enable_debug="no"])
++
++if test "x$enable_debug" = "xyes"; then
++	AC_S9X_COMPILER_FLAG([-g],  [g])
++	AC_S9X_COMPILER_FLAG([-O0], [o0])
++else
++	AC_S9X_COMPILER_FLAG([-O3], [o3], [
++		AC_S9X_COMPILER_FLAG([-O2], [o2], [
++			AC_S9X_COMPILER_FLAG([-O1], [o1])])])
++	AC_S9X_COMPILER_FLAG([-fomit-frame-pointer], [omit_frame_pointer])
++fi
++
++# <domaemon>: --enable-neon
++
++AC_ARG_ENABLE([neon],
++	[AS_HELP_STRING([--enable-neon],
++		[use the optimisation flag to enable NEON instructions (default: no)])],
++	[], [enable_neon="no"])
++
++if test "x$enable_neon" != "xno"; then
++	AC_S9X_COMPILER_FLAG(["-mfpu=neon"], [mfpu],
++	[
++		AC_MSG_ERROR(["NEON optimisation flag was not accepted."])
++	])
++
++	AC_S9X_COMPILER_FLAG(["-Wa,-march=armv7a"],		[march])
++	AC_S9X_COMPILER_FLAG(["-fprefetch-loop-arrays"],	[prefetch])
++fi
++
++# </domaemon>
++
++AC_S9X_COMPILER_FLAG([-fno-exceptions],	      [no_exceptions])
++AC_S9X_COMPILER_FLAG([-fno-rtti],             [no_rtti])
++AC_S9X_COMPILER_FLAG([-pedantic],             [pedantic])
++AC_S9X_COMPILER_FLAG([-Wall],                 [Wall])
++AC_S9X_COMPILER_FLAG([-W],                    [W])
++AC_S9X_COMPILER_FLAG([-Wno-unused-parameter], [Wno_unused_parameter])
++
++# Enable debugger.
++
++S9XDEBUGGER="#S9XDEBUGGER=1"
++
++AC_ARG_ENABLE([debugger],
++	[AS_HELP_STRING([--enable-debugger],
++		[enable debugger (default: no)])],
++	[], [enable_debugger="no"])
++
++if test "x$enable_debugger" = "xyes"; then
++	S9XDEBUGGER="S9XDEBUGGER=1"
++	S9XDEFS="$S9XDEFS -DDEBUGGER"
++fi
++
++# Enable netplay support if requested.
++
++S9XNETPLAY="#S9XNETPLAY=1"
++
++AC_ARG_ENABLE([netplay],
++	[AS_HELP_STRING([--enable-netplay],
++		[enable netplay support (default: no)])],
++	[], [enable_netplay="no"])
++
++if test "x$enable_netplay" = "xyes"; then
++	S9XNETPLAY="S9XNETPLAY=1"
++	S9XDEFS="$S9XDEFS -DNETPLAY_SUPPORT"
++fi
++
++# Enable GZIP support through zlib.
++
++AC_CACHE_VAL([snes9x_cv_zlib],
++[
++	AC_CHECK_HEADER([zlib.h],
++		[AC_CHECK_LIB([z], [gzread], [snes9x_cv_zlib="yes"], [snes9x_cv_zlib="no"])],
++		[snes9x_cv_zlib="no"])
++])
++
++AC_ARG_ENABLE([gzip],
++	[AS_HELP_STRING([--enable-gzip],
++		[enable GZIP support through zlib (default: yes)])],
++	[], [enable_gzip="yes"])
++
++if test "x$enable_gzip" = "xyes"; then
 +	PKG_CHECK_MODULES([ZLIB], [zlib])
- 	if test "x$snes9x_cv_zlib" = "xyes"; then
--		S9XDEFS="$S9XDEFS -DZLIB"
--		S9XLIBS="$S9XLIBS -lz"
++	if test "x$snes9x_cv_zlib" = "xyes"; then
 +		S9XDEFS="$S9XDEFS ${ZLIB_CFLAGS} -DZLIB"
 +		S9XLIBS="$S9XLIBS ${ZLIB_LIBS}"
- 	else
- 		AC_MSG_WARN([zlib not found. Build without GZIP support.])
- 		enable_gzip="no"
-@@ -176,7 +177,7 @@ if test "x$enable_zip" = "xyes"; then
- 	if test "x$snes9x_cv_zlib" = "xyes"; then
- 		S9XZIP="S9XZIP=1"
- 		S9XDEFS="$S9XDEFS -DUNZIP_SUPPORT"
--		if test "x$enable_gzip" = "xno"; then 
++	else
++		AC_MSG_WARN([zlib not found. Build without GZIP support.])
++		enable_gzip="no"
++	fi
++fi
++
++# Enable ZIP support through zlib.
++
++S9XZIP="#S9XZIP=1"
++
++AC_ARG_ENABLE([zip],
++	[AS_HELP_STRING([--enable-zip],
++		[enable ZIP support through zlib (default: yes)])],
++	[], [enable_zip="yes"])
++
++if test "x$enable_zip" = "xyes"; then
++	if test "x$snes9x_cv_zlib" = "xyes"; then
++		S9XZIP="S9XZIP=1"
++		S9XDEFS="$S9XDEFS -DUNZIP_SUPPORT"
 +		if test "x$enable_gzip" = "xno"; then
- 			S9XLIBS="$S9XLIBS -lz"
- 		fi
- 	else
-@@ -214,9 +215,10 @@ AC_ARG_ENABLE([screenshot],
- 	[], [enable_screenshot="yes"])
- 
- if test "x$enable_screenshot" = "xyes"; then
++			S9XLIBS="$S9XLIBS -lz"
++		fi
++	else
++		AC_MSG_WARN([zlib not found. Build without ZIP support.])
++		enable_zip="no"
++	fi
++fi
++
++# Enable JMA support.
++
++S9XJMA="#S9XJMA=1"
++
++AC_ARG_ENABLE([jma],
++	[AS_HELP_STRING([--enable-jma],
++		[enable JMA support (default: yes)])],
++	[], [enable_jma="yes"])
++
++if test "x$enable_jma" = "xyes"; then
++	S9XJMA="S9XJMA=1"
++	S9XDEFS="$S9XDEFS -DJMA_SUPPORT"
++fi
++
++# Enable screenshot support through libpng.
++
++AC_CACHE_VAL([snes9x_cv_libpng],
++[
++	AC_CHECK_HEADER([png.h],
++		[AC_CHECK_LIB([png], [png_init_io], [snes9x_cv_libpng="yes"], [snes9x_cv_libpng="no"])],
++		[snes9x_cv_libpng="no"])
++])
++
++AC_ARG_ENABLE([screenshot],
++	[AS_HELP_STRING([--enable-screenshot],
++		[enable screenshot support through libpng (default: yes)])],
++	[], [enable_screenshot="yes"])
++
++if test "x$enable_screenshot" = "xyes"; then
 +	PKG_CHECK_MODULES([PNG], [libpng])
- 	if test "x$snes9x_cv_libpng" = "xyes"; then
--		S9XDEFS="$S9XDEFS -DHAVE_LIBPNG"
--		S9XLIBS="$S9XLIBS -lpng"
++	if test "x$snes9x_cv_libpng" = "xyes"; then
 +		S9XDEFS="$S9XDEFS ${PNG_CFLAGS} -DHAVE_LIBPNG"
 +		S9XLIBS="$S9XLIBS ${PNG_LIBS}"
- 	else
- 		AC_MSG_WARN([libpng not found. Build without screenshot support.])
- 		enable_screenshot="no"
-@@ -234,16 +236,17 @@ AC_CHECK_FUNC([mkstemp],
- 
- AC_CACHE_VAL([snes9x_cv_sdl],
- [
--	AC_CHECK_HEADER([SDL/SDL.h],
--		[AC_CHECK_LIB([SDL], [SDL_Init], [snes9x_cv_sdl="yes"], [snes9x_cv_sdl="no"])],
++	else
++		AC_MSG_WARN([libpng not found. Build without screenshot support.])
++		enable_screenshot="no"
++	fi
++fi
++
++# Check for functions
++
++AC_CHECK_FUNC([mkstemp],
++[
++	S9XDEFS="$S9XDEFS -DHAVE_MKSTEMP"
++])
++
++# <domaemon>: Check SDL, messy.
++
++AC_CACHE_VAL([snes9x_cv_sdl],
++[
 +	AC_CHECK_HEADER([SDL2/SDL.h],
 +		[AC_CHECK_LIB([SDL2], [SDL_Init], [snes9x_cv_sdl="yes"], [snes9x_cv_sdl="no"])],
- 		[snes9x_cv_sdl="no"])
- ])
- 
- if test "x$snes9x_cv_sdl" = "xyes"; then
--  	S9XFLGS="$S9XFLGS `sdl-config --cflags`"
--	S9XLIBS="$S9XLIBS `sdl-config --libs`"
++		[snes9x_cv_sdl="no"])
++])
++
++if test "x$snes9x_cv_sdl" = "xyes"; then
 +	PKG_CHECK_MODULES([SDL2], [sdl2])
 +  	S9XFLGS="$S9XFLGS ${SDL2_CFLAGS}"
 +	S9XLIBS="$S9XLIBS ${SDL2_LIBS}  -lbrcmEGL -lbrcmGLESv2 -lbcm_host -lvchostif -lbcm_host -lvcos -lvchiq_arm"
- else
--	AC_MSG_ERROR([SDL is required.])
++else
 +	AC_MSG_ERROR([SDL2 is required.])
- fi
- 
- ###
-@@ -277,7 +280,7 @@ AC_CHECK_HEADERS([unistd.h sys/socket.h])
- 
- if test "x$snes9x_have_stdint_h" = "x"; then
- 	AC_MSG_CHECKING([whether the size of pointer is int])
--	
++fi
 +
- 	AC_TRY_RUN(
- 	[
- 		int main (void)
-@@ -286,7 +289,7 @@ if test "x$snes9x_have_stdint_h" = "x"; then
- 		}
- 	],
- 	[snes9x_ptr_is_int="yes"], [snes9x_ptr_is_int="no"])
--	
++###
 +
- 	if test "x$snes9x_ptr_is_int" = "xyes"; then
- 		AC_MSG_RESULT(yes)
- 	else
-@@ -312,7 +315,7 @@ AC_DEFUN([AC_S9X_CHECK_SAR],
- 		typedef int16_t			int16;
- 		typedef int32_t			int32;
- 		typedef int64_t			int64;
--		#else 
++
++# </domaemon>
++
++# Check for headers
++
++snes9x_have_stdint_h="";
++
++AC_CHECK_HEADER([strings.h],
++[
++	S9XDEFS="$S9XDEFS -DHAVE_STRINGS_H"
++])
++
++AC_CHECK_HEADER([sys/ioctl.h],
++[
++	S9XDEFS="$S9XDEFS -DHAVE_SYS_IOCTL_H"
++])
++
++AC_CHECK_HEADER([stdint.h],
++[
++	S9XDEFS="$S9XDEFS -DHAVE_STDINT_H"
++	snes9x_have_stdint_h="-DHAVE_STDINT_H"
++])
++
++AC_CHECK_HEADERS([unistd.h sys/socket.h])
++
++# Check whether the size of pointer is int.
++
++if test "x$snes9x_have_stdint_h" = "x"; then
++	AC_MSG_CHECKING([whether the size of pointer is int])
++
++	AC_TRY_RUN(
++	[
++		int main (void)
++		{
++			return (!(sizeof(void *) == sizeof(int)));
++		}
++	],
++	[snes9x_ptr_is_int="yes"], [snes9x_ptr_is_int="no"])
++
++	if test "x$snes9x_ptr_is_int" = "xyes"; then
++		AC_MSG_RESULT(yes)
++	else
++		AC_MSG_RESULT(no)
++		S9XDEFS="$S9XDEFS -DPTR_NOT_INT"
++	fi
++fi
++
++# Check whether right shift is arithmetic or not
++
++AC_DEFUN([AC_S9X_CHECK_SAR],
++[
++	AC_MSG_CHECKING([whether right shift $1 is arithmetic])
++
++	OLD_CXXFLAGS="[$]CXXFLAGS"
++	CXXFLAGS="[$]OLD_CXXFLAGS $snes9x_have_stdint_h"
++
++	AC_TRY_RUN(
++	[
++		#ifdef HAVE_STDINT_H
++		#include <stdint.h>
++		typedef int8_t			int8;
++		typedef int16_t			int16;
++		typedef int32_t			int32;
++		typedef int64_t			int64;
 +		#else
- 		typedef signed char		int8;
- 		typedef signed short	int16;
- 		typedef signed int		int32;
-@@ -332,7 +335,7 @@ AC_DEFUN([AC_S9X_CHECK_SAR],
- 			return (i < 0 ? 0 : 1);
- 		}
- 	],
--	[snes9x_sar_$1="yes"], [snes9x_sar_$1="no"])
++		typedef signed char		int8;
++		typedef signed short	int16;
++		typedef signed int		int32;
++		#ifdef __GNUC__
++		__extension__
++		#endif
++		typedef long long		int64;
++		#endif
++
++		int main (void)
++		{
++			$1	i;
++
++			i = -1;
++			i >>= 1;
++
++			return (i < 0 ? 0 : 1);
++		}
++	],
 +	[snes9x_sar_$1="yes"], [snes9x_sar_$1="no"], [snes9x_sar_$1=$GCC])
- 
- 	CXXFLAGS="[$]OLD_CXXFLAGS"
- 
-diff --git a/sdl/sdl_snes9x.h b/sdl/sdl_snes9x.h
-index d8db46b..6f3ee6e 100644
---- a/sdl/sdl_snes9x.h
-+++ b/sdl/sdl_snes9x.h
-@@ -1,10 +1,12 @@
--#include <SDL/SDL.h>
++
++	CXXFLAGS="[$]OLD_CXXFLAGS"
++
++	if test "x$snes9x_sar_$1" = "xno"; then
++		AC_MSG_RESULT([no])
++	else
++		S9XDEFS="$S9XDEFS -DRIGHTSHIFT_$1_IS_SAR"
++		AC_MSG_RESULT([yes])
++	fi
++])
++
++AC_S9X_CHECK_SAR([int8])
++AC_S9X_CHECK_SAR([int16])
++AC_S9X_CHECK_SAR([int32])
++AC_S9X_CHECK_SAR([int64])
++
++if test "x$snes9x_sar_int8" = "xyes" -a "x$snes9x_sar_int16" = "xyes" -a "x$snes9x_sar_int32" = "xyes" -a "x$snes9x_sar_int64" = "xyes"; then
++	S9XDEFS="`echo \"$S9XDEFS\" | sed -e 's/-DRIGHTSHIFT_int8_IS_SAR//'`"
++	S9XDEFS="`echo \"$S9XDEFS\" | sed -e 's/-DRIGHTSHIFT_int16_IS_SAR//'`"
++	S9XDEFS="`echo \"$S9XDEFS\" | sed -e 's/-DRIGHTSHIFT_int32_IS_SAR//'`"
++	S9XDEFS="`echo \"$S9XDEFS\" | sed -e 's/-DRIGHTSHIFT_int64_IS_SAR//'`"
++	S9XDEFS="$S9XDEFS -DRIGHTSHIFT_IS_SAR"
++fi
++
++# Output.
++
++S9XFLGS="$CXXFLAGS $CPPFLAGS $LDFLAGS $S9XFLGS"
++S9XLIBS="$LIBS $S9XLIBS"
++
++S9XFLGS="`echo \"$S9XFLGS\" | sed -e 's/  */ /g'`"
++S9XDEFS="`echo \"$S9XDEFS\" | sed -e 's/  */ /g'`"
++S9XLIBS="`echo \"$S9XLIBS\" | sed -e 's/  */ /g'`"
++S9XFLGS="`echo \"$S9XFLGS\" | sed -e 's/^  *//'`"
++S9XDEFS="`echo \"$S9XDEFS\" | sed -e 's/^  *//'`"
++S9XLIBS="`echo \"$S9XLIBS\" | sed -e 's/^  *//'`"
++
++AC_SUBST(S9XFLGS)
++AC_SUBST(S9XDEFS)
++AC_SUBST(S9XLIBS)
++AC_SUBST(S9XDEBUGGER)
++AC_SUBST(S9XNETPLAY)
++AC_SUBST(S9XZIP)
++AC_SUBST(S9XJMA)
++
++rm config.info 2>/dev/null
++
++cat >config.info <<EOF
++
++build information:
++cc...............,,,. $CC
++c++.................. $CXX
++options.............. $S9XFLGS
++defines.............. $S9XDEFS
++libs................. $S9XLIBS
++
++features:
++screenshot support... $enable_screenshot
++netplay support...... $enable_netplay
++GZIP support......... $enable_gzip
++ZIP support.......... $enable_zip
++JMA support.......... $enable_jma
++debugger............. $enable_debugger
++
++EOF
++
++cat config.info
++
++AC_OUTPUT(Makefile)
+diff --git a/sdl2/install-sh b/sdl2/install-sh
+index e69de29..4d4a951 100644
+--- a/sdl2/install-sh
++++ b/sdl2/install-sh
+@@ -0,0 +1,323 @@
++#!/bin/sh
++# install - install a program, script, or datafile
++
++scriptversion=2005-05-14.22
++
++# This originates from X11R5 (mit/util/scripts/install.sh), which was
++# later released in X11R6 (xc/config/util/install.sh) with the
++# following copyright and license.
++#
++# Copyright (C) 1994 X Consortium
++#
++# Permission is hereby granted, free of charge, to any person obtaining a copy
++# of this software and associated documentation files (the "Software"), to
++# deal in the Software without restriction, including without limitation the
++# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
++# sell copies of the Software, and to permit persons to whom the Software is
++# furnished to do so, subject to the following conditions:
++#
++# The above copyright notice and this permission notice shall be included in
++# all copies or substantial portions of the Software.
++#
++# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
++# X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
++# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNEC-
++# TION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
++#
++# Except as contained in this notice, the name of the X Consortium shall not
++# be used in advertising or otherwise to promote the sale, use or other deal-
++# ings in this Software without prior written authorization from the X Consor-
++# tium.
++#
++#
++# FSF changes to this file are in the public domain.
++#
++# Calling this script install-sh is preferred over install.sh, to prevent
++# `make' implicit rules from creating a file called install from it
++# when there is no Makefile.
++#
++# This script is compatible with the BSD install script, but was written
++# from scratch.  It can only install one file at a time, a restriction
++# shared with many OS's install programs.
++
++# set DOITPROG to echo to test this script
++
++# Don't use :- since 4.3BSD and earlier shells don't like it.
++doit="${DOITPROG-}"
++
++# put in absolute paths if you don't have them in your path; or use env. vars.
++
++mvprog="${MVPROG-mv}"
++cpprog="${CPPROG-cp}"
++chmodprog="${CHMODPROG-chmod}"
++chownprog="${CHOWNPROG-chown}"
++chgrpprog="${CHGRPPROG-chgrp}"
++stripprog="${STRIPPROG-strip}"
++rmprog="${RMPROG-rm}"
++mkdirprog="${MKDIRPROG-mkdir}"
++
++chmodcmd="$chmodprog 0755"
++chowncmd=
++chgrpcmd=
++stripcmd=
++rmcmd="$rmprog -f"
++mvcmd="$mvprog"
++src=
++dst=
++dir_arg=
++dstarg=
++no_target_directory=
++
++usage="Usage: $0 [OPTION]... [-T] SRCFILE DSTFILE
++   or: $0 [OPTION]... SRCFILES... DIRECTORY
++   or: $0 [OPTION]... -t DIRECTORY SRCFILES...
++   or: $0 [OPTION]... -d DIRECTORIES...
++
++In the 1st form, copy SRCFILE to DSTFILE.
++In the 2nd and 3rd, copy all SRCFILES to DIRECTORY.
++In the 4th, create DIRECTORIES.
++
++Options:
++-c         (ignored)
++-d         create directories instead of installing files.
++-g GROUP   $chgrpprog installed files to GROUP.
++-m MODE    $chmodprog installed files to MODE.
++-o USER    $chownprog installed files to USER.
++-s         $stripprog installed files.
++-t DIRECTORY  install into DIRECTORY.
++-T         report an error if DSTFILE is a directory.
++--help     display this help and exit.
++--version  display version info and exit.
++
++Environment variables override the default commands:
++  CHGRPPROG CHMODPROG CHOWNPROG CPPROG MKDIRPROG MVPROG RMPROG STRIPPROG
++"
++
++while test -n "$1"; do
++  case $1 in
++    -c) shift
++        continue;;
++
++    -d) dir_arg=true
++        shift
++        continue;;
++
++    -g) chgrpcmd="$chgrpprog $2"
++        shift
++        shift
++        continue;;
++
++    --help) echo "$usage"; exit $?;;
++
++    -m) chmodcmd="$chmodprog $2"
++        shift
++        shift
++        continue;;
++
++    -o) chowncmd="$chownprog $2"
++        shift
++        shift
++        continue;;
++
++    -s) stripcmd=$stripprog
++        shift
++        continue;;
++
++    -t) dstarg=$2
++	shift
++	shift
++	continue;;
++
++    -T) no_target_directory=true
++	shift
++	continue;;
++
++    --version) echo "$0 $scriptversion"; exit $?;;
++
++    *)  # When -d is used, all remaining arguments are directories to create.
++	# When -t is used, the destination is already specified.
++	test -n "$dir_arg$dstarg" && break
++        # Otherwise, the last argument is the destination.  Remove it from $@.
++	for arg
++	do
++          if test -n "$dstarg"; then
++	    # $@ is not empty: it contains at least $arg.
++	    set fnord "$@" "$dstarg"
++	    shift # fnord
++	  fi
++	  shift # arg
++	  dstarg=$arg
++	done
++	break;;
++  esac
++done
++
++if test -z "$1"; then
++  if test -z "$dir_arg"; then
++    echo "$0: no input file specified." >&2
++    exit 1
++  fi
++  # It's OK to call `install-sh -d' without argument.
++  # This can happen when creating conditional directories.
++  exit 0
++fi
++
++for src
++do
++  # Protect names starting with `-'.
++  case $src in
++    -*) src=./$src ;;
++  esac
++
++  if test -n "$dir_arg"; then
++    dst=$src
++    src=
++
++    if test -d "$dst"; then
++      mkdircmd=:
++      chmodcmd=
++    else
++      mkdircmd=$mkdirprog
++    fi
++  else
++    # Waiting for this to be detected by the "$cpprog $src $dsttmp" command
++    # might cause directories to be created, which would be especially bad
++    # if $src (and thus $dsttmp) contains '*'.
++    if test ! -f "$src" && test ! -d "$src"; then
++      echo "$0: $src does not exist." >&2
++      exit 1
++    fi
++
++    if test -z "$dstarg"; then
++      echo "$0: no destination specified." >&2
++      exit 1
++    fi
++
++    dst=$dstarg
++    # Protect names starting with `-'.
++    case $dst in
++      -*) dst=./$dst ;;
++    esac
++
++    # If destination is a directory, append the input filename; won't work
++    # if double slashes aren't ignored.
++    if test -d "$dst"; then
++      if test -n "$no_target_directory"; then
++	echo "$0: $dstarg: Is a directory" >&2
++	exit 1
++      fi
++      dst=$dst/`basename "$src"`
++    fi
++  fi
++
++  # This sed command emulates the dirname command.
++  dstdir=`echo "$dst" | sed -e 's,/*$,,;s,[^/]*$,,;s,/*$,,;s,^$,.,'`
++
++  # Make sure that the destination directory exists.
++
++  # Skip lots of stat calls in the usual case.
++  if test ! -d "$dstdir"; then
++    defaultIFS='
++	 '
++    IFS="${IFS-$defaultIFS}"
++
++    oIFS=$IFS
++    # Some sh's can't handle IFS=/ for some reason.
++    IFS='%'
++    set x `echo "$dstdir" | sed -e 's@/@%@g' -e 's@^%@/@'`
++    shift
++    IFS=$oIFS
++
++    pathcomp=
++
++    while test $# -ne 0 ; do
++      pathcomp=$pathcomp$1
++      shift
++      if test ! -d "$pathcomp"; then
++        $mkdirprog "$pathcomp"
++	# mkdir can fail with a `File exist' error in case several
++	# install-sh are creating the directory concurrently.  This
++	# is OK.
++	test -d "$pathcomp" || exit
++      fi
++      pathcomp=$pathcomp/
++    done
++  fi
++
++  if test -n "$dir_arg"; then
++    $doit $mkdircmd "$dst" \
++      && { test -z "$chowncmd" || $doit $chowncmd "$dst"; } \
++      && { test -z "$chgrpcmd" || $doit $chgrpcmd "$dst"; } \
++      && { test -z "$stripcmd" || $doit $stripcmd "$dst"; } \
++      && { test -z "$chmodcmd" || $doit $chmodcmd "$dst"; }
++
++  else
++    dstfile=`basename "$dst"`
++
++    # Make a couple of temp file names in the proper directory.
++    dsttmp=$dstdir/_inst.$$_
++    rmtmp=$dstdir/_rm.$$_
++
++    # Trap to clean up those temp files at exit.
++    trap 'ret=$?; rm -f "$dsttmp" "$rmtmp" && exit $ret' 0
++    trap '(exit $?); exit' 1 2 13 15
++
++    # Copy the file name to the temp name.
++    $doit $cpprog "$src" "$dsttmp" &&
++
++    # and set any options; do chmod last to preserve setuid bits.
++    #
++    # If any of these fail, we abort the whole thing.  If we want to
++    # ignore errors from any of these, just make sure not to ignore
++    # errors from the above "$doit $cpprog $src $dsttmp" command.
++    #
++    { test -z "$chowncmd" || $doit $chowncmd "$dsttmp"; } \
++      && { test -z "$chgrpcmd" || $doit $chgrpcmd "$dsttmp"; } \
++      && { test -z "$stripcmd" || $doit $stripcmd "$dsttmp"; } \
++      && { test -z "$chmodcmd" || $doit $chmodcmd "$dsttmp"; } &&
++
++    # Now rename the file to the real destination.
++    { $doit $mvcmd -f "$dsttmp" "$dstdir/$dstfile" 2>/dev/null \
++      || {
++	   # The rename failed, perhaps because mv can't rename something else
++	   # to itself, or perhaps because mv is so ancient that it does not
++	   # support -f.
++
++	   # Now remove or move aside any old file at destination location.
++	   # We try this two ways since rm can't unlink itself on some
++	   # systems and the destination file might be busy for other
++	   # reasons.  In this case, the final cleanup might fail but the new
++	   # file should still install successfully.
++	   {
++	     if test -f "$dstdir/$dstfile"; then
++	       $doit $rmcmd -f "$dstdir/$dstfile" 2>/dev/null \
++	       || $doit $mvcmd -f "$dstdir/$dstfile" "$rmtmp" 2>/dev/null \
++	       || {
++		 echo "$0: cannot unlink or rename $dstdir/$dstfile" >&2
++		 (exit 1); exit 1
++	       }
++	     else
++	       :
++	     fi
++	   } &&
++
++	   # Now rename the file to the real destination.
++	   $doit $mvcmd "$dsttmp" "$dstdir/$dstfile"
++	 }
++    }
++  fi || { (exit 1); exit 1; }
++done
++
++# The final little trick to "correctly" pass the exit status to the exit trap.
++{
++  (exit 0); exit 0
++}
++
++# Local variables:
++# eval: (add-hook 'write-file-hooks 'time-stamp)
++# time-stamp-start: "scriptversion="
++# time-stamp-format: "%:y-%02m-%02d.%02H"
++# time-stamp-end: "$"
++# End:
+diff --git a/sdl2/sdl_snes9x.h b/sdl2/sdl_snes9x.h
+index e69de29..86eae1c 100644
+--- a/sdl2/sdl_snes9x.h
++++ b/sdl2/sdl_snes9x.h
+@@ -0,0 +1,26 @@
 +#ifndef SDL_SNES9X_H
 +#define SDL_SNES9X_H
 +
 +#include <SDL2/SDL.h>
 +
- #include "port.h"
- #include "conffile.h"
- 
- typedef std::pair<std::string, std::string>	strpair_t;
- extern ConfigFile::secvec_t	keymaps;
- 
--
--
--
++#include <stdlib.h>
++#include <unistd.h>
++#include <ctype.h>
++#include <errno.h>
++#include <string.h>
++
++#include "snes9x.h"
++#include "memmap.h"
++#include "ppu.h"
++#include "controls.h"
++#include "movie.h"
++#include "logger.h"
++#include "conffile.h"
++#include "blit.h"
++#include "display.h"
++#include "port.h"
++
++typedef std::pair<std::string, std::string>	strpair_t;
++extern ConfigFile::secvec_t	keymaps;
++
 +#endif // SDL_SNES9X_H
-diff --git a/sdl/sdlaudio.cpp b/sdl/sdlaudio.cpp
-index 826a958..2755187 100644
---- a/sdl/sdlaudio.cpp
-+++ b/sdl/sdlaudio.cpp
-@@ -65,8 +65,7 @@
- #include "debug.h"
- #endif
- 
--#include <SDL/SDL.h>
--//#include "sdl_snes9x.h"
+diff --git a/sdl2/sdlaudio.cpp b/sdl2/sdlaudio.cpp
+index e69de29..2755187 100644
+--- a/sdl2/sdlaudio.cpp
++++ b/sdl2/sdlaudio.cpp
+@@ -0,0 +1,141 @@
++/***********************************************************************************
++  Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
++
++  See CREDITS file to find the copyright owners of this file.
++
++  SDL Input/Audio/Video code (many lines of code come from snes9x & drnoksnes)
++  (c) Copyright 2011         Makoto Sugano (makoto.sugano@gmail.com)
++
++  Snes9x homepage: http://www.snes9x.com/
++
++  Permission to use, copy, modify and/or distribute Snes9x in both binary
++  and source form, for non-commercial purposes, is hereby granted without
++  fee, providing that this license information and copyright notice appear
++  with all copies and any derived work.
++
++  This software is provided 'as-is', without any express or implied
++  warranty. In no event shall the authors be held liable for any damages
++  arising from the use of this software or it's derivatives.
++
++  Snes9x is freeware for PERSONAL USE only. Commercial users should
++  seek permission of the copyright holders first. Commercial use includes,
++  but is not limited to, charging money for Snes9x or software derived from
++  Snes9x, including Snes9x or derivatives in commercial game bundles, and/or
++  using Snes9x as a promotion for your commercial product.
++
++  The copyright holders request that bug fixes and improvements to the code
++  should be forwarded to them so everyone can benefit from the modifications
++  in future versions.
++
++  Super NES and Super Nintendo Entertainment System are trademarks of
++  Nintendo Co., Limited and its subsidiary companies.
++ ***********************************************************************************/
++
++#define HAVE_SDL 1
++
++#include <stdlib.h>
++#include <unistd.h>
++#include <ctype.h>
++#include <fcntl.h>
++#include <dirent.h>
++#include <signal.h>
++#include <errno.h>
++#include <string.h>
++
++#ifdef HAVE_STRINGS_H
++#include <strings.h>
++#endif
++
++#include <sys/stat.h>
++#include <sys/types.h>
++
++#include "snes9x.h"
++#include "memmap.h"
++#include "apu/apu.h"
++#include "gfx.h"
++#include "snapshot.h"
++#include "controls.h"
++#include "cheats.h"
++#include "movie.h"
++#include "logger.h"
++#include "display.h"
++#include "conffile.h"
++
++#ifdef DEBUGGER
++#include "debug.h"
++#endif
++
 +#include <SDL2/SDL.h>
- 
- SDL_AudioSpec *audiospec;
- uint32        sound_buffer_size;
-@@ -109,32 +108,32 @@ bool8 S9xOpenSoundDevice (void)
- 	SDL_InitSubSystem (SDL_INIT_AUDIO);
- 
- 	audiospec = (SDL_AudioSpec *) malloc (sizeof (SDL_AudioSpec));
--	
 +
- 	audiospec->freq = Settings.SoundPlaybackRate;
- 	audiospec->channels = Settings.Stereo ? 2 : 1;
- 	audiospec->format = Settings.SixteenBitSound ? AUDIO_S16SYS : AUDIO_U8;
- 	audiospec->samples = (sound_buffer_size * audiospec->freq / 1000) >> 1;
- 	audiospec->callback = sdl_audio_callback;
--	
++SDL_AudioSpec *audiospec;
++uint32        sound_buffer_size;
 +
- 	printf ("SDL sound driver initializing...\n");
- 	printf ("    --> (Frequency: %dhz, Latency: %dms)...",
- 		audiospec->freq,
- 		(audiospec->samples * 1000 / audiospec->freq) << 1);
--	
++void S9xToggleSoundChannel (int c)
++{
++	static uint8	sound_switch = 255;
 +
- 	if (SDL_OpenAudio (audiospec, NULL) < 0)
- 	  {
- 	    printf ("Failed\n");
--	    
++	if (c == 8)
++		sound_switch = 255;
++	else
++		sound_switch ^= 1 << c;
 +
- 	    free (audiospec);
- 	    audiospec = NULL;
--	    
++	S9xSetSoundControl(sound_switch);
++}
 +
- 	    return FALSE;
- 	  }
--	
++static void
++sdl_audio_callback (void *userdata, Uint8 *stream, int len)
++{
++    SDL_LockAudio ();
++    S9xMixSamples (stream, len >> (Settings.SixteenBitSound ? 1 : 0));
++    SDL_UnlockAudio ();
 +
- 	printf ("OK\n");
--	
++    return;
++}
 +
- 	SDL_PauseAudio (0);
--	
++static void
++samples_available (void *data)
++{
++    SDL_LockAudio ();
++    S9xFinalizeSamples ();
++    SDL_UnlockAudio ();
 +
- 	S9xSetSamplesAvailableCallback (samples_available, NULL);
- #endif
- 
-diff --git a/sdl/sdlinput.cpp b/sdl/sdlinput.cpp
-index 156d392..b72625f 100644
---- a/sdl/sdlinput.cpp
-+++ b/sdl/sdlinput.cpp
-@@ -110,37 +110,37 @@ bool8 S9xMapInput (const char *n, s9xcommand_t *cmd)
- 			d = ((n[1] - '0') * 10 + (n[2] - '0')) << 24;
- 			d |= 0x80000000;
- 			i = 4;
--			
++    return;
++}
 +
- 			if (!strncmp(n + i, "Axis", 4))	// domaemon: joystick axis
- 			{
- 				d |= 0x8000; // Axis mode
- 				i += 4;
- 			}
- 			else if (n[i] == 'B') // domaemon: joystick button
--			{	
++bool8 S9xOpenSoundDevice (void)
++{
++#ifdef HAVE_SDL
++	SDL_InitSubSystem (SDL_INIT_AUDIO);
++
++	audiospec = (SDL_AudioSpec *) malloc (sizeof (SDL_AudioSpec));
++
++	audiospec->freq = Settings.SoundPlaybackRate;
++	audiospec->channels = Settings.Stereo ? 2 : 1;
++	audiospec->format = Settings.SixteenBitSound ? AUDIO_S16SYS : AUDIO_U8;
++	audiospec->samples = (sound_buffer_size * audiospec->freq / 1000) >> 1;
++	audiospec->callback = sdl_audio_callback;
++
++	printf ("SDL sound driver initializing...\n");
++	printf ("    --> (Frequency: %dhz, Latency: %dms)...",
++		audiospec->freq,
++		(audiospec->samples * 1000 / audiospec->freq) << 1);
++
++	if (SDL_OpenAudio (audiospec, NULL) < 0)
++	  {
++	    printf ("Failed\n");
++
++	    free (audiospec);
++	    audiospec = NULL;
++
++	    return FALSE;
++	  }
++
++	printf ("OK\n");
++
++	SDL_PauseAudio (0);
++
++	S9xSetSamplesAvailableCallback (samples_available, NULL);
++#endif
++
++	return (TRUE);
++}
+diff --git a/sdl2/sdlinput.cpp b/sdl2/sdlinput.cpp
+index e69de29..d413c81 100644
+--- a/sdl2/sdlinput.cpp
++++ b/sdl2/sdlinput.cpp
+@@ -0,0 +1,425 @@
++/***********************************************************************************
++  Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
++
++  See CREDITS file to find the copyright owners of this file.
++
++  SDL Input/Audio/Video code (many lines of code come from snes9x & drnoksnes)
++  (c) Copyright 2011         Makoto Sugano (makoto.sugano@gmail.com)
++
++  Snes9x homepage: http://www.snes9x.com/
++
++  Permission to use, copy, modify and/or distribute Snes9x in both binary
++  and source form, for non-commercial purposes, is hereby granted without
++  fee, providing that this license information and copyright notice appear
++  with all copies and any derived work.
++
++  This software is provided 'as-is', without any express or implied
++  warranty. In no event shall the authors be held liable for any damages
++  arising from the use of this software or it's derivatives.
++
++  Snes9x is freeware for PERSONAL USE only. Commercial users should
++  seek permission of the copyright holders first. Commercial use includes,
++  but is not limited to, charging money for Snes9x or software derived from
++  Snes9x, including Snes9x or derivatives in commercial game bundles, and/or
++  using Snes9x as a promotion for your commercial product.
++
++  The copyright holders request that bug fixes and improvements to the code
++  should be forwarded to them so everyone can benefit from the modifications
++  in future versions.
++
++  Super NES and Super Nintendo Entertainment System are trademarks of
++  Nintendo Co., Limited and its subsidiary companies.
++ ***********************************************************************************/
++
++#include "sdl_snes9x.h"
++
++#include "snes9x.h"
++#include "port.h"
++#include "controls.h"
++
++using namespace std;
++std::map <string, int> name_sdlkeysym;
++
++ConfigFile::secvec_t	keymaps;
++
++s9xcommand_t S9xInitCommandT (const char *n)
++{
++	s9xcommand_t	cmd;
++
++	cmd.type         = S9xBadMapping;
++	cmd.multi_press  = 0;
++	cmd.button_norpt = 0;
++	cmd.port[0]      = 0xff;
++	cmd.port[1]      = 0;
++	cmd.port[2]      = 0;
++	cmd.port[3]      = 0;
++
++	return (cmd);
++}
++
++char * S9xGetDisplayCommandName (s9xcommand_t cmd)
++{
++	return (strdup("None"));
++}
++
++void S9xHandleDisplayCommand (s9xcommand_t cmd, int16 data1, int16 data2)
++{
++	return;
++}
++
++// domaemon: 2) here we send the keymapping request to the SNES9X
++// domaemon: MapInput (J, K, M)
++bool8 S9xMapInput (const char *n, s9xcommand_t *cmd)
++{
++	int	i, j, d;
++	char	*c;
++
++	// domaemon: linking PseudoPointer# and command
++	if (!strncmp(n, "PseudoPointer", 13))
++	{
++		if (n[13] >= '1' && n[13] <= '8' && n[14] == '\0')
++		{
++			return (S9xMapPointer(PseudoPointerBase + (n[13] - '1'), *cmd, false));
++		}
++		else
++		{
++			goto unrecog;
++		}
++	}
++
++	// domaemon: linking PseudoButton# and command
++	if (!strncmp(n, "PseudoButton", 12))
++	{
++		if (isdigit(n[12]) && (j = strtol(n + 12, &c, 10)) < 256 && (c == NULL || *c == '\0'))
++		{
++			return (S9xMapButton(PseudoButtonBase + j, *cmd, false));
++		}
++		else
++		{
++			goto unrecog;
++		}
++	}
++
++	if (!(isdigit(n[1]) && isdigit(n[2]) && n[3] == ':'))
++		goto unrecog;
++
++	switch (n[0])
++	{
++		case 'J': // domaemon: joysticks input mapping
++		{
++			d = ((n[1] - '0') * 10 + (n[2] - '0')) << 24;
++			d |= 0x80000000;
++			i = 4;
++
++			if (!strncmp(n + i, "Axis", 4))	// domaemon: joystick axis
 +			{
- 				i++;
- 			}
- 			else
- 			{
- 				goto unrecog;
- 			}
--			
++				d |= 0x8000; // Axis mode
++				i += 4;
++			}
++			else if (n[i] == 'B') // domaemon: joystick button
++			{
++				i++;
++			}
++			else
++			{
++				goto unrecog;
++			}
 +
- 			d |= j = strtol(n + i, &c, 10); // Axis or Button id
- 			if ((c != NULL && *c != '\0') || j > 0x3fff)
- 				goto unrecog;
--			
++			d |= j = strtol(n + i, &c, 10); // Axis or Button id
++			if ((c != NULL && *c != '\0') || j > 0x3fff)
++				goto unrecog;
 +
- 			if (d & 0x8000)
- 				return (S9xMapAxis(d, *cmd, false));
--			
++			if (d & 0x8000)
++				return (S9xMapAxis(d, *cmd, false));
 +
- 			return (S9xMapButton(d, *cmd, false));
- 		}
- 
- 		case 'K':
- 		{
- 			d = 0x00000000;
--			
++			return (S9xMapButton(d, *cmd, false));
++		}
 +
- 			for (i = 4; n[i] != '\0' && n[i] != '+'; i++) ;
--			
++		case 'K':
++		{
++			d = 0x00000000;
 +
- 			if (n[i] == '\0' || i == 4) {
- 				// domaemon: if no mod keys are found.
- 				i = 4;
-@@ -152,7 +152,7 @@ bool8 S9xMapInput (const char *n, s9xcommand_t *cmd)
- 			}
- 
- 			string keyname (n + i); // domaemon: SDL_keysym in string format.
--			
++			for (i = 4; n[i] != '\0' && n[i] != '+'; i++) ;
 +
- 			d |= name_sdlkeysym[keyname];
- 			return (S9xMapButton(d, *cmd, false));
- 		}
-@@ -164,10 +164,10 @@ bool8 S9xMapInput (const char *n, s9xcommand_t *cmd)
- 			if (!strncmp(n + 4, "Pointer", 7))
- 			{
- 				d |= 0x8000;
--				
++			if (n[i] == '\0' || i == 4) {
++				// domaemon: if no mod keys are found.
++				i = 4;
++			}
++			else
++			{
++				// domaemon: mod keys are not supported now.
++				goto unrecog;
++			}
 +
- 				if (n[11] == '\0')
- 					return (S9xMapPointer(d, *cmd, true));
--				
++			string keyname (n + i); // domaemon: SDL_keysym in string format.
 +
- 				i = 11;
- 			}
- 			else if (n[4] == 'B')
-@@ -178,18 +178,18 @@ bool8 S9xMapInput (const char *n, s9xcommand_t *cmd)
- 			{
- 				goto unrecog;
- 			}
--			
++			d |= name_sdlkeysym[keyname];
++			return (S9xMapButton(d, *cmd, false));
++		}
 +
- 			d |= j = strtol(n + i, &c, 10);
--			
++		case 'M':
++		{
++			d = 0x40000000;
 +
- 			if ((c != NULL && *c != '\0') || j > 0x7fff)
- 				goto unrecog;
--			
++			if (!strncmp(n + 4, "Pointer", 7))
++			{
++				d |= 0x8000;
 +
- 			if (d & 0x8000)
- 				return (S9xMapPointer(d, *cmd, true));
- 
- 			return (S9xMapButton(d, *cmd, false));
- 		}
--	
++				if (n[11] == '\0')
++					return (S9xMapPointer(d, *cmd, true));
 +
- 		default:
- 			break;
- 	}
-@@ -246,19 +246,18 @@ void S9xParseInputConfig (ConfigFile &conf, int pass)
- 	keymaps.clear();
- 	if (!conf.GetBool("Unix::ClearAllControls", false))
- 	{
--		// Using 'Joypad# Axis'
++				i = 11;
++			}
++			else if (n[4] == 'B')
++			{
++				i = 5;
++			}
++			else
++			{
++				goto unrecog;
++			}
++
++			d |= j = strtol(n + i, &c, 10);
++
++			if ((c != NULL && *c != '\0') || j > 0x7fff)
++				goto unrecog;
++
++			if (d & 0x8000)
++				return (S9xMapPointer(d, *cmd, true));
++
++			return (S9xMapButton(d, *cmd, false));
++		}
++
++		default:
++			break;
++	}
++
++unrecog:
++	char	*err = new char[strlen(n) + 34];
++
++	sprintf(err, "Unrecognized input device name '%s'", n);
++	perror(err);
++	delete [] err;
++
++	return (false);
++}
++
++// domaemon: SetupDefaultKeymap -> MapInput (JS) -> MapDisplayInput (KB)
++void S9xSetupDefaultKeymap (void)
++{
++	s9xcommand_t	cmd;
++
++	S9xUnmapAllControls();
++
++	for (ConfigFile::secvec_t::iterator i = keymaps.begin(); i != keymaps.end(); i++)
++	{
++		cmd = S9xInitCommandT(i->second.c_str());
++
++		if (cmd.type == S9xBadMapping)
++		{
++			cmd = S9xGetCommandT(i->second.c_str());
++			if (cmd.type == S9xBadMapping)
++			{
++				std::string	s("Unrecognized command '");
++				s += i->second + "'";
++				perror(s.c_str());
++				continue;
++			}
++		}
++
++		if (!S9xMapInput(i->first.c_str(), &cmd))
++		{
++			std::string	s("Could not map '");
++			s += i->second + "' to '" + i->first + "'";
++			perror(s.c_str());
++			continue;
++		}
++	}
++
++	keymaps.clear();
++}
++
++// domaemon: FIXME, just collecting the essentials.
++// domaemon: *) here we define the keymapping.
++void S9xParseInputConfig (ConfigFile &conf, int pass)
++{
++	keymaps.clear();
++	if (!conf.GetBool("Unix::ClearAllControls", false))
++	{
 +		// Hardcoded Pad Config
- 		keymaps.push_back(strpair_t("J00:Axis0",      "Joypad1 Axis Left/Right T=50%"));
- 		keymaps.push_back(strpair_t("J00:Axis1",      "Joypad1 Axis Up/Down T=50%"));
--
--		keymaps.push_back(strpair_t("J00:B0",         "Joypad1 X"));
++		keymaps.push_back(strpair_t("J00:Axis0",      "Joypad1 Axis Left/Right T=50%"));
++		keymaps.push_back(strpair_t("J00:Axis1",      "Joypad1 Axis Up/Down T=50%"));
 +		keymaps.push_back(strpair_t("J00:B2",         "Joypad1 X"));
- 		keymaps.push_back(strpair_t("J00:B1",         "Joypad1 A"));
--		keymaps.push_back(strpair_t("J00:B2",         "Joypad1 B"));
++		keymaps.push_back(strpair_t("J00:B1",         "Joypad1 A"));
 +		keymaps.push_back(strpair_t("J00:B0",         "Joypad1 B"));
- 		keymaps.push_back(strpair_t("J00:B3",         "Joypad1 Y"));
++		keymaps.push_back(strpair_t("J00:B3",         "Joypad1 Y"));
 +		keymaps.push_back(strpair_t("J00:B4",         "Joypad1 L"));
 +		keymaps.push_back(strpair_t("J00:B5",         "Joypad1 R"));
 +		keymaps.push_back(strpair_t("J00:B9",         "Joypad1 Select"));
 +		keymaps.push_back(strpair_t("J00:B8",        "Joypad1 Start"));
- 
--		keymaps.push_back(strpair_t("J00:B6",         "Joypad1 L"));
--		keymaps.push_back(strpair_t("J00:B7",         "Joypad1 R"));
--		keymaps.push_back(strpair_t("J00:B8",         "Joypad1 Select"));
--		keymaps.push_back(strpair_t("J00:B11",        "Joypad1 Start"));
- 		keymaps.push_back(strpair_t("K00:SDLK_RIGHT",        "Joypad1 Right"));
- 		keymaps.push_back(strpair_t("K00:SDLK_LEFT",         "Joypad1 Left"));
- 		keymaps.push_back(strpair_t("K00:SDLK_DOWN",         "Joypad1 Down"));
-@@ -317,7 +316,7 @@ void S9xInitInputDevices (void)
- 		for (int i = 0; i < num_joysticks; i++)
- 		{
- 			joystick[i] = SDL_JoystickOpen (i);
--			printf ("  %s\n", SDL_JoystickName(i));
++
++		keymaps.push_back(strpair_t("K00:SDLK_RIGHT",        "Joypad1 Right"));
++		keymaps.push_back(strpair_t("K00:SDLK_LEFT",         "Joypad1 Left"));
++		keymaps.push_back(strpair_t("K00:SDLK_DOWN",         "Joypad1 Down"));
++		keymaps.push_back(strpair_t("K00:SDLK_UP",           "Joypad1 Up"));
++		keymaps.push_back(strpair_t("K00:SDLK_RETURN",       "Joypad1 Start"));
++		keymaps.push_back(strpair_t("K00:SDLK_SPACE",        "Joypad1 Select"));
++		keymaps.push_back(strpair_t("K00:SDLK_d",            "Joypad1 A"));
++		keymaps.push_back(strpair_t("K00:SDLK_c",            "Joypad1 B"));
++		keymaps.push_back(strpair_t("K00:SDLK_s",            "Joypad1 X"));
++		keymaps.push_back(strpair_t("K00:SDLK_x",            "Joypad1 Y"));
++		keymaps.push_back(strpair_t("K00:SDLK_a",            "Joypad1 L"));
++		keymaps.push_back(strpair_t("K00:SDLK_z",            "Joypad1 R"));
++
++		// domaemon: *) GetSDLKeyFromName().
++		name_sdlkeysym["SDLK_s"] = SDLK_s;
++		name_sdlkeysym["SDLK_d"] = SDLK_d;
++		name_sdlkeysym["SDLK_x"] = SDLK_x;
++		name_sdlkeysym["SDLK_c"] = SDLK_c;
++		name_sdlkeysym["SDLK_a"] = SDLK_a;
++		name_sdlkeysym["SDLK_z"] = SDLK_z;
++		name_sdlkeysym["SDLK_UP"] = SDLK_UP;
++		name_sdlkeysym["SDLK_DOWN"] = SDLK_DOWN;
++		name_sdlkeysym["SDLK_RIGHT"] = SDLK_RIGHT;
++		name_sdlkeysym["SDLK_LEFT"] = SDLK_LEFT;
++		name_sdlkeysym["SDLK_RETURN"] = SDLK_RETURN;
++		name_sdlkeysym["SDLK_SPACE"] = SDLK_SPACE;
++	}
++
++	return;
++}
++
++void S9xInitInputDevices (void)
++{
++	SDL_Joystick * joystick[4] = {NULL, NULL, NULL, NULL};
++
++	// domaemon: 1) initializing the joystic subsystem
++	SDL_InitSubSystem (SDL_INIT_JOYSTICK);
++
++	/*
++	 * domaemon: 2) check how may joysticks are connected
++	 * domaemon: 3) relate paddev1 to SDL_Joystick[0], paddev2 to SDL_Joystick[1]...
++	 * domaemon: 4) print out the joystick name and capabilities
++	 */
++
++	int num_joysticks = SDL_NumJoysticks();
++
++	if (num_joysticks == 0)
++	{
++		fprintf(stderr, "joystick: No joystick found.\n");
++	}
++	else
++	{
++		SDL_JoystickEventState (SDL_ENABLE);
++
++		// domaemon: FIXME should check if num_joysticks is below 4..
++		for (int i = 0; i < num_joysticks; i++)
++		{
++			joystick[i] = SDL_JoystickOpen (i);
 +			printf ("  %s\n", SDL_JoystickName(joystick[i]));
- 			printf ("  %d-axis %d-buttons %d-balls %d-hats \n",
- 				SDL_JoystickNumAxes(joystick[i]),
- 				SDL_JoystickNumButtons(joystick[i]),
-@@ -341,7 +340,7 @@ void S9xProcessEvents (bool8 block)
- 			if (event.key.keysym.sym == SDLK_q)
- 			{
- 				quit_state = TRUE;
--			} 
++			printf ("  %d-axis %d-buttons %d-balls %d-hats \n",
++				SDL_JoystickNumAxes(joystick[i]),
++				SDL_JoystickNumButtons(joystick[i]),
++				SDL_JoystickNumBalls(joystick[i]),
++				SDL_JoystickNumHats(joystick[i]));
++		}
++	}
++}
++
++void S9xProcessEvents (bool8 block)
++{
++	SDL_Event event;
++	bool8 quit_state = FALSE;
++
++	while ((block) || (SDL_PollEvent (&event) != 0))
++	{
++		switch (event.type) {
++		case SDL_KEYDOWN:
++		case SDL_KEYUP:
++			// domaemon: not sure it's the best idea, but reserving the SDLK_q for quit.
++			if (event.key.keysym.sym == SDLK_q)
++			{
++				quit_state = TRUE;
 +			}
- 			else
- 			{
- 				S9xReportButton(event.key.keysym.mod << 16 | // keyboard mod
-@@ -350,14 +349,12 @@ void S9xProcessEvents (bool8 block)
- 			}
- 			break;
- 
--/***** Joystick starts *****/
--#if 0
- 		case SDL_JOYBUTTONDOWN:
- 		case SDL_JOYBUTTONUP:
- 			S9xReportButton(0x80000000 | // joystick button
--					(event.jbutton.which << 24) | // joystick index
--					event.jbutton.button, // joystick button code
--					event.type == SDL_JOYBUTTONDOWN); // press or release
++			else
++			{
++				S9xReportButton(event.key.keysym.mod << 16 | // keyboard mod
++						event.key.keysym.sym, // keyboard ksym
++						event.type == SDL_KEYDOWN); // press or release
++			}
++			break;
++
++		case SDL_JOYBUTTONDOWN:
++		case SDL_JOYBUTTONUP:
++			S9xReportButton(0x80000000 | // joystick button
 +                                        (event.jbutton.which << 24) | // joystick index
 +                                        event.jbutton.button, // joystick button code
 +                                        event.type == SDL_JOYBUTTONDOWN); // press or release
- 			break;
- 
- 		case SDL_JOYAXISMOTION:
-@@ -366,6 +363,29 @@ void S9xProcessEvents (bool8 block)
- 				      event.jaxis.axis, // joystick axis
- 				      event.jaxis.value); // axis value
- 			break;
++			break;
++
++		case SDL_JOYAXISMOTION:
++			S9xReportAxis(0x80008000 | // joystick axis
++				      (event.jaxis.which << 24) | // joystick index
++				      event.jaxis.axis, // joystick axis
++				      event.jaxis.value); // axis value
++			break;
 +
 + 		case SDL_JOYHATMOTION:
 +                        switch (event.jhat.value) {
@@ -374,580 +4679,1299 @@ index 156d392..b72625f 100644
 +/***** Joystick starts *****/
 +#if 0
 +
- #endif
- /***** Joystick ends *****/
- 
-@@ -375,7 +395,7 @@ void S9xProcessEvents (bool8 block)
- 			break;
- 		}
- 	}
--	
-+
- 	if (quit_state == TRUE)
- 	{
- 		printf ("Quit Event. Bye.\n");
-@@ -418,7 +438,7 @@ main()
- 	{
- 		printf("Unable to initialize SDL: %s\n", SDL_GetError());
- 	}
--  
-+
- 	atexit(SDL_Quit);
- 
- 	screen = SDL_SetVideoMode(64, 64, 16, 0);
-@@ -431,7 +451,7 @@ main()
- 
- 	SDL_JoystickEventState (SDL_ENABLE);
- 
--	while (SDL_WaitEvent (&event) != 0) 
-+	while (SDL_WaitEvent (&event) != 0)
- 	{
- 		switch (event.type) {
- 		case SDL_KEYDOWN:
-@@ -468,7 +488,7 @@ main()
- 		}
- 	}
- }
--	
-+
- // domaemon: 2) here we send the keymapping request to the SNES9X
- bool8 S9xMapDisplayInput (const char *n, s9xcommand_t *cmd)
- {
-diff --git a/sdl/sdlvideo.cpp b/sdl/sdlvideo.cpp
-index 7e5f159..15b9135 100644
---- a/sdl/sdlvideo.cpp
-+++ b/sdl/sdlvideo.cpp
-@@ -3,7 +3,11 @@
- 
-   See CREDITS file to find the copyright owners of this file.
- 
--  SDL Input/Audio/Video code (many lines of code come from snes9x & drnoksnes)
-+  This port is targeting the cookie environment using a pure SDL2 Backend and target
-+  raspberry pi boards. It is based on the snes9x-sdl implementation provided by
-+  domaemon but as been reworked in to use SDL 2 and to be comptatible with newer
-+  versions of snes9x.
-+
-   (c) Copyright 2011         Makoto Sugano (makoto.sugano@gmail.com)
- 
-   Snes9x homepage: http://www.snes9x.com/
-@@ -36,9 +40,6 @@
- #include <ctype.h>
- #include <errno.h>
- #include <string.h>
--#ifdef HAVE_STRINGS_H
--#include <strings.h>
--#endif
- 
- #include "snes9x.h"
- #include "memmap.h"
-@@ -52,333 +53,251 @@
- 
- #include "sdl_snes9x.h"
- 
-+//#define USE_BUFFER 0
-+
- struct GUIData
- {
--	SDL_Surface             *sdl_screen;
--	uint8			*snes_buffer;
--	uint8			*blit_screen;
--	uint32			blit_screen_pitch;
--	int			video_mode;
--        bool8                   fullscreen;
--};
--static struct GUIData	GUI;
--
--typedef	void (* Blitter) (uint8 *, int, uint8 *, int, int, int);
--
--#ifdef __linux
--// Select seems to be broken in 2.x.x kernels - if a signal interrupts a
--// select system call with a zero timeout, the select call is restarted but
--// with an infinite timeout! The call will block until data arrives on the
--// selected fd(s).
--//
--// The workaround is to stop the X library calling select in the first
--// place! Replace XPending - which polls for data from the X server using
--// select - with an ioctl call to poll for data and then only call the blocking
--// XNextEvent if data is waiting.
--#define SELECT_BROKEN_FOR_SIGNALS
-+	SDL_Window *	window;
-+	SDL_Renderer *	renderer;
-+	SDL_Texture *	texture;
-+#ifdef USE_BUFFER
-+	uint8 *			buffer;
-+#else
-+	void *			tbuffer;
-+	int tpitch;
- #endif
--
--enum
--{
--	VIDEOMODE_BLOCKY = 1,
--	VIDEOMODE_TV,
--	VIDEOMODE_SMOOTH,
--	VIDEOMODE_SUPEREAGLE,
--	VIDEOMODE_2XSAI,
--	VIDEOMODE_SUPER2XSAI,
--	VIDEOMODE_EPX,
--	VIDEOMODE_HQ2X
- };
--
--static void SetupImage (void);
--static void TakedownImage (void);
--static void Repaint (bool8);
-+static struct GUIData GUI;
- 
- void S9xExtraDisplayUsage (void)
- {
--	S9xMessage(S9X_INFO, S9X_USAGE, "-fullscreen                     fullscreen mode (without scaling)");
--	S9xMessage(S9X_INFO, S9X_USAGE, "");
--	S9xMessage(S9X_INFO, S9X_USAGE, "-v1                             Video mode: Blocky (default)");
--	S9xMessage(S9X_INFO, S9X_USAGE, "-v2                             Video mode: TV");
--	S9xMessage(S9X_INFO, S9X_USAGE, "-v3                             Video mode: Smooth");
--	S9xMessage(S9X_INFO, S9X_USAGE, "-v4                             Video mode: SuperEagle");
--	S9xMessage(S9X_INFO, S9X_USAGE, "-v5                             Video mode: 2xSaI");
--	S9xMessage(S9X_INFO, S9X_USAGE, "-v6                             Video mode: Super2xSaI");
--	S9xMessage(S9X_INFO, S9X_USAGE, "-v7                             Video mode: EPX");
--	S9xMessage(S9X_INFO, S9X_USAGE, "-v8                             Video mode: hq2x");
- 	S9xMessage(S9X_INFO, S9X_USAGE, "");
- }
- 
--void S9xParseDisplayArg (char **argv, int &i, int argc)
-+void S9xParseDisplayArg(char **argv, int &i, int argc)
- {
--	if (!strncasecmp(argv[i], "-fullscreen", 11))
--        {
--                GUI.fullscreen = TRUE;
--                printf ("Entering fullscreen mode (without scaling).\n");
--        }
--        else
--	if (!strncasecmp(argv[i], "-v", 2))
--	{
--		switch (argv[i][2])
--		{
--			case '1':	GUI.video_mode = VIDEOMODE_BLOCKY;		break;
--			case '2':	GUI.video_mode = VIDEOMODE_TV;			break;
--			case '3':	GUI.video_mode = VIDEOMODE_SMOOTH;		break;
--			case '4':	GUI.video_mode = VIDEOMODE_SUPEREAGLE;	break;
--			case '5':	GUI.video_mode = VIDEOMODE_2XSAI;		break;
--			case '6':	GUI.video_mode = VIDEOMODE_SUPER2XSAI;	break;
--			case '7':	GUI.video_mode = VIDEOMODE_EPX;			break;
--			case '8':	GUI.video_mode = VIDEOMODE_HQ2X;		break;
--		}
--	}
--	else
--		S9xUsage();
-+	S9xUsage();
- }
- 
- const char * S9xParseDisplayConfig (ConfigFile &conf, int pass)
- {
--	if (pass != 1)
--		return ("Unix/SDL");
--
--	if (conf.Exists("Unix/SDL::VideoMode"))
--	{
--		GUI.video_mode = conf.GetUInt("Unix/SDL::VideoMode", VIDEOMODE_BLOCKY);
--		if (GUI.video_mode < 1 || GUI.video_mode > 8)
--			GUI.video_mode = VIDEOMODE_BLOCKY;
--	}
--	else
--		GUI.video_mode = VIDEOMODE_BLOCKY;
--
--	return ("Unix/SDL");
--}
--
--static void FatalError (const char *str)
--{
--	fprintf(stderr, "%s\n", str);
--	S9xExit();
-+	return ("Linux/SDL2");
- }
- 
- void S9xInitDisplay (int argc, char **argv)
- {
--	if (SDL_Init(SDL_INIT_VIDEO) != 0)
--	{
--		printf("Unable to initialize SDL: %s\n", SDL_GetError());
-+	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-+		SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
-+		S9xExit();
- 	}
--  
-+
- 	atexit(SDL_Quit);
--	
--	/*
--	 * domaemon
--	 *
--	 * we just go along with RGB565 for now, nothing else..
--	 */
--	
-+
- 	S9xSetRenderPixelFormat(RGB565);
--	
- 	S9xBlitFilterInit();
- 	S9xBlit2xSaIFilterInit();
- 	S9xBlitHQ2xFilterInit();
- 
--
--	/*
--	 * domaemon
--	 *
--	 * FIXME: The secreen size should be flexible
--	 * FIXME: Check if the SDL screen is really in RGB565 mode. screen->fmt	
--	 */	
--        if (GUI.fullscreen == TRUE)
--        {
--                GUI.sdl_screen = SDL_SetVideoMode(0, 0, 16, SDL_FULLSCREEN);
--        } else {
--                GUI.sdl_screen = SDL_SetVideoMode(SNES_WIDTH * 2, SNES_HEIGHT_EXTENDED * 2, 16, 0);
--        }
--
--        if (GUI.sdl_screen == NULL)
--	{
--		printf("Unable to set video mode: %s\n", SDL_GetError());
--		exit(1);
--        }
--
--	/*
--	 * domaemon
--	 *
--	 * buffer allocation, quite important
--	 */
--	SetupImage();
--}
--
--void S9xDeinitDisplay (void)
--{
--	TakedownImage();
--
--	SDL_Quit();
--
--	S9xBlitFilterDeinit();
--	S9xBlit2xSaIFilterDeinit();
--	S9xBlitHQ2xFilterDeinit();
--}
--
--static void TakedownImage (void)
--{
--	if (GUI.snes_buffer)
--	{
--		free(GUI.snes_buffer);
--		GUI.snes_buffer = NULL;
-+	GUI.window = SDL_CreateWindow("Snes9x-SDL2", 0, 0, 0, 0, SDL_WINDOW_FULLSCREEN|SDL_WINDOW_OPENGL);
-+	if (GUI.window == nullptr) {
-+		SDL_Log("Could not create window: %s", SDL_GetError());
-+		S9xExit();
- 	}
- 
--	S9xGraphicsDeinit();
--}
--
--static void SetupImage (void)
--{
--	TakedownImage();
--
--	// domaemon: The whole unix code basically assumes output=(original * 2);
--	// This way the code can handle the SNES filters, which does the 2X.
--	GFX.Pitch = SNES_WIDTH * 2 * 2;
--	GUI.snes_buffer = (uint8 *) calloc(GFX.Pitch * ((SNES_HEIGHT_EXTENDED + 4) * 2), 1);
--	if (!GUI.snes_buffer)
--		FatalError("Failed to allocate GUI.snes_buffer.");
--
--	// domaemon: Add 2 lines before drawing.
--	GFX.Screen = (uint16 *) (GUI.snes_buffer + (GFX.Pitch * 2 * 2));
--
--	if (GUI.fullscreen == TRUE)
--	{
--		int offset_height_pix;
--		int offset_width_pix;
--		int offset_byte;
--
-+	GUI.renderer = SDL_CreateRenderer(GUI.window, -1, SDL_RENDERER_ACCELERATED);
-+	if (GUI.renderer == nullptr) {
-+		SDL_Log("Could not create renderer: %s", SDL_GetError());
-+		S9xExit();
-+	}
- 
--		offset_height_pix = (GUI.sdl_screen->h - (SNES_HEIGHT * 2)) / 2;
--		offset_width_pix = (GUI.sdl_screen->w - (SNES_WIDTH * 2)) / 2;
--		
--		offset_byte = (GUI.sdl_screen->w * offset_height_pix + offset_width_pix) * 2;
-+	// To Respect AR, we need to rely on these.
-+	if (SDL_RenderSetLogicalSize(GUI.renderer, IMAGE_WIDTH, IMAGE_HEIGHT) == -1) {
-+		SDL_Log("Unable to set logical size: %s", SDL_GetError());
-+		S9xExit();
-+	}
- 
--		GUI.blit_screen       = (uint8 *) GUI.sdl_screen->pixels + offset_byte;
--		GUI.blit_screen_pitch = GUI.sdl_screen->w * 2;
-+#ifdef USE_BUFFER
-+	// Use an intermediate buffer. This allow for flexibility on how SNES handle the generation of
-+	// data, at the cost of having an additionnal buffer to copy around. The pipline is defined as
-+	// follow: SNES_BUFFER -> SDL_TEXTURE -> RENDERER (BUFFER != TEXTURE)
-+	if (GUI.buffer) {
-+		SDL_Log("Buffer is already initialized");
-+	} else {
-+		GUI.buffer = (uint8 *) malloc(IMAGE_WIDTH * IMAGE_HEIGHT * 2); // 16Bits per Pixel
-+		GFX.Pitch  = IMAGE_WIDTH * 2;
-+		GFX.Screen = (uint16*)GUI.buffer;
-+	}
-+	if (!GUI.buffer) {
-+		SDL_Log("Unable to initialize Buffer");
-+		S9xExit();
-+	}
-+	if (GUI.texture) {
-+		SDL_Log("Texture is already initialized");
-+	} else {
-+		GUI.texture = SDL_CreateTexture(GUI.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, IMAGE_WIDTH, IMAGE_HEIGHT);
- 	}
--	else 
--	{
--		GUI.blit_screen       = (uint8 *) GUI.sdl_screen->pixels;
--		GUI.blit_screen_pitch = SNES_WIDTH * 2 * 2; // window size =(*2); 2 byte pir pixel =(*2)
-+#else
-+	// Do not use and intermediate buffer. This is less flexible and only work because we know what
-+	// format is used internally by SNES. However it avoid a costly buffer copy. The pipeline is
-+	// Greatly simplified: SNES_BUFFER -> RENDERER (BUFFER = TEXTURE = S9xEndScreenRefresh < 10ms)
-+	// TODO: This does not always work, we need a way to determine the size of the buffer used
-+	//       dynamically because sometime it change (ex: Secret Of Mana home screen)
-+	if (GUI.texture) {
-+		SDL_Log("Texture is already initialized");
-+	} else {
-+		GUI.texture = SDL_CreateTexture(GUI.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 256, 239);
-+	}
-+	if (SDL_LockTexture(GUI.texture, nullptr, &GUI.tbuffer, &GUI.tpitch) == -1) {
-+		SDL_Log("Cant lock texture: %s", SDL_GetError());
-+		return;
-+	}
-+	GFX.Pitch  = GUI.tpitch;
-+	GFX.Screen = (uint16*)(GUI.tbuffer + 8 * GUI.tpitch); // Not sure why this line skip is needed ...
 +#endif
++/***** Joystick ends *****/
 +
-+	if (GUI.texture == nullptr) {
-+		SDL_Log("Could not initialize Texture: %s", SDL_GetError());
++		case SDL_QUIT:
++			// domaemon: we come here when the window is getting closed.
++			quit_state = TRUE;
++			break;
++		}
++	}
++
++	if (quit_state == TRUE)
++	{
++		printf ("Quit Event. Bye.\n");
 +		S9xExit();
- 	}
- 
- 	S9xGraphicsInit();
- }
- 
--void S9xPutImage (int width, int height)
-+void S9xDeinitDisplay (void)
- {
--	static int	prevWidth = 0, prevHeight = 0;
--	int			copyWidth, copyHeight;
--	Blitter		blitFn = NULL;
--
--	if (GUI.video_mode == VIDEOMODE_BLOCKY || GUI.video_mode == VIDEOMODE_TV || GUI.video_mode == VIDEOMODE_SMOOTH)
--		if ((width <= SNES_WIDTH) && ((prevWidth != width) || (prevHeight != height)))
--			S9xBlitClearDelta();
--
--	if (width <= SNES_WIDTH)
--	{
--		if (height > SNES_HEIGHT_EXTENDED)
--		{
--			copyWidth  = width * 2;
--			copyHeight = height;
--			blitFn = S9xBlitPixSimple2x1;
--		}
--		else
--		{
--			copyWidth  = width  * 2;
--			copyHeight = height * 2;
--
--			switch (GUI.video_mode)
--			{
--				case VIDEOMODE_BLOCKY:		blitFn = S9xBlitPixSimple2x2;		break;
--				case VIDEOMODE_TV:			blitFn = S9xBlitPixTV2x2;			break;
--				case VIDEOMODE_SMOOTH:		blitFn = S9xBlitPixSmooth2x2;		break;
--				case VIDEOMODE_SUPEREAGLE:	blitFn = S9xBlitPixSuperEagle16;	break;
--				case VIDEOMODE_2XSAI:		blitFn = S9xBlitPix2xSaI16;			break;
--				case VIDEOMODE_SUPER2XSAI:	blitFn = S9xBlitPixSuper2xSaI16;	break;
--				case VIDEOMODE_EPX:			blitFn = S9xBlitPixEPX16;			break;
--				case VIDEOMODE_HQ2X:		blitFn = S9xBlitPixHQ2x16;			break;
--			}
--		}
--	}
--	else
--	if (height <= SNES_HEIGHT_EXTENDED)
--	{
--		copyWidth  = width;
--		copyHeight = height * 2;
--
--		switch (GUI.video_mode)
--		{
--			default:					blitFn = S9xBlitPixSimple1x2;	break;
--			case VIDEOMODE_TV:			blitFn = S9xBlitPixTV1x2;		break;
--		}
--	}
--	else
--	{
--		copyWidth  = width;
--		copyHeight = height;
--		blitFn = S9xBlitPixSimple1x1;
-+	S9xGraphicsDeinit();
-+
-+	if (GUI.texture) {
-+		SDL_DestroyTexture(GUI.texture);
- 	}
- 
-+#ifdef USE_BUFFER
-+	if (GUI.buffer) {
-+		free(GUI.buffer);
 +	}
-+	GUI.buffer = nullptr;
-+#endif
- 
--	// domaemon: this is place where the rendering buffer size should be changed?
--	blitFn((uint8 *) GFX.Screen, GFX.Pitch, GUI.blit_screen, GUI.blit_screen_pitch, width, height);
-+	if (GUI.renderer) {
-+		SDL_DestroyRenderer(GUI.renderer);
-+	}
- 
--	// domaemon: does the height change on the fly?
--	if (height < prevHeight)
--	{
--		int	p = GUI.blit_screen_pitch >> 2;
--		for (int y = SNES_HEIGHT * 2; y < SNES_HEIGHT_EXTENDED * 2; y++)
--		{
--			uint32	*d = (uint32 *) (GUI.blit_screen + y * GUI.blit_screen_pitch);
--			for (int x = 0; x < p; x++)
--				*d++ = 0;
--		}
-+	if (GUI.window) {
-+		SDL_DestroyWindow(GUI.window);
- 	}
- 
--	Repaint(TRUE);
-+	SDL_Quit();
- 
--	prevWidth  = width;
--	prevHeight = height;
--}
-+	S9xBlitFilterDeinit();
-+	S9xBlit2xSaIFilterDeinit();
-+	S9xBlitHQ2xFilterDeinit();
- 
--static void Repaint (bool8 isFrameBoundry)
--{
--        SDL_Flip(GUI.sdl_screen);
-+	GUI.texture     = nullptr;
-+	GUI.renderer    = nullptr;
-+	GUI.window      = nullptr;
- }
- 
- void S9xMessage (int type, int number, const char *message)
- {
- 	const int	max = 36 * 3;
- 	static char	buffer[max + 1];
--
- 	fprintf(stdout, "%s\n", message);
- 	strncpy(buffer, message, max + 1);
- 	buffer[max] = 0;
- 	S9xSetInfoString(buffer);
- }
- 
--const char * S9xStringInput (const char *message)
-+const char * S9xStringInput(const char * message)
- {
- 	static char	buffer[256];
--
- 	printf("%s: ", message);
- 	fflush(stdout);
--
--	if (fgets(buffer, sizeof(buffer) - 2, stdin))
-+	if (fgets(buffer, sizeof(buffer) - 2, stdin)) {
- 		return (buffer);
--
-+	}
- 	return (NULL);
- }
- 
--void S9xSetTitle (const char *string)
-+void S9xSetTitle (const char * title)
- {
--	SDL_WM_SetCaption(string, string);
-+	SDL_SetWindowTitle(GUI.window, title);
- }
- 
--void S9xSetPalette (void)
-+void S9xSetPalette(void)
- {
- 	return;
- }
++}
 +
-+#ifdef USE_BUFFER
-+
-+// In this mode we provide a buffer to SNES that is fill with screen data. When Put image is called
-+// we blit this buffer into a surface using one of the S9XBlit functions. Note we do not use an
-+// intermediate buffer and udpate the texture with it, we update the texture directly. This is
-+// possible because the texture format is known and comptatible with SNES data.
-+
-+void S9xPutImage(int width, int height)
++bool S9xPollButton (uint32 id, bool *pressed)
 +{
-+	static int prevWidth = 0;
-+	static int prevHeight = 0;
-+	void * pixels;
-+	int pitch;
-+	if ((width <= SNES_WIDTH) && ((prevWidth != width) || (prevHeight != height))) {
-+		SDL_Log("Render:%dx%d, Texture:%dx%d ", width, height, IMAGE_WIDTH, IMAGE_HEIGHT);
-+		S9xBlitClearDelta();
++	return (false);
++}
++
++bool S9xPollAxis (uint32 id, int16 *value)
++{
++	return (false);
++}
++
++bool S9xPollPointer (uint32 id, int16 *x, int16 *y)
++{
++	return (false);
++}
++
++// domaemon: needed by SNES9X
++void S9xHandlePortCommand (s9xcommand_t cmd, int16 data1, int16 data2)
++{
++	return;
++}
+diff --git a/sdl2/sdlmain.cpp b/sdl2/sdlmain.cpp
+index e69de29..f4ae0ae 100644
+--- a/sdl2/sdlmain.cpp
++++ b/sdl2/sdlmain.cpp
+@@ -0,0 +1,1059 @@
++/***********************************************************************************
++  Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
++
++  See CREDITS file to find the copyright owners of this file.
++
++  SDL Input/Audio/Video code (many lines of code come from snes9x & drnoksnes)
++  (c) Copyright 2011         Makoto Sugano (makoto.sugano@gmail.com)
++
++  Snes9x homepage: http://www.snes9x.com/
++
++  Permission to use, copy, modify and/or distribute Snes9x in both binary
++  and source form, for non-commercial purposes, is hereby granted without
++  fee, providing that this license information and copyright notice appear
++  with all copies and any derived work.
++
++  This software is provided 'as-is', without any express or implied
++  warranty. In no event shall the authors be held liable for any damages
++  arising from the use of this software or it's derivatives.
++
++  Snes9x is freeware for PERSONAL USE only. Commercial users should
++  seek permission of the copyright holders first. Commercial use includes,
++  but is not limited to, charging money for Snes9x or software derived from
++  Snes9x, including Snes9x or derivatives in commercial game bundles, and/or
++  using Snes9x as a promotion for your commercial product.
++
++  The copyright holders request that bug fixes and improvements to the code
++  should be forwarded to them so everyone can benefit from the modifications
++  in future versions.
++
++  Super NES and Super Nintendo Entertainment System are trademarks of
++  Nintendo Co., Limited and its subsidiary companies.
++ ***********************************************************************************/
++
++#include <stdlib.h>
++#include <unistd.h>
++#include <ctype.h>
++#include <dirent.h>
++#include <errno.h>
++#include <string.h>
++
++#ifdef HAVE_STRINGS_H
++#include <strings.h>
++#endif
++
++#include <sys/stat.h>
++#include <sys/time.h>
++#include <sys/types.h>
++
++#include "sdl_snes9x.h"
++
++#include "snes9x.h"
++#include "memmap.h"
++#include "apu/apu.h"
++#include "gfx.h"
++#include "snapshot.h"
++#include "controls.h"
++#include "cheats.h"
++#include "movie.h"
++#include "logger.h"
++#include "display.h"
++#include "conffile.h"
++#ifdef NETPLAY_SUPPORT
++#include "netplay.h"
++#endif
++#ifdef DEBUGGER
++#include "debug.h"
++#endif
++
++#ifdef NETPLAY_SUPPORT
++#ifdef _DEBUG
++#define NP_DEBUG 2
++#endif
++#endif
++
++static const char	*s9x_base_dir        = NULL,
++					*rom_filename        = NULL,
++					*snapshot_filename   = NULL,
++					*play_smv_filename   = NULL,
++					*record_smv_filename = NULL;
++
++extern uint32           sound_buffer_size; // used in sdlaudio
++
++static char		default_dir[PATH_MAX + 1];
++
++static const char	dirNames[13][32] =
++{
++	"",				// DEFAULT_DIR
++	"",				// HOME_DIR
++	"",				// ROMFILENAME_DIR
++	"rom",			// ROM_DIR
++	"sram",			// SRAM_DIR
++	"savestate",	// SNAPSHOT_DIR
++	"screenshot",	// SCREENSHOT_DIR
++	"spc",			// SPC_DIR
++	"cheat",		// CHEAT_DIR
++	"patch",		// IPS_DIR
++	"bios",			// BIOS_DIR
++	"log",			// LOG_DIR
++	""
++};
++
++#ifdef NETPLAY_SUPPORT
++static uint32	joypads[8];
++static uint32	old_joypads[8];
++#endif
++
++void S9xParseInputConfig(ConfigFile &, int pass); // defined in sdlinput
++
++static long log2 (long);
++static void NSRTControllerSetup (void);
++static int make_snes9x_dirs (void);
++
++void _splitpath (const char *path, char *drive, char *dir, char *fname, char *ext)
++{
++	*drive = 0;
++
++	const char	*slash = strrchr(path, SLASH_CHAR),
++				*dot   = strrchr(path, '.');
++
++	if (dot && slash && dot < slash)
++		dot = NULL;
++
++	if (!slash)
++	{
++		*dir = 0;
++
++		strcpy(fname, path);
++
++		if (dot)
++		{
++			fname[dot - path] = 0;
++			strcpy(ext, dot + 1);
++		}
++		else
++			*ext = 0;
 +	}
-+	if (SDL_LockTexture(GUI.texture, nullptr, &pixels, &pitch) == -1) {
-+		SDL_Log("Cant lock texture: %s", SDL_GetError());
++	else
++	{
++		strcpy(dir, path);
++		dir[slash - path] = 0;
++
++		strcpy(fname, slash + 1);
++
++		if (dot)
++		{
++			fname[dot - slash - 1] = 0;
++			strcpy(ext, dot + 1);
++		}
++		else
++			*ext = 0;
++	}
++}
++
++void _makepath (char *path, const char *, const char *dir, const char *fname, const char *ext)
++{
++	if (dir && *dir)
++	{
++		strcpy(path, dir);
++		strcat(path, SLASH_STR);
++	}
++	else
++		*path = 0;
++
++	strcat(path, fname);
++
++	if (ext && *ext)
++	{
++		strcat(path, ".");
++		strcat(path, ext);
++	}
++}
++
++static long log2 (long num)
++{
++	long	n = 0;
++
++	while (num >>= 1)
++		n++;
++
++	return (n);
++}
++
++void S9xExtraUsage (void) // domaemon: ExtraUsage -> ExtraDisplayUsage
++{
++	/*                               12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
++
++	S9xMessage(S9X_INFO, S9X_USAGE, "-multi                          Enable multi cartridge system");
++	S9xMessage(S9X_INFO, S9X_USAGE, "-carta <filename>               ROM in slot A (use with -multi)");
++	S9xMessage(S9X_INFO, S9X_USAGE, "-cartb <filename>               ROM in slot B (use with -multi)");
++	S9xMessage(S9X_INFO, S9X_USAGE, "");
++
++	S9xMessage(S9X_INFO, S9X_USAGE, "-buffersize                     Sound generating buffer size in millisecond");
++	S9xMessage(S9X_INFO, S9X_USAGE, "");
++
++	S9xMessage(S9X_INFO, S9X_USAGE, "-loadsnapshot                   Load snapshot file at start");
++	S9xMessage(S9X_INFO, S9X_USAGE, "-playmovie <filename>           Start emulator playing the .smv file");
++	S9xMessage(S9X_INFO, S9X_USAGE, "-recordmovie <filename>         Start emulator recording the .smv file");
++	S9xMessage(S9X_INFO, S9X_USAGE, "-dumpstreams                    Save audio/video data to disk");
++	S9xMessage(S9X_INFO, S9X_USAGE, "-dumpmaxframes <num>            Stop emulator after saving specified number of");
++	S9xMessage(S9X_INFO, S9X_USAGE, "                                frames (use with -dumpstreams)");
++	S9xMessage(S9X_INFO, S9X_USAGE, "");
++
++	S9xExtraDisplayUsage();
++}
++
++/*
++ * domaemon: arg is parsed as ParseArg -> ParseDisplayArg
++ */
++void S9xParseArg (char **argv, int &i, int argc)
++{
++	if (!strcasecmp(argv[i], "-multi"))
++		Settings.Multi = TRUE;
++	else
++	if (!strcasecmp(argv[i], "-carta"))
++	{
++		if (i + 1 < argc)
++			strncpy(Settings.CartAName, argv[++i], _MAX_PATH);
++		else
++			S9xUsage();
++	}
++	else
++	if (!strcasecmp(argv[i], "-cartb"))
++	{
++		if (i + 1 < argc)
++			strncpy(Settings.CartBName, argv[++i], _MAX_PATH);
++		else
++			S9xUsage();
++	}
++	else
++	if (!strcasecmp(argv[i], "-buffersize"))
++	{
++		if (i + 1 < argc)
++			sound_buffer_size = atoi(argv[++i]);
++		else
++			S9xUsage();
++	}
++	else
++	if (!strcasecmp(argv[i], "-loadsnapshot"))
++	{
++		if (i + 1 < argc)
++			snapshot_filename = argv[++i];
++		else
++			S9xUsage();
++	}
++	else
++	if (!strcasecmp(argv[i], "-playmovie"))
++	{
++		if (i + 1 < argc)
++			play_smv_filename = argv[++i];
++		else
++			S9xUsage();
++	}
++	else
++	if (!strcasecmp(argv[i], "-recordmovie"))
++	{
++		if (i + 1 < argc)
++			record_smv_filename = argv[++i];
++		else
++			S9xUsage();
++	}
++	else
++	if (!strcasecmp(argv[i], "-dumpstreams"))
++		Settings.DumpStreams = TRUE;
++	else
++	if (!strcasecmp(argv[i], "-dumpmaxframes"))
++		Settings.DumpStreamsMaxFrames = atoi(argv[++i]);
++	else
++		S9xParseDisplayArg(argv, i, argc);
++}
++
++static void NSRTControllerSetup (void)
++{
++	if (!strncmp((const char *) Memory.NSRTHeader + 24, "NSRT", 4))
++	{
++		// First plug in both, they'll change later as needed
++		S9xSetController(0, CTL_JOYPAD, 0, 0, 0, 0);
++		S9xSetController(1, CTL_JOYPAD, 1, 0, 0, 0);
++
++		switch (Memory.NSRTHeader[29])
++		{
++			case 0x00:	// Everything goes
++				break;
++
++			case 0x10:	// Mouse in Port 0
++				S9xSetController(0, CTL_MOUSE,      0, 0, 0, 0);
++				break;
++
++			case 0x01:	// Mouse in Port 1
++				S9xSetController(1, CTL_MOUSE,      1, 0, 0, 0);
++				break;
++
++			case 0x03:	// Super Scope in Port 1
++				S9xSetController(1, CTL_SUPERSCOPE, 0, 0, 0, 0);
++				break;
++
++			case 0x06:	// Multitap in Port 1
++				S9xSetController(1, CTL_MP5,        1, 2, 3, 4);
++				break;
++
++			case 0x66:	// Multitap in Ports 0 and 1
++				S9xSetController(0, CTL_MP5,        0, 1, 2, 3);
++				S9xSetController(1, CTL_MP5,        4, 5, 6, 7);
++				break;
++
++			case 0x08:	// Multitap in Port 1, Mouse in new Port 1
++				S9xSetController(1, CTL_MOUSE,      1, 0, 0, 0);
++				// There should be a toggle here for putting in Multitap instead
++				break;
++
++			case 0x04:	// Pad or Super Scope in Port 1
++				S9xSetController(1, CTL_SUPERSCOPE, 0, 0, 0, 0);
++				// There should be a toggle here for putting in a pad instead
++				break;
++
++			case 0x05:	// Justifier - Must ask user...
++				S9xSetController(1, CTL_JUSTIFIER,  1, 0, 0, 0);
++				// There should be a toggle here for how many justifiers
++				break;
++
++			case 0x20:	// Pad or Mouse in Port 0
++				S9xSetController(0, CTL_MOUSE,      0, 0, 0, 0);
++				// There should be a toggle here for putting in a pad instead
++				break;
++
++			case 0x22:	// Pad or Mouse in Port 0 & 1
++				S9xSetController(0, CTL_MOUSE,      0, 0, 0, 0);
++				S9xSetController(1, CTL_MOUSE,      1, 0, 0, 0);
++				// There should be a toggles here for putting in pads instead
++				break;
++
++			case 0x24:	// Pad or Mouse in Port 0, Pad or Super Scope in Port 1
++				// There should be a toggles here for what to put in, I'm leaving it at gamepad for now
++				break;
++
++			case 0x27:	// Pad or Mouse in Port 0, Pad or Mouse or Super Scope in Port 1
++				// There should be a toggles here for what to put in, I'm leaving it at gamepad for now
++				break;
++
++			// Not Supported yet
++			case 0x99:	// Lasabirdie
++				break;
++
++			case 0x0A:	// Barcode Battler
++				break;
++		}
++	}
++}
++
++/*
++ * domaemon: config is parsed as
++ *
++ * ParsePortConfig -> ParseInputConfig
++ * ParsePortConfig -> ParseDisplayConfig
++ */
++
++void S9xParsePortConfig (ConfigFile &conf, int pass)
++{
++	s9x_base_dir                = conf.GetStringDup("Unix::BaseDir",             default_dir);
++	snapshot_filename           = conf.GetStringDup("Unix::SnapshotFilename",    NULL);
++	play_smv_filename           = conf.GetStringDup("Unix::PlayMovieFilename",   NULL);
++	record_smv_filename         = conf.GetStringDup("Unix::RecordMovieFilename", NULL);
++	sound_buffer_size           = conf.GetUInt     ("Unix::SoundBufferSize",     100);
++
++	// domaemon: default input configuration
++	S9xParseInputConfig(conf, 1);
++
++	std::string section = S9xParseDisplayConfig(conf, 1);
++
++	ConfigFile::secvec_t	sec = conf.GetSection((section + " Controls").c_str());
++	for (ConfigFile::secvec_t::iterator c = sec.begin(); c != sec.end(); c++)
++		keymaps.push_back(*c);
++}
++
++static int make_snes9x_dirs (void)
++{
++	if (strlen(s9x_base_dir) + 1 + sizeof(dirNames[0]) > PATH_MAX + 1)
++		return (-1);
++
++	mkdir(s9x_base_dir, 0755);
++
++	for (int i = 0; i < LAST_DIR; i++)
++	{
++		if (dirNames[i][0])
++		{
++			char	s[PATH_MAX + 1];
++			snprintf(s, PATH_MAX + 1, "%s%s%s", s9x_base_dir, SLASH_STR, dirNames[i]);
++			mkdir(s, 0755);
++		}
++	}
++
++	return (0);
++}
++
++const char * S9xGetDirectory (enum s9x_getdirtype dirtype)
++{
++	static char	s[PATH_MAX + 1];
++
++	if (dirNames[dirtype][0])
++		snprintf(s, PATH_MAX + 1, "%s%s%s", s9x_base_dir, SLASH_STR, dirNames[dirtype]);
++	else
++	{
++		switch (dirtype)
++		{
++			case DEFAULT_DIR:
++				strncpy(s, s9x_base_dir, PATH_MAX + 1);
++				s[PATH_MAX] = 0;
++				break;
++
++			case HOME_DIR:
++				strncpy(s, getenv("HOME"), PATH_MAX + 1);
++				s[PATH_MAX] = 0;
++				break;
++
++			case ROMFILENAME_DIR:
++				strncpy(s, Memory.ROMFilename, PATH_MAX + 1);
++				s[PATH_MAX] = 0;
++
++				for (int i = strlen(s); i >= 0; i--)
++				{
++					if (s[i] == SLASH_CHAR)
++					{
++						s[i] = 0;
++						break;
++					}
++				}
++
++				break;
++
++			default:
++				s[0] = 0;
++				break;
++		}
++	}
++
++	return (s);
++}
++
++const char * S9xGetFilename (const char *ex, enum s9x_getdirtype dirtype)
++{
++	static char	s[PATH_MAX + 1];
++	char		drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
++
++	_splitpath(Memory.ROMFilename, drive, dir, fname, ext);
++	snprintf(s, PATH_MAX + 1, "%s%s%s%s", S9xGetDirectory(dirtype), SLASH_STR, fname, ex);
++
++	return (s);
++}
++
++const char * S9xGetFilenameInc (const char *ex, enum s9x_getdirtype dirtype)
++{
++	static char	s[PATH_MAX + 1];
++	char		drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
++
++	unsigned int	i = 0;
++	const char		*d;
++	struct stat		buf;
++
++	_splitpath(Memory.ROMFilename, drive, dir, fname, ext);
++	d = S9xGetDirectory(dirtype);
++
++	do
++		snprintf(s, PATH_MAX + 1, "%s%s%s.%03d%s", d, SLASH_STR, fname, i++, ex);
++	while (stat(s, &buf) == 0 && i < 1000);
++
++	return (s);
++}
++
++const char * S9xBasename (const char *f)
++{
++	const char	*p;
++
++	if ((p = strrchr(f, '/')) != NULL || (p = strrchr(f, '\\')) != NULL)
++		return (p + 1);
++
++	return (f);
++}
++
++const char * S9xSelectFilename (const char *def, const char *dir1, const char *ext1, const char *title)
++{
++	static char	s[PATH_MAX + 1];
++	char		buffer[PATH_MAX + 1];
++
++	printf("\n%s (default: %s): ", title, def);
++	fflush(stdout);
++
++	if (fgets(buffer, PATH_MAX + 1, stdin))
++	{
++		char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
++
++		char	*p = buffer;
++		while (isspace(*p))
++			p++;
++		if (!*p)
++		{
++			strncpy(buffer, def, PATH_MAX + 1);
++			buffer[PATH_MAX] = 0;
++			p = buffer;
++		}
++
++		char	*q = strrchr(p, '\n');
++		if (q)
++			*q = 0;
++
++		_splitpath(p, drive, dir, fname, ext);
++		_makepath(s, drive, *dir ? dir : dir1, fname, *ext ? ext : ext1);
++
++		return (s);
++	}
++
++	return (NULL);
++}
++
++const char * S9xChooseFilename (bool8 read_only)
++{
++	char	s[PATH_MAX + 1];
++	char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
++
++	const char	*filename;
++	char		title[64];
++
++	_splitpath(Memory.ROMFilename, drive, dir, fname, ext);
++	snprintf(s, PATH_MAX + 1, "%s.frz", fname);
++	sprintf(title, "%s snapshot filename", read_only ? "Select load" : "Choose save");
++
++	S9xSetSoundMute(TRUE);
++	filename = S9xSelectFilename(s, S9xGetDirectory(SNAPSHOT_DIR), "frz", title);
++	S9xSetSoundMute(FALSE);
++
++	return (filename);
++}
++
++const char * S9xChooseMovieFilename (bool8 read_only)
++{
++	char	s[PATH_MAX + 1];
++	char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
++
++	const char	*filename;
++	char		title[64];
++
++	_splitpath(Memory.ROMFilename, drive, dir, fname, ext);
++	snprintf(s, PATH_MAX + 1, "%s.smv", fname);
++	sprintf(title, "Choose movie %s filename", read_only ? "playback" : "record");
++
++	S9xSetSoundMute(TRUE);
++	filename = S9xSelectFilename(s, S9xGetDirectory(HOME_DIR), "smv", title);
++	S9xSetSoundMute(FALSE);
++
++	return (filename);
++}
++
++bool8 S9xOpenSnapshotFile (const char *filename, bool8 read_only, STREAM *file)
++{
++	char	s[PATH_MAX + 1];
++	char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
++
++	_splitpath(filename, drive, dir, fname, ext);
++
++	if (*drive || *dir == SLASH_CHAR || (strlen(dir) > 1 && *dir == '.' && *(dir + 1) == SLASH_CHAR))
++	{
++		strncpy(s, filename, PATH_MAX + 1);
++		s[PATH_MAX] = 0;
++	}
++	else
++		snprintf(s, PATH_MAX + 1, "%s%s%s", S9xGetDirectory(SNAPSHOT_DIR), SLASH_STR, fname);
++
++	if (!*ext && strlen(s) <= PATH_MAX - 4)
++		strcat(s, ".frz");
++
++	if ((*file = OPEN_STREAM(s, read_only ? "rb" : "wb")))
++		return (TRUE);
++
++	return (FALSE);
++}
++
++void S9xCloseSnapshotFile (STREAM file)
++{
++	CLOSE_STREAM(file);
++}
++
++void S9xAutoSaveSRAM (void)
++{
++	Memory.SaveSRAM(S9xGetFilename(".srm", SRAM_DIR));
++}
++
++void S9xSyncSpeed (void)
++{
++  // doemaemon: not sure how crucial this is atm.
++	if (Settings.SoundSync)
++	{
++		while (!S9xSyncSound())
++			usleep(0);
++	}
++
++	if (Settings.DumpStreams)
++		return;
++
++#ifdef NETPLAY_SUPPORT
++	if (Settings.NetPlay && NetPlay.Connected)
++	{
++	#if defined(NP_DEBUG) && NP_DEBUG == 2
++		printf("CLIENT: SyncSpeed @%d\n", S9xGetMilliTime());
++	#endif
++
++		S9xNPSendJoypadUpdate(old_joypads[0]);
++		for (int J = 0; J < 8; J++)
++			joypads[J] = S9xNPGetJoypad(J);
++
++		if (!S9xNPCheckForHeartBeat())
++		{
++			NetPlay.PendingWait4Sync = !S9xNPWaitForHeartBeatDelay(100);
++		#if defined(NP_DEBUG) && NP_DEBUG == 2
++			if (NetPlay.PendingWait4Sync)
++				printf("CLIENT: PendingWait4Sync1 @%d\n", S9xGetMilliTime());
++		#endif
++
++			IPPU.RenderThisFrame = TRUE;
++			IPPU.SkippedFrames = 0;
++		}
++		else
++		{
++			NetPlay.PendingWait4Sync = !S9xNPWaitForHeartBeatDelay(200);
++		#if defined(NP_DEBUG) && NP_DEBUG == 2
++			if (NetPlay.PendingWait4Sync)
++				printf("CLIENT: PendingWait4Sync2 @%d\n", S9xGetMilliTime());
++		#endif
++
++			if (IPPU.SkippedFrames < NetPlay.MaxFrameSkip)
++			{
++				IPPU.RenderThisFrame = FALSE;
++				IPPU.SkippedFrames++;
++			}
++			else
++			{
++				IPPU.RenderThisFrame = TRUE;
++				IPPU.SkippedFrames = 0;
++			}
++		}
++
++		if (!NetPlay.PendingWait4Sync)
++		{
++			NetPlay.FrameCount++;
++			S9xNPStepJoypadHistory();
++		}
++
 +		return;
 +	}
-+	if (width <= SNES_WIDTH && height > SNES_HEIGHT_EXTENDED) {
-+		S9xBlitPixSimple2x1((uint8*)GFX.Screen, GFX.Pitch, (uint8*)pixels, GFX.Pitch, width, height);
-+	} else if (width <= SNES_WIDTH) {
-+		S9xBlitPixSimple2x2((uint8*)GFX.Screen, GFX.Pitch, (uint8*)pixels, GFX.Pitch, width, height);
-+	} else if (height <= SNES_HEIGHT_EXTENDED) {
-+		S9xBlitPixSimple1x2((uint8*)GFX.Screen, GFX.Pitch, (uint8*)pixels, GFX.Pitch, width, height);
-+	} else {
-+		S9xBlitPixSimple1x1((uint8*)GFX.Screen, GFX.Pitch, (uint8*)pixels, GFX.Pitch, width, height);
++#endif
++
++	if (Settings.HighSpeedSeek > 0)
++		Settings.HighSpeedSeek--;
++
++	if (Settings.TurboMode)
++	{
++		if ((++IPPU.FrameSkip >= Settings.TurboSkipFrames) && !Settings.HighSpeedSeek)
++		{
++			IPPU.FrameSkip = 0;
++			IPPU.SkippedFrames = 0;
++			IPPU.RenderThisFrame = TRUE;
++		}
++		else
++		{
++			IPPU.SkippedFrames++;
++			IPPU.RenderThisFrame = FALSE;
++		}
++
++		return;
 +	}
-+	if (height < prevHeight) {
-+		int  p = SNES_WIDTH >> 2;
-+		for (int y = SNES_HEIGHT * 2; y < SNES_HEIGHT_EXTENDED * 2; y++) {
-+			uint32  * d = (uint32 *) ((uint32 *)pixels + y * GFX.Pitch);
-+			for (int x = 0; x < p; x++) {
-+				*d++ = 0;
++
++	static struct timeval	next1 = { 0, 0 };
++	struct timeval			now;
++
++	while (gettimeofday(&now, NULL) == -1) ;
++
++	// If there is no known "next" frame, initialize it now.
++	if (next1.tv_sec == 0)
++	{
++		next1 = now;
++		next1.tv_usec++;
++	}
++
++	// If we're on AUTO_FRAMERATE, we'll display frames always only if there's excess time.
++	// Otherwise we'll display the defined amount of frames.
++	unsigned	limit = (Settings.SkipFrames == AUTO_FRAMERATE) ? (timercmp(&next1, &now, <) ? 10 : 1) : Settings.SkipFrames;
++
++	IPPU.RenderThisFrame = (++IPPU.SkippedFrames >= limit) ? TRUE : FALSE;
++
++	if (IPPU.RenderThisFrame)
++		IPPU.SkippedFrames = 0;
++	else
++	{
++		// If we were behind the schedule, check how much it is.
++		if (timercmp(&next1, &now, <))
++		{
++			unsigned	lag = (now.tv_sec - next1.tv_sec) * 1000000 + now.tv_usec - next1.tv_usec;
++			if (lag >= 500000)
++			{
++				// More than a half-second behind means probably pause.
++				// The next line prevents the magic fast-forward effect.
++				next1 = now;
 +			}
 +		}
 +	}
-+	SDL_UnlockTexture(GUI.texture);
-+	SDL_RenderClear(GUI.renderer);
-+	SDL_RenderCopy(GUI.renderer, GUI.texture, nullptr, nullptr);
-+	SDL_RenderPresent(GUI.renderer);
-+	prevWidth  = width;
-+	prevHeight = height;
-+}
 +
-+#else
++	// Delay until we're completed this frame.
++	// Can't use setitimer because the sound code already could be using it. We don't actually need it either.
++	while (timercmp(&next1, &now, >))
++	{
++		// If we're ahead of time, sleep a while.
++		unsigned	timeleft = (next1.tv_sec - now.tv_sec) * 1000000 + next1.tv_usec - now.tv_usec;
++		usleep(timeleft);
 +
-+// In this mode we dont use a buffer at all. Instead when initializing we give SNES the buffer that
-+// directly map a Texture object. This can work because we know the format being used by SNES when
-+// rendering the buffer. As such, we dont need the extra copy with one of the SNES blit functions.
-+
-+void S9xPutImage(int width, int height)
-+{
-+	static int prevWidth = 0;
-+	static int prevHeight = 0;
-+	void * pixels;
-+	int pitch;
-+	if ((width <= SNES_WIDTH) && ((prevWidth != width) || (prevHeight != height))) {
-+		SDL_Log("Render:%dx%d, Texture:%dx%d ", width, height, IMAGE_WIDTH, IMAGE_HEIGHT);
-+		S9xBlitClearDelta();
++		while (gettimeofday(&now, NULL) == -1) ;
++		// Continue with a while-loop because usleep() could be interrupted by a signal.
 +	}
-+	SDL_UnlockTexture(GUI.texture);
-+	SDL_RenderClear(GUI.renderer);
-+	SDL_RenderCopy(GUI.renderer, GUI.texture, nullptr, nullptr);
-+	SDL_RenderPresent(GUI.renderer);
-+	SDL_LockTexture(GUI.texture, nullptr, &GUI.tbuffer, &GUI.tpitch);
-+	prevWidth  = width;
-+	prevHeight = height;
++
++	// Calculate the timestamp of the next frame.
++	next1.tv_usec += Settings.FrameTime;
++	if (next1.tv_usec >= 1000000)
++	{
++		next1.tv_sec += next1.tv_usec / 1000000;
++		next1.tv_usec %= 1000000;
++	}
 +}
 +
++void S9xExit (void)
++{
++	S9xMovieShutdown();
++
++	S9xSetSoundMute(TRUE);
++	Settings.StopEmulation = TRUE;
++
++#ifdef NETPLAY_SUPPORT
++	if (Settings.NetPlay)
++		S9xNPDisconnect();
 +#endif
++
++	Memory.SaveSRAM(S9xGetFilename(".srm", SRAM_DIR));
++	S9xSaveCheatFile(S9xGetFilename(".cht", CHEAT_DIR));
++	S9xResetSaveTimer(FALSE);
++
++	S9xUnmapAllControls();
++	S9xDeinitDisplay();
++	Memory.Deinit();
++	S9xDeinitAPU();
++
++	exit(0);
++}
++
++#ifdef DEBUGGER
++static void sigbrkhandler (int)
++{
++	CPU.Flags |= DEBUG_MODE_FLAG;
++	signal(SIGINT, (SIG_PF) sigbrkhandler);
++}
++#endif
++
++int main (int argc, char **argv)
++{
++	if (argc < 2)
++		S9xUsage();
++
++	printf("\n\nSnes9x " VERSION " for unix/SDL\n");
++
++	snprintf(default_dir, PATH_MAX + 1, "%s%s%s", getenv("HOME"), SLASH_STR, ".snes9x");
++	s9x_base_dir = default_dir;
++
++	ZeroMemory(&Settings, sizeof(Settings));
++	Settings.MouseMaster = TRUE;
++	Settings.SuperScopeMaster = TRUE;
++	Settings.JustifierMaster = TRUE;
++	Settings.MultiPlayer5Master = TRUE;
++	Settings.FrameTimePAL = 20000;
++	Settings.FrameTimeNTSC = 16667;
++	Settings.SixteenBitSound = TRUE;
++	Settings.Stereo = TRUE;
++	Settings.SoundPlaybackRate = 32000;
++	Settings.SoundInputRate = 32000;
++	Settings.SupportHiRes = TRUE;
++	Settings.Transparency = TRUE;
++	Settings.AutoDisplayMessages = TRUE;
++	Settings.InitialInfoStringTimeout = 120;
++	Settings.HDMATimingHack = 100;
++	Settings.BlockInvalidVRAMAccessMaster = TRUE;
++	Settings.StopEmulation = TRUE;
++	Settings.WrongMovieStateProtection = TRUE;
++	Settings.DumpStreamsMaxFrames = -1;
++	Settings.StretchScreenshots = 1;
++	Settings.SnapshotScreenshots = TRUE;
++	Settings.SkipFrames = AUTO_FRAMERATE;
++	Settings.TurboSkipFrames = 15;
++	Settings.CartAName[0] = 0;
++	Settings.CartBName[0] = 0;
++	//Settings.OpenGLEnable = TRUE;
++
++
++#ifdef NETPLAY_SUPPORT
++	Settings.ServerName[0] = 0;
++#endif
++
++	CPU.Flags = 0;
++
++	S9xLoadConfigFiles(argv, argc);
++	rom_filename = S9xParseArgs(argv, argc);
++
++	make_snes9x_dirs();
++
++	if (!Memory.Init() || !S9xInitAPU())
++	{
++		fprintf(stderr, "Snes9x: Memory allocation failure - not enough RAM/virtual memory available.\nExiting...\n");
++		Memory.Deinit();
++		S9xDeinitAPU();
++		exit(1);
++	}
++
++	S9xInitSound(sound_buffer_size, 0);
++	S9xSetSoundMute(TRUE);
++
++	S9xReportControllers();
++
++#ifdef GFX_MULTI_FORMAT
++	S9xSetRenderPixelFormat(RGB565);
++#endif
++
++	uint32	saved_flags = CPU.Flags;
++	bool8	loaded = FALSE;
++
++	if (Settings.Multi)
++	{
++		loaded = Memory.LoadMultiCart(Settings.CartAName, Settings.CartBName);
++
++		if (!loaded)
++		{
++			char	s1[PATH_MAX + 1], s2[PATH_MAX + 1];
++			char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
++
++			s1[0] = s2[0] = 0;
++
++			if (Settings.CartAName[0])
++			{
++				_splitpath(Settings.CartAName, drive, dir, fname, ext);
++				snprintf(s1, PATH_MAX + 1, "%s%s%s", S9xGetDirectory(ROM_DIR), SLASH_STR, fname);
++				if (ext[0] && (strlen(s1) <= PATH_MAX - 1 - strlen(ext)))
++				{
++					strcat(s1, ".");
++					strcat(s1, ext);
++				}
++			}
++
++			if (Settings.CartBName[0])
++			{
++				_splitpath(Settings.CartBName, drive, dir, fname, ext);
++				snprintf(s2, PATH_MAX + 1, "%s%s%s", S9xGetDirectory(ROM_DIR), SLASH_STR, fname);
++				if (ext[0] && (strlen(s2) <= PATH_MAX - 1 - strlen(ext)))
++				{
++					strcat(s2, ".");
++					strcat(s2, ext);
++				}
++			}
++
++			loaded = Memory.LoadMultiCart(s1, s2);
++		}
++	}
++	else
++	if (rom_filename)
++	{
++		loaded = Memory.LoadROM(rom_filename);
++
++		if (!loaded && rom_filename[0])
++		{
++			char	s[PATH_MAX + 1];
++			char	drive[_MAX_DRIVE + 1], dir[_MAX_DIR + 1], fname[_MAX_FNAME + 1], ext[_MAX_EXT + 1];
++
++			_splitpath(rom_filename, drive, dir, fname, ext);
++			snprintf(s, PATH_MAX + 1, "%s%s%s", S9xGetDirectory(ROM_DIR), SLASH_STR, fname);
++			if (ext[0] && (strlen(s) <= PATH_MAX - 1 - strlen(ext)))
++			{
++				strcat(s, ".");
++				strcat(s, ext);
++			}
++
++			loaded = Memory.LoadROM(s);
++		}
++	}
++
++	if (!loaded)
++	{
++		fprintf(stderr, "Error opening the ROM file.\n");
++		exit(1);
++	}
++
++	NSRTControllerSetup();
++	Memory.LoadSRAM(S9xGetFilename(".srm", SRAM_DIR));
++	S9xLoadCheatFile(S9xGetFilename(".cht", CHEAT_DIR));
++
++	CPU.Flags = saved_flags;
++	Settings.StopEmulation = FALSE;
++
++#ifdef DEBUGGER
++	struct sigaction sa;
++	sa.sa_handler = sigbrkhandler;
++#ifdef SA_RESTART
++	sa.sa_flags = SA_RESTART;
++#else
++	sa.sa_flags = 0;
++#endif
++	sigemptyset(&sa.sa_mask);
++	sigaction(SIGINT, &sa, NULL);
++#endif
++
++	S9xInitInputDevices();
++	S9xInitDisplay(argc, argv);
++	S9xSetupDefaultKeymap();
++
++#ifdef NETPLAY_SUPPORT
++	if (strlen(Settings.ServerName) == 0)
++	{
++		char	*server = getenv("S9XSERVER");
++		if (server)
++		{
++			strncpy(Settings.ServerName, server, 127);
++			Settings.ServerName[127] = 0;
++		}
++	}
++
++	char	*port = getenv("S9XPORT");
++	if (Settings.Port >= 0 && port)
++		Settings.Port = atoi(port);
++	else
++	if (Settings.Port < 0)
++		Settings.Port = -Settings.Port;
++
++	if (Settings.NetPlay)
++	{
++		NetPlay.MaxFrameSkip = 10;
++
++		if (!S9xNPConnectToServer(Settings.ServerName, Settings.Port, Memory.ROMName))
++		{
++			fprintf(stderr, "Failed to connect to server %s on port %d.\n", Settings.ServerName, Settings.Port);
++			S9xExit();
++		}
++
++		fprintf(stderr, "Connected to server %s on port %d as player #%d playing %s.\n", Settings.ServerName, Settings.Port, NetPlay.Player, Memory.ROMName);
++	}
++#endif
++
++	if (play_smv_filename)
++	{
++		uint32	flags = CPU.Flags & (DEBUG_MODE_FLAG | TRACE_FLAG);
++		if (S9xMovieOpen(play_smv_filename, TRUE) != SUCCESS)
++			exit(1);
++		CPU.Flags |= flags;
++	}
++	else
++	if (record_smv_filename)
++	{
++		uint32	flags = CPU.Flags & (DEBUG_MODE_FLAG | TRACE_FLAG);
++		if (S9xMovieCreate(record_smv_filename, 0xFF, MOVIE_OPT_FROM_RESET, NULL, 0) != SUCCESS)
++			exit(1);
++		CPU.Flags |= flags;
++	}
++	else
++	if (snapshot_filename)
++	{
++		uint32	flags = CPU.Flags & (DEBUG_MODE_FLAG | TRACE_FLAG);
++		if (!S9xUnfreezeGame(snapshot_filename))
++			exit(1);
++		CPU.Flags |= flags;
++	}
++
++	sprintf(String, "\"%s\" %s: %s", Memory.ROMName, TITLE, VERSION);
++
++	// domaemon: setting the title on the window bar
++	S9xSetTitle(String);
++
++	S9xSetSoundMute(FALSE);
++
++#ifdef NETPLAY_SUPPORT
++	bool8	NP_Activated = Settings.NetPlay;
++#endif
++
++	while (1)
++	{
++	#ifdef NETPLAY_SUPPORT
++		if (NP_Activated)
++		{
++			if (NetPlay.PendingWait4Sync && !S9xNPWaitForHeartBeatDelay(100))
++			{
++				S9xProcessEvents(FALSE);
++				continue;
++			}
++
++			for (int J = 0; J < 8; J++)
++				old_joypads[J] = MovieGetJoypad(J);
++
++			for (int J = 0; J < 8; J++)
++				MovieSetJoypad(J, joypads[J]);
++
++			if (NetPlay.Connected)
++			{
++				if (NetPlay.PendingWait4Sync)
++				{
++					NetPlay.PendingWait4Sync = FALSE;
++					NetPlay.FrameCount++;
++					S9xNPStepJoypadHistory();
++				}
++			}
++			else
++			{
++				fprintf(stderr, "Lost connection to server.\n");
++				S9xExit();
++			}
++		}
++	#endif
++
++	#ifdef DEBUGGER
++		if (!Settings.Paused || (CPU.Flags & (DEBUG_MODE_FLAG | SINGLE_STEP_FLAG)))
++	#else
++		if (!Settings.Paused)
++	#endif
++			S9xMainLoop();
++
++	#ifdef NETPLAY_SUPPORT
++		if (NP_Activated)
++		{
++			for (int J = 0; J < 8; J++)
++				MovieSetJoypad(J, old_joypads[J]);
++		}
++	#endif
++
++	#ifdef DEBUGGER
++		if (Settings.Paused || (CPU.Flags & DEBUG_MODE_FLAG))
++	#else
++		if (Settings.Paused)
++	#endif
++			S9xSetSoundMute(TRUE);
++
++	#ifdef DEBUGGER
++		if (CPU.Flags & DEBUG_MODE_FLAG)
++			S9xDoDebug();
++		else
++	#endif
++		if (Settings.Paused)
++		{
++			S9xProcessEvents(FALSE);
++			usleep(100000);
++		}
++
++		S9xProcessEvents(FALSE);
++
++	#ifdef DEBUGGER
++		if (!Settings.Paused && !(CPU.Flags & DEBUG_MODE_FLAG))
++	#else
++		if (!Settings.Paused)
++	#endif
++			S9xSetSoundMute(FALSE);
++	}
++
++	return (0);
++}
+diff --git a/sdl2/sdlvideo.cpp b/sdl2/sdlvideo.cpp
+index e69de29..97fc909 100644
+--- a/sdl2/sdlvideo.cpp
++++ b/sdl2/sdlvideo.cpp
+@@ -0,0 +1,190 @@
++#include "sdl_snes9x.h"
++
++// These are the different possible screen sizes
++#define SCREEN_256x224	0
++#define SCREEN_256x239	1
++#define SCREEN_512x224	2
++#define SCREEN_512x239	3
++#define SCREEN_512x448	4
++#define SCREEN_512x478	5
++#define SCREEN_COUNT	6
++
++// Internal global context
++typedef struct {
++	SDL_Window *	window;
++	SDL_Renderer *	renderer;
++	SDL_Texture * texture;
++	std::map<int, SDL_Texture *> resolutions;
++	void * buffer;
++	int pitch;
++} Context;
++static Context CTX;
++
++void S9xExtraDisplayUsage (void)
++{
++	S9xMessage(S9X_INFO, S9X_USAGE, "");
++}
++
++void S9xParseDisplayArg(char **argv, int &i, int argc)
++{
++	S9xUsage();
++}
++
++const char * S9xParseDisplayConfig (ConfigFile &conf, int pass)
++{
++	return ("Unix/SDL2");
++}
++
++void S9xInitDisplay (int argc, char **argv)
++{
++	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
++		SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
++		S9xExit();
++	}
++
++	atexit(SDL_Quit);
++
++	S9xSetRenderPixelFormat(RGB565);
++	S9xBlitFilterInit();
++	S9xBlit2xSaIFilterInit();
++	S9xBlitHQ2xFilterInit();
++
++	CTX.window = SDL_CreateWindow("Snes9x-SDL2", 0, 0, 0, 0, SDL_WINDOW_FULLSCREEN|SDL_WINDOW_OPENGL);
++	if (CTX.window == nullptr) {
++		SDL_Log("Could not create window: %s", SDL_GetError());
++		S9xExit();
++	}
++
++	CTX.renderer = SDL_CreateRenderer(CTX.window, -1, SDL_RENDERER_ACCELERATED);
++	if (CTX.renderer == nullptr) {
++		SDL_Log("Could not create renderer: %s", SDL_GetError());
++		S9xExit();
++	}
++
++	SDL_RenderSetIntegerScale(CTX.renderer, SDL_TRUE);
++
++	CTX.resolutions[SCREEN_256x224] = SDL_CreateTexture(CTX.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 256, 224);
++	CTX.resolutions[SCREEN_256x239] = SDL_CreateTexture(CTX.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 256, 239);
++	CTX.resolutions[SCREEN_512x224] = SDL_CreateTexture(CTX.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 512, 224);
++	CTX.resolutions[SCREEN_512x239] = SDL_CreateTexture(CTX.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 512, 239);
++	CTX.resolutions[SCREEN_512x448] = SDL_CreateTexture(CTX.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 512, 448);
++	CTX.resolutions[SCREEN_512x478] = SDL_CreateTexture(CTX.renderer, SDL_PIXELFORMAT_RGB565, SDL_TEXTUREACCESS_STREAMING, 512, 478);
++
++	CTX.texture = CTX.resolutions[SCREEN_256x224];
++	if (CTX.texture == nullptr) {
++		SDL_Log("Could not initialize Texture: %s", SDL_GetError());
++		S9xExit();
++	}
++
++	SDL_LockTexture(CTX.texture, nullptr, &CTX.buffer, &CTX.pitch);
++	GFX.Pitch  = CTX.pitch;
++	GFX.Screen = (uint16*)(CTX.buffer);
++
++	S9xGraphicsInit();
++}
++
++void S9xDeinitDisplay (void)
++{
++	S9xGraphicsDeinit();
++
++	SDL_DestroyTexture(CTX.resolutions[SCREEN_256x224]);
++	SDL_DestroyTexture(CTX.resolutions[SCREEN_256x239]);
++	SDL_DestroyTexture(CTX.resolutions[SCREEN_512x224]);
++	SDL_DestroyTexture(CTX.resolutions[SCREEN_512x239]);
++	SDL_DestroyTexture(CTX.resolutions[SCREEN_512x448]);
++	SDL_DestroyTexture(CTX.resolutions[SCREEN_512x478]);
++	memset(&CTX.resolutions, 0, sizeof(SDL_Texture*) * SCREEN_COUNT);
++
++	CTX.texture = nullptr;
++
++	if (CTX.renderer) {
++		SDL_DestroyRenderer(CTX.renderer);
++		CTX.renderer    = nullptr;
++	}
++
++	if (CTX.window) {
++		SDL_DestroyWindow(CTX.window);
++		CTX.window      = nullptr;
++	}
++
++	SDL_Quit();
++
++	S9xBlitFilterDeinit();
++	S9xBlit2xSaIFilterDeinit();
++	S9xBlitHQ2xFilterDeinit();
++}
++
++void S9xMessage (int type, int number, const char *message)
++{
++	const int	max = 36 * 3;
++	static char	buffer[max + 1];
++	fprintf(stdout, "%s\n", message);
++	strncpy(buffer, message, max + 1);
++	buffer[max] = 0;
++	S9xSetInfoString(buffer);
++}
++
++const char * S9xStringInput(const char * message)
++{
++	static char	buffer[256];
++	printf("%s: ", message);
++	fflush(stdout);
++	if (fgets(buffer, sizeof(buffer) - 2, stdin)) {
++		return (buffer);
++	}
++	return (NULL);
++}
++
++void S9xSetTitle (const char * title)
++{
++	SDL_SetWindowTitle(CTX.window, title);
++}
++
++void S9xSetPalette(void)
++{
++}
++
++bool8 S9xContinueUpdate(int width, int height)
++{
++	return (TRUE);
++}
++
++bool8 S9xInitUpdate (void)
++{
++	return (TRUE);
++}
++
++bool8 S9xDeinitUpdate (int width, int height)
++{
++	static int w = -1;
++	static int h = -1;
++
++	SDL_UnlockTexture(CTX.texture);
++	SDL_RenderCopy(CTX.renderer, CTX.texture, nullptr, nullptr);
++	SDL_RenderPresent(CTX.renderer);
++
++	if (h != height || w != width) {
++		if (width == 256 && height == 224) {
++			CTX.texture = CTX.resolutions[SCREEN_256x224];
++		} else if (width == 256 && height == 239) {
++			CTX.texture = CTX.resolutions[SCREEN_256x239];
++		} else if (width == 512 && height == 224) {
++			CTX.texture = CTX.resolutions[SCREEN_512x224];
++		} else if (width == 512 && height == 239) {
++			CTX.texture = CTX.resolutions[SCREEN_512x239];
++		} else if (width == 512 && height == 448) {
++			CTX.texture = CTX.resolutions[SCREEN_512x448];
++		} else if (width == 512 && height == 478) {
++			CTX.texture = CTX.resolutions[SCREEN_512x478];
++		}
++		SDL_RenderSetLogicalSize(CTX.renderer, width, height);
++		width = w;
++		height = h;
++	}
++
++	SDL_LockTexture(CTX.texture, nullptr, &CTX.buffer, &CTX.pitch);
++	GFX.Pitch  = CTX.pitch;
++	GFX.Screen = (uint16*)(CTX.buffer);
++	return (TRUE);
++
++}

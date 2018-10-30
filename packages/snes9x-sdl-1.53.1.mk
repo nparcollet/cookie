@@ -11,6 +11,7 @@ P_PROVIDES		= snes9x
 
 .PHONY: fetch setup compile install
 
+
 fetch:
 	cookie git clone $(P_GITURL) $(P_NAME)
 
@@ -18,11 +19,11 @@ setup:
 	cookie git checkout $(P_NAME) $(P_GITREV) $(P_SRCDIR)
 
 compile:
-	cd sdl && autoreconf -if
-	cd sdl && ./configure --host=$(HOST) --prefix=/usr --disable-zip --enable-neon
-	cd sdl && make -j$(P_NPROCS)
+	cd sdl2 && autoreconf -if
+	cd sdl2 && ./configure --host=$(HOST) --prefix=/usr --disable-zip --enable-neon
+	cd sdl2 && make -j$(P_NPROCS)
 
 install:
 	mkdir -p $(P_DESTDIR)/usr/bin
-	cp sdl/snes9x-sdl $(P_DESTDIR)/usr/bin/snes9x
+	cp sdl2/snes9x-sdl $(P_DESTDIR)/usr/bin/snes9x
 	$(HOST)-strip $(P_DESTDIR)/usr/bin/snes9x
