@@ -40,27 +40,27 @@ class command(object):
 				try:
 					self.__getattribute__('do_%s' % action)(args)
 					sys.exit(0)
-				except Exception, e:
-					cookie.logger.abort('cant run: ' + e.message)
+				except Exception as e:
+					cookie.logger.abort('cant run: %s' % str(e))
 			else:
 				self.do_help([])
 
 	def do_help(self, args):
-		print ''
+		print('')
 		ml  = max([ len(a) for a in self.actions()])
 		doc = self.__getattribute__('do_help').__doc__
 		desc = '\t' + doc.strip().replace('\t', '').replace('\n', '\n\t') if doc else 'No description'
-		print '\033[31mSYNTAX\033[0m'
-		print '	%s %s [args]' % (self._name, '|'.join(self.actions()))
-		print ''
-		print '\033[31mDESCRIPTION\033[0m'
-		print '\t%s' % self.__doc__.strip().replace('\t', '').replace('\n', '\n\t')
-		print ''
+		print('\033[31mSYNTAX\033[0m')
+		print('	%s %s [args]' % (self._name, '|'.join(self.actions())))
+		print('')
+		print('\033[31mDESCRIPTION\033[0m')
+		print('\t%s' % self.__doc__.strip().replace('\t', '').replace('\n', '\n\t'))
+		print('')
 		for a in self.actions():
-			print '\033[31mACTION: %s\033[0m' % a.upper()
+			print('\033[31mACTION: %s\033[0m' % a.upper())
 			d = self.__getattribute__('do_%s' % a).__doc__
 			if d is None:
-				print '	No documentation available for %s' % a
+				print('	No documentation available for %s' % a)
 			else:
-				print '%s' % '\t' + d.strip().replace('\t', '').replace('\n', '\n\t')
-			print ''
+				print('%s' % '\t' + d.strip().replace('\t', '').replace('\n', '\n\t'))
+			print('')

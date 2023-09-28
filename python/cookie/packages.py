@@ -149,7 +149,7 @@ class packages:
 				built_sha1	  = file(sha1file).read().strip()
 				makefile_sha1 = cookie.sha1.compute(self.makefile())
 				return True if built_sha1 == makefile_sha1 else False
-			except Exception, e:
+			except Exception as e:
 				return False
 
 		def merge(self):
@@ -167,7 +167,7 @@ class packages:
 				try :
 					path = '%s/packages.json' % self.installed()
 					meta = json.load(open(path)) if os.path.isfile(path) else {}
-				except Exception, e:
+				except Exception as e:
 					meta = {}
 				meta[self.name()] = { 'version': self.version() }
 				json.dump(meta, open('%s/packages.json' % self.installed(), 'w'))

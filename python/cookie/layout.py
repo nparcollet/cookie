@@ -7,7 +7,7 @@ class layout:
 	def root(self):
 		try:
 			return os.getenv('COOKIE')
-		except Exception, e:
+		except Exception as e:
 			return None
 
 	@classmethod

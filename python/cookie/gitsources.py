@@ -18,7 +18,7 @@ class gitsources:
 			else:
 				cookie.logger.debug('cloning repository %s from %s' % (reponame, url))
 				cookie.shell().run('git clone --bare %s %s' % (url, path))
-		except Exception, e:
+		except Exception as e:
 			raise Exception('could not clone or update %s: %s' % (reponame, e.message))
 
 	@classmethod
@@ -30,14 +30,14 @@ class gitsources:
 			try:
 				(status, out, err) = shell.run('cd %s && git cat-file -t %s' % (local, revision))
 				cookie.logger.debug('revision is present in the repository')
-			except Exception, e:
+			except Exception as e:
 				cookie.logger.debug('revision not found, updating first')
 				cookie.shell().run('cd %s && git fetch -v' % local)
 			cookie.logger.debug('cloning from the local repository')
 			shell.run('git clone --shared --no-checkout %s %s' % (local, destdir))
 			cookie.logger.debug('resetting to revision %s' % revision)
 			shell.run('cd %s && git reset --hard %s' % (destdir, revision))
-		except Exception, e:
+		except Exception as e:
 			raise Exception('could not checkout repositoriy %s: %s' % (reponame, e.message))
 
 	@classmethod

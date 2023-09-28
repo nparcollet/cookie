@@ -37,7 +37,7 @@ class targets():
 				path = '%s/installed/packages.json' % self._path
 				raw  = json.load(open(path))
 				return [ '%s-%s' % (str(k), str(v['version'])) for k, v in raw.items() ]
-			except Exception, e:
+			except Exception as e:
 				return []
 
 		def version(self, name):
@@ -45,7 +45,7 @@ class targets():
 				path = '%s/installed/packages.json' % self._path
 				raw  = json.load(open(path))
 				return raw[name]['version']
-			except Exception, e:
+			except Exception as e:
 				return None
 
 		def add(self, selector):
@@ -153,7 +153,7 @@ class targets():
 		try:
 			mapping = json.load(open('%s/mapping.json' % cookie.layout.cache()))
 			return [ str(x) for x in mapping["targets"].keys() ]
-		except Exception, e:
+		except Exception as e:
 			return []
 
 	@classmethod
@@ -161,7 +161,7 @@ class targets():
 		try:
 			mapping = json.load(open('%s/mapping.json' % cookie.layout.cache()))
 			return str(mapping["current"])
-		except Exception, e:
+		except Exception as e:
 			return None
 
 	@classmethod
@@ -219,7 +219,7 @@ class targets():
 				'created_on'	: now,
 				'profile'		: pname,
 				'board'			: pboard,
-				'volume'		: volume[0]
+				'volume'		: volume[0].decode()
 			}
 			json.dump(mapping, open(mapping_file, 'w'))
 
@@ -246,6 +246,6 @@ class targets():
 					cookie.docker.run('tar -C /opt/target -cJf /opt/cookie/cache/toolchains/%s.tar.xz toolchain' % profile.toolchain())
 					cookie.docker.run('rm -rf /opt/target/.build /opt/target/build.log /opt/target/.config')
 					cookie.sha1.save(source_sha1, target_file)
-			except Exception, e:
+			except Exception as e:
 				self.destroy(name)
 				raise e

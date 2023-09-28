@@ -11,7 +11,7 @@ class shell:
 	def __init__(self, quiet = False):
 		try:
 			self._path = os.getcwd()
-		except Exception, e:
+		except Exception as e:
 			cookie.logger.abort('current directory is invalid and was probably deleted' )
 		self._env	= None
 		self._log	= None
@@ -62,5 +62,5 @@ class shell:
 				(out if handle == p.stdout else err).append(data)
 		status = p.wait()
 		if status != 0:
-			raise Exception, 'shell: command "%s" in "%s" failed with status %d' % (cmd, self._path, status)
+			raise Exception('shell: command "%s" in "%s" failed with status %d' % (cmd, self._path, status))
 		return (status, out, err)

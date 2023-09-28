@@ -25,7 +25,7 @@ class distfiles:
 					os.rename('%s.t' % (dest), '%s' % (dest,))
 			else:
 				cookie.logger.debug('already downloaded this archive')
-		except Exception, e:
+		except Exception as e:
 			os.unlink('%s.t' % (dest))
 			raise
 
@@ -51,7 +51,7 @@ class distfiles:
 				s.run('cd %s && tar -xf %s' % (dest, self.archive(name)))
 			else:
 				raise Exception('unsupported %s format' % name.split('.')[-1])
-		except Exception, e:
+		except Exception as e:
 			raise Exception('could not extract %s: %s' % (name, str(e)))
 
 	@classmethod

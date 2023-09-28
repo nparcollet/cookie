@@ -11,7 +11,7 @@ class docker:
 		tgt = cookie.targets.get(cur) if cur else None
 		prf = cookie.profiles.get(tgt.profile(), tgt.board()) if tgt else None
 		cmd = ' '.join([
-			'/usr/local/bin/docker',
+			'docker',
 			'run',
 			'--interactive',
 			'--tty',
