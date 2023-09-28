@@ -24,14 +24,14 @@ be started straight away without any additional steps on the resulting image or 
 
 # PREREQUISITES
 
-Before working with cookie, you need to ensure the necessary dependencies are installed on your
-system. Note that these are kept to the bare minimum as to ensure cookie can run on a wide variety
+Before working with cookie, you need to ensure the necessary dependencies are installed on your system and
+properly setup. Note that these are kept to the bare minimum as to ensure cookie can run on a wide variety
 of systems. As of today, the following are required:
 
 - git
 - python
 - docker
-- console
+- any console (window: wsl, powershell, linux: console, ...)
 
 These tools are available on most OS and are relatively easy to install and setup. Simply check
 online for these component as they all come with simple installation guides.
@@ -67,7 +67,6 @@ the environment:
 The process of going from the description of an image to actually generating this image and flashing
 it onto the board is long and complex, however it can be summarized with the following simple diagram:
 
-
 ![Overview](documentation/overview.png)
 
 Keep this diagram in mind, and with the following commands, create your first image:
@@ -97,6 +96,32 @@ all, we are compiling everything from scratch, including the toolchain. In cooki
 are cached for reuse and will only be rebuilt if there description changes. For instance, you will
 rarely need to recreate the build environment, or the toolchain.
 
+## Under the hood
+
+**Bootstrap**
+The first step allow to create a separate environment from your host where all the needed tools are
+installed at a known version. This is basically another linux distro based on Debian. Doing so, cookie
+will always be able to find the host tools it needs, and these tools will be at the expected version
+with a compliant API.
+
+**Create**
+Using the various information in cookie, create the recipe that you want to build. This include choosing
+the toolchain, the kernel configuration and the package to include. All of this put together is called
+a target, basically the instanciation of a profile. This is a quick operation, simply consisting of
+creating directories and copying files around.
+
+**Merge**
+Merging in cookie is the process that consist of ensure the end game image (the one that will be flashed
+on your device) is up to date in regards with the rules to build it. First time you build a target it will
+be long since nothing exists. However, once build, if you modify part of the recipe, the merge will only
+consist in rebuilding the components that were updated, or taking into account the new options that were
+selected.
+
+**MkRedist**
+The last step consist in packaging the result of the merge as needed so that images can be flashed into
+the target device. Often, this means generating a disk image with several partition that can be directly
+copied on the device drive.
+
 # DOCUMENTATION
 
 There is a lot more to cookie than just following the quick start. It is highly recommended to read
@@ -116,5 +141,3 @@ are ordered in a logical order and will drive you throu this journey:
 - [Understanding cookie python module](documentation/PYTHON.md)
 - [Debugging the Image](documentation/DEBUG.md)
 - [Known Issues](documentation/TROUBLESHOOTING.md)
-
-
