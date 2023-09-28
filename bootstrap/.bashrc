@@ -31,4 +31,3 @@ export PATH
 
 # Source Build Environment Variable if it is defined
 [[ -v COOKIE_TOOLCHAIN ]] && . /opt/cookie/toolchains/${COOKIE_TOOLCHAIN}.env 
-
