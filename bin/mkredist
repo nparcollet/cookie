@@ -13,7 +13,9 @@ rsync -aHAXx 					\
 	--exclude *.a 				\
 	--exclude *.h 				\
 	--exclude *.la 				\
+	--exclude *.mo 				\
 	--exclude /usr/share/man	\
+	--exclude /usr/include		\
 	${ROOTFS_DIR}/ ${REDIST_DIR}/
 
 echo "Stripping libraries and binaries"

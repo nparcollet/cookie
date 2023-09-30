@@ -107,7 +107,7 @@ class targets():
 			# Ask for confirmation
 			answer = ''
 			while answer not in ["y", "n"]:
-				answer = raw_input("Proceed with merge [y/n]? ").lower()
+				answer = input("Proceed with merge [y/n]? ").lower()
 
 			# Abort
 			if answer == 'n':
@@ -219,7 +219,7 @@ class targets():
 				'created_on'	: now,
 				'profile'		: pname,
 				'board'			: pboard,
-				'volume'		: volume[0].decode()
+				'volume'		: volume[0]
 			}
 			json.dump(mapping, open(mapping_file, 'w'))
 

@@ -40,5 +40,5 @@ class sha1:
 		Save the sha1 value in the file at the given path
 		"""
 		with open(path, 'w') as handle:
-			print >> handle, sha1
+			handle.write(sha1)
 			handle.close()

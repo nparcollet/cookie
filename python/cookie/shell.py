@@ -54,11 +54,11 @@ class shell:
 				if not output:
 					handles.remove(handle)
 					continue
-				data = output.rstrip()
+				data = output.rstrip().decode()
 				if not self._quiet:
 					cookie.logger.debug(data)
 				if self._log:
-					print >> self._log, data
+					self._log.write(data)
 				(out if handle == p.stdout else err).append(data)
 		status = p.wait()
 		if status != 0:

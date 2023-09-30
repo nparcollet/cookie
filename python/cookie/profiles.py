@@ -30,6 +30,12 @@ class profiles:
 		def arch(self):
 			return self._infos['boards'][self._board]["arch"]
 
+		def env(self):
+			return { ('P_%s' % k): v for k, v in self._infos['env'].items() }
+
+		def board_env(self):
+			return { ('P_BOARD_%s' % k): v for k, v in self._infos['boards'][self._board]["env"].items() }
+
 		def packages(self):
 			list = []
 			path = '%s/%s/packages.conf' % (cookie.layout.profiles(), self._name)

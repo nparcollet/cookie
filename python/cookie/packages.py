@@ -19,6 +19,7 @@ class packages:
 			self._depends		= [ o.strip() for o in self._meta['DEPENDS'].split() ]  if 'DEPENDS'     in self._meta else []
 			self._licences		= [ o.strip() for o in self._meta['LICENCES'].split() ] if 'LICENCES'    in self._meta else []
 			self._archs			= [ o.strip() for o in self._meta['ARCHS'].split() ]    if 'ARCHS'       in self._meta else []
+			self._extraenv		= [ o.strip() for o in self._meta['EXTRA_ENV'].split() ]    if 'EXTRA_ENV'       in self._meta else []
 			self._provides      = [ o.strip() for o in self._meta['PROVIDES'].split() ] if 'PROVIDES'    in self._meta else []
 			self._target		= None
 			self._profile		= None
@@ -48,6 +49,9 @@ class packages:
 
 		def archs(self):
 			return self._archs
+
+		def extra_env(self):
+			return self.extra_env
 
 		def licences(self):
 			return self._licences
@@ -97,13 +101,23 @@ class packages:
 				srcdir = '%s/%s' % (self.workdir(), self._meta['SRCDIR']) if 'SRCDIR' in self._meta else '%s/srcdir' % self.workdir()
 				envfile = '%s/%s.env' % (cookie.layout.toolchains(), self._profile.toolchain())
 				s = cookie.shell()
+
+				# Setup extra env on top of what s defined by the toolchain env file
 				s.loadenv()
 				s.setenv('P_WORKDIR',   self.workdir())
 				s.setenv('P_DESTDIR',   self.destdir())
 				s.setenv('P_SYSROOT',   self.rootfs())
 				s.setenv('P_TOOLCHAIN', self._profile.toolchain())
-				s.setenv('P_ARCH',      self._profile.arch())
-				s.setenv('P_NPROCS',  '4') # TODO: Get this programmatically ...
+
+				# Custom profile specific env
+				for k, v in self._profile.env().items():
+					s.setenv(k, v)
+
+				# Custome board specific env
+				for k, v in self._profile.board_env().items():
+					s.setenv(k, v)
+
+				# Source TC env file then run make command
 				s.run('. %s && make -C %s -f %s %s' % (envfile, srcdir if os.path.isdir(srcdir) else self.workdir(), self.makefile(), rule))
 
 		def clean(self):
@@ -119,6 +133,9 @@ class packages:
 			if self._arch not in self._archs:
 				raise Exception('architecture %s is not supported by package' % self._arch)
 			else:
+				for e in self._extraenv:
+					if not e in self._profile.env() and not e in self._profile.board_env():
+						raise Exception('package require %s environment to be set in profile' % e)
 				cookie.logger.debug('all check passed')
 
 		def fetch(self):
@@ -146,10 +163,14 @@ class packages:
 		def has_binpkg(self):
 			try:
 				sha1file      = '%s/%s-%s.sha1' % (self.archives(), self.name(), self.version())
-				built_sha1	  = file(sha1file).read().strip()
-				makefile_sha1 = cookie.sha1.compute(self.makefile())
-				return True if built_sha1 == makefile_sha1 else False
+				if os.path.isfile(sha1file):
+					built_sha1	  = open(sha1file).read().strip()
+					makefile_sha1 = cookie.sha1.compute(self.makefile())
+					return True if built_sha1 == makefile_sha1 else False
+				else:
+					return False
 			except Exception as e:
+				cookie.logger.debug('Call to has bin pkg failed: %s' % str(e))
 				return False
 
 		def merge(self):
@@ -178,7 +199,7 @@ class packages:
 			if not os.path.isdir(self.archives()): os.makedirs(self.archives())
 			cookie.shell().run('tar cJf %s/%s -C %s .' % (self.archives(), archive, self.destdir()))
 			with open('%s/%s-%s.sha1' % (self.archives(), self.name(), self.version()), 'w') as handle:
-				print >> handle, cookie.sha1.compute(self.makefile())
+				handle.write(cookie.sha1.compute(self.makefile()))
 				handle.close()
 
 		def unmerge(self):
