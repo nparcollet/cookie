@@ -17,7 +17,7 @@ setup:
 	cookie extract $(P_ARCHIVE) $(P_WORKDIR)
 
 compile:
-	make -j$(P_NPROCS) CC=$(HOST)-gcc -f Makefile-libbz2_so
+	make -j$(NPROCS) CC=$(HOST)-gcc -f Makefile-libbz2_so
 
 install:
 	make CC=$(HOST)-gcc PREFIX=$(P_DESTDIR)/usr install

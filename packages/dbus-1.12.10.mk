@@ -25,7 +25,7 @@ compile:
 		--disable-xml-docs		\
 		--with-dbus-user=root	\
 		--host=$(HOST)
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

@@ -18,7 +18,7 @@ setup:
 
 compile:
 	./configure --host=$(HOST) --prefix=/usr --without-dbus
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

@@ -1,12 +1,12 @@
 P_NAME			= dropbear
-P_VERSION		= 2018.76
+P_VERSION		= 2022.83
 P_DESCRIPTION	= Dropbear is a relatively small SSH server and client
-P_URL   		= http://matt.ucc.asn.au/dropbear/$(P_ARCHIVE)
-P_ARCHIVE		= dropbear-2018.76.tar.bz2
+P_URL   		= https://github.com/mkj/dropbear/archive/refs/tags/DROPBEAR_2022.83.tar.gz
+P_ARCHIVE		= DROPBEAR_2022.83.tar.gz
 P_LICENCES		= MIT
-P_ARCHS			= arm
-P_SRCDIR		= dropbear-2018.76
-P_DEPENDS		= zlib
+P_ARCHS			= arm arm64
+P_SRCDIR		= dropbear-DROPBEAR_2022.83
+P_DEPENDS		= zlib libxcrypt
 
 fetch:
 	cookie fetch $(P_URL)
@@ -17,8 +17,8 @@ setup:
 compile:
 	autoreconf -if
 	./configure --prefix=/usr CC=$(HOST)-gcc --host=$(HOST)
-	make -j$(P_NPROCS)
-	make -j$(P_NPROCS) scp
+	make -j$(NPROCS)
+	make -j$(NPROCS) scp
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

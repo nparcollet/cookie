@@ -2,7 +2,7 @@ P_NAME			= sysroot
 P_VERSION		= 0.1.0
 P_DESCRIPTION	= Base sysroot imported from the target toolchain
 P_LICENCES		=
-P_ARCHS			= arm
+P_ARCHS			= arm arm64
 P_PROVIDES		= libc
 P_DEPENDS		=
 

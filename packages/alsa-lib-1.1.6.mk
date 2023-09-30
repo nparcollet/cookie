@@ -19,7 +19,7 @@ setup:
 compile:
 	autoreconf -if
 	./configure --prefix=/usr --host=$(HOST) --with-pcm-plugins=hw
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install-strip

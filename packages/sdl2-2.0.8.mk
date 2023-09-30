@@ -19,7 +19,7 @@ setup:
 compile:
 	./autogen.sh
 	./configure --host=$(HOST) --prefix=/usr --enable-video-rpi
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

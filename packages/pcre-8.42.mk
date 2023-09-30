@@ -31,7 +31,7 @@ compile:
 	[ ! -e $(P_WORKDIR)/build ] || rm -rf $(P_WORKDIR)/build
 	mkdir -p $(P_WORKDIR)/build
 	cd $(P_WORKDIR)/build && ../pcre-8.42/configure $(CONFOPTS)
-	cd $(P_WORKDIR)/build && make -j$(P_NPROCS)
+	cd $(P_WORKDIR)/build && make -j$(NPROCS)
 
 install:
 	cd $(P_WORKDIR)/build && make DESTDIR=$(P_DESTDIR) install-strip

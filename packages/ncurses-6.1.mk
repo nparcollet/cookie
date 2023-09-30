@@ -18,7 +18,7 @@ setup:
 
 compile:
 	./configure --prefix=/usr --with-shared --disable-stripping --enable-pc-file --enable-widec --host=$(HOST)
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	STRIP=$(HOST)-strip make DESTDIR=$(P_DESTDIR) install

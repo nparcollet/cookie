@@ -20,7 +20,7 @@ compile:
 	sed -e "s#noinst_PROGRAMS = showfont glfont#noinst_PROGRAMS =#g" -i Makefile.am
 	./autogen.sh
 	./configure --host=$(HOST) --prefix=/usr --without-x --with-freetype-prefix=$(P_SYSROOT)/usr SDL_VIDEODRIVER=RPI
-	make -j$(P_NPROCS) libSDL2_ttf.la
+	make -j$(NPROCS) libSDL2_ttf.la
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

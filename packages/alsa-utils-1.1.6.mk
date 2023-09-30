@@ -20,7 +20,7 @@ compile:
 	./configure --prefix=/usr --host=$(HOST) --enable-alsamixer --enable-alsaconf \
 		NCURSESW_CFLAGS="-I$(P_SYSROOT)/usr/include" \
 		NCURSESW_LIBS="-L$(P_SYSROOT)/usr/lib -lncursesw -lpanelw -lmenuw"
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install-strip

@@ -21,7 +21,7 @@ compile:
 	sed -e 's#^includedir=.*#includedir=$$\{prefix\}/include#' -i libffi.pc.in
 	sed -e 's#^Cflags:.*#Cflags:#' -i libffi.pc.in
 	./configure --host=$(HOST) --prefix=/usr
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

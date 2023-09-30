@@ -21,7 +21,7 @@ setup:
 compile:
 	cd sdl2 && autoreconf -if
 	cd sdl2 && ./configure --host=$(HOST) --prefix=/usr --disable-zip --enable-neon
-	cd sdl2 && make -j$(P_NPROCS)
+	cd sdl2 && make -j$(NPROCS)
 
 install:
 	mkdir -p $(P_DESTDIR)/usr/bin

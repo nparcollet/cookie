@@ -4,7 +4,7 @@ P_DESCRIPTION	= Base filesystem layout, configuration and services
 P_LICENCES		= MIT
 P_GITURL		= https://github.com/nparcollet/layout.git
 P_GITREV		= HEAD
-P_ARCHS			= arm
+P_ARCHS			= arm arm64
 P_SRCDIR		= layout
 
 .PHONY: fetch setup compile install

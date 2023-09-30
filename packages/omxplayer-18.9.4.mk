@@ -29,7 +29,7 @@ setup:
 compile:
 	sed -e "s%CFLAGS=%CFLAGS+= $(ALL_CFLAGS) %" -i Makefile
 	sed -e "s%LDFLAGS=%LDFLAGS+= $(ALL_LIBS) %" -i Makefile
-	CC=$(HOST)-cc SDKSTAGE=$(P_SYSROOT) STRIP=$(HOST)-strip make -j$(P_NPROCS) omxplayer.bin
+	CC=$(HOST)-cc SDKSTAGE=$(P_SYSROOT) STRIP=$(HOST)-strip make -j$(NPROCS) omxplayer.bin
 
 install:
 	mkdir -p $(P_DESTDIR)/usr/bin

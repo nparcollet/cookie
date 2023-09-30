@@ -17,7 +17,7 @@ setup:
 
 compile:
 	./Configure linux-armv4 shared --prefix=/usr --openssldir=/etc/ssl
-	make CC=$(HOST)-gcc -j$(P_NPROCS)
+	make CC=$(HOST)-gcc -j$(NPROCS)
 
 install:
 	make INSTALL_PREFIX=$(P_DESTDIR) install_sw

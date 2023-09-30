@@ -19,7 +19,7 @@ setup:
 
 compile:
 	./configure --host=$(HOST) --prefix=/usr --with-png=yes --with-zlib=yes --with-bzip2=yes --with-harfbuzz=no
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

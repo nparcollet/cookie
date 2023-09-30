@@ -17,7 +17,7 @@ setup:
 	cookie git checkout $(P_NAME) $(P_GITREV) $(P_SRCDIR)
 
 compile:
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

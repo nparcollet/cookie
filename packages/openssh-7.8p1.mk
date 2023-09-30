@@ -28,7 +28,7 @@ setup:
 compile:
 	autoreconf -if
 	./configure $(CONFOPTS)
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

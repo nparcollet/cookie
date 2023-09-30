@@ -21,7 +21,7 @@ compile:
 	#sed -e "s#noinst_PROGRAMS = showfont glfont#noinst_PROGRAMS =#g" -i Makefile.am
 	./autogen.sh
 	./configure --host=$(HOST) --prefix=/usr SDL_VIDEODRIVER=RPI
-	make -j$(P_NPROCS) libSDL2_image.la
+	make -j$(NPROCS) libSDL2_image.la
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

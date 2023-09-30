@@ -21,7 +21,7 @@ compile:
 	wget https://raw.githubusercontent.com/GNOME/gtk-doc-stub/master/gtk-doc.make -O gtk-doc.make
 	autoreconf -if
 	./configure --prefix=/usr --with-pcre=system --sysconfdir=/etc --host=$(HOST) --enable-libmount=no glib_cv_stack_grows=no glib_cv_uscore=no
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install-strip

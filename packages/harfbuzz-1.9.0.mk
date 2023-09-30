@@ -20,7 +20,7 @@ setup:
 
 compile:
 	./configure --host=$(HOST) --prefix=/usr
-	make -j$(P_NPROCS)
+	make -j$(NPROCS)
 
 install:
 	make DESTDIR=$(P_DESTDIR) install

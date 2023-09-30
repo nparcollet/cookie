@@ -1,12 +1,11 @@
 P_NAME			= libssh
-P_VERSION		= 0.8.3
+P_VERSION		= 0.10.5
 P_DESCRIPTION	= Multiplatform C library implementing the SSHv2 protocol on client and server side.
-P_URL			= https://www.libssh.org/files/0.8/libssh-0.8.3.tar.xz
-P_ARCHIVE		= libssh-0.8.3.tar.xz
-P_LICENCES		=
-P_ARCHS			= arm
-P_SRCDIR		= libssh-0.8.3
-# Note: openssl-1.1.1 i not comptatible with this version
+P_ARCHIVE		= $(P_NAME)-$(P_VERSION).tar.xz
+P_URL			= https://www.libssh.org/files/0.10/$(P_ARCHIVE)
+P_LICENCES		= LGPL
+P_ARCHS			= arm arm64
+P_SRCDIR		= $(P_NAME)-$(P_VERSION)
 P_DEPENDS		= openssl zlib
 
 fetch:
