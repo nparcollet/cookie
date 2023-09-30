@@ -101,23 +101,17 @@ class packages:
 				srcdir = '%s/%s' % (self.workdir(), self._meta['SRCDIR']) if 'SRCDIR' in self._meta else '%s/srcdir' % self.workdir()
 				envfile = '%s/%s.env' % (cookie.layout.toolchains(), self._profile.toolchain())
 				s = cookie.shell()
-
-				# Setup extra env on top of what s defined by the toolchain env file
 				s.loadenv()
-				s.setenv('P_WORKDIR',   self.workdir())
-				s.setenv('P_DESTDIR',   self.destdir())
-				s.setenv('P_SYSROOT',   self.rootfs())
-				s.setenv('P_TOOLCHAIN', self._profile.toolchain())
-
-				# Custom profile specific env
-				for k, v in self._profile.env().items():
-					s.setenv(k, v)
-
-				# Custome board specific env
-				for k, v in self._profile.board_env().items():
-					s.setenv(k, v)
-
-				# Source TC env file then run make command
+				s.setenv('P_WORKDIR',   	self.workdir())
+				s.setenv('P_DESTDIR',   	self.destdir())
+				s.setenv('P_SYSROOT',   	self.rootfs())
+				s.setenv('P_BOARD',			self._profile.board())
+				s.setenv('P_TOOLCHAIN', 	self._profile.toolchain())
+				s.setenv('P_ARCH',			self._profile.arch())
+				s.setenv('P_CHIPSET',		self._profile.chipset())
+				s.setenv('P_CPU',			self._profile.cpu())
+				s.setenv('P_ISA',			self._profile.isa())
+				s.setenv('P_DEFCONFIG',		self._profile.defconfig())
 				s.run('. %s && make -C %s -f %s %s' % (envfile, srcdir if os.path.isdir(srcdir) else self.workdir(), self.makefile(), rule))
 
 		def clean(self):
@@ -133,9 +127,6 @@ class packages:
 			if self._arch not in self._archs:
 				raise Exception('architecture %s is not supported by package' % self._arch)
 			else:
-				for e in self._extraenv:
-					if not e in self._profile.env() and not e in self._profile.board_env():
-						raise Exception('package require %s environment to be set in profile' % e)
 				cookie.logger.debug('all check passed')
 
 		def fetch(self):

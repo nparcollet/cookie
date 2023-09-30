@@ -30,11 +30,17 @@ class profiles:
 		def arch(self):
 			return self._infos['boards'][self._board]["arch"]
 
-		def env(self):
-			return { ('P_%s' % k): v for k, v in self._infos['env'].items() }
+		def chipset(self):
+			return self._infos['boards'][self._board]["chipset"]
 
-		def board_env(self):
-			return { ('P_BOARD_%s' % k): v for k, v in self._infos['boards'][self._board]["env"].items() }
+		def cpu(self):
+			return self._infos['boards'][self._board]["cpu"]
+
+		def isa(self): # Instruction Set Architecture
+			return self._infos['boards'][self._board]["isa"]
+
+		def defconfig(self):
+			return self._infos['boards'][self._board]["defconfig"]
 
 		def packages(self):
 			list = []
