@@ -42,7 +42,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	nfs-common				\
 	autopoint				\
 	gettext					\
-	nfs-ganesha			
+	nfs-ganesha				\
+	libssl-dev				\
+	libltdl-dev
 
 # Cross Tool NG 1.26.0
 RUN	git clone -b 'crosstool-ng-1.26.0' --single-branch --depth 1 https://github.com/crosstool-ng/crosstool-ng.git /root/ctng	\
