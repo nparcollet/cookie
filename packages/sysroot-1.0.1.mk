@@ -20,4 +20,16 @@ install:
 	cp -a /opt/target/toolchain/$(P_TOOLCHAIN)/sysroot/* $(P_DESTDIR)/
 	cp -a /opt/target/toolchain/$(P_TOOLCHAIN)/debug-root/usr/bin/*  $(P_DESTDIR)/usr/bin/
 	cp -a /opt/target/toolchain/$(P_TOOLCHAIN)/debug-root/usr/lib/*  $(P_DESTDIR)/usr/lib/
-	rm -rf $(P_DESTDIR)/usr/include/{asm,asm-generic,drm,linux,misc,mtd,rdma,scsi,sound,video,xen}
+
+	# These will re installed by the kernel, which obviously is needed anyway
+	rm -rf $(P_DESTDIR)/usr/include/asm
+	rm -rf $(P_DESTDIR)/usr/include/asm-generic
+	rm -rf $(P_DESTDIR)/usr/include/drm
+	rm -rf $(P_DESTDIR)/usr/include/linux
+	rm -rf $(P_DESTDIR)/usr/include/misc
+	rm -rf $(P_DESTDIR)/usr/include/mtd
+	rm -rf $(P_DESTDIR)/usr/include/rdma
+	rm -rf $(P_DESTDIR)/usr/include/scsi
+	rm -rf $(P_DESTDIR)/usr/include/sound
+	rm -rf $(P_DESTDIR)/usr/include/video
+	rm -rf $(P_DESTDIR)/usr/include/xen
