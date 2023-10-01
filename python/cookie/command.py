@@ -3,6 +3,7 @@
 import os
 import sys
 import cookie
+import time
 
 class command(object):
 
@@ -38,10 +39,12 @@ class command(object):
 			args   = sys.argv[2:] if len(sys.argv) > 1 else []
 			if action in self.actions():
 				try:
+					start_time = time.time()
 					self.__getattribute__('do_%s' % action)(args)
+					cookie.logger.debug("Command executed in %s seconds" % (time.time() - start_time))
 					sys.exit(0)
 				except Exception as e:
-					cookie.logger.abort('cant run: %s' % str(e))
+					cookie.logger.abort('Failed after %s seconds: %s' % (time.time() - start_time, str(e)))
 			else:
 				self.do_help([])
 
