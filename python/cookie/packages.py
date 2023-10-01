@@ -19,7 +19,7 @@ class packages:
 			self._depends		= [ o.strip() for o in self._meta['DEPENDS'].split() ]  if 'DEPENDS'     in self._meta else []
 			self._licences		= [ o.strip() for o in self._meta['LICENCES'].split() ] if 'LICENCES'    in self._meta else []
 			self._archs			= [ o.strip() for o in self._meta['ARCHS'].split() ]    if 'ARCHS'       in self._meta else []
-			self._extraenv		= [ o.strip() for o in self._meta['EXTRA_ENV'].split() ]    if 'EXTRA_ENV'       in self._meta else []
+			self._options		= [ o.strip() for o in self._meta['OPTIONS'].split() ]  if 'OPTIONS'     in self._meta else []
 			self._provides      = [ o.strip() for o in self._meta['PROVIDES'].split() ] if 'PROVIDES'    in self._meta else []
 			self._target		= None
 			self._profile		= None
@@ -61,6 +61,9 @@ class packages:
 
 		def arch(self):
 			return self._arch
+
+		def options(self):
+			return [ 'P_OPTION_%s' % o.upper() for o in self._options ]
 
 		def rootfs(self):
 			path = '/opt/target/rootfs'
@@ -105,13 +108,7 @@ class packages:
 				s.setenv('P_WORKDIR',   	self.workdir())
 				s.setenv('P_DESTDIR',   	self.destdir())
 				s.setenv('P_SYSROOT',   	self.rootfs())
-				s.setenv('P_BOARD',			self._profile.board())
-				s.setenv('P_TOOLCHAIN', 	self._profile.toolchain())
-				s.setenv('P_ARCH',			self._profile.arch())
-				s.setenv('P_CHIPSET',		self._profile.chipset())
-				s.setenv('P_CPU',			self._profile.cpu())
-				s.setenv('P_ISA',			self._profile.isa())
-				s.setenv('P_DEFCONFIG',		self._profile.defconfig())
+				for k, v in self._profile.options().items(): s.setenv(k, v)
 				s.run('. %s && make -C %s -f %s %s' % (envfile, srcdir if os.path.isdir(srcdir) else self.workdir(), self.makefile(), rule))
 
 		def clean(self):
@@ -124,10 +121,16 @@ class packages:
 
 		def check(self):
 			cookie.logger.info('checking package')
+			cookie.logger.debug('required options are %s' % str(self.options()))
+			cookie.logger.debug('supported archs are %s' % str(self._archs))
 			if self._arch not in self._archs:
 				raise Exception('architecture %s is not supported by package' % self._arch)
 			else:
-				cookie.logger.debug('all check passed')
+				opts = self._profile.options()
+				for o in self.options():
+					if not o in opts:
+						raise Exception('option %s not defined in profile' % o)
+			cookie.logger.debug('all check passed')
 
 		def fetch(self):
 			self.make('fetch')

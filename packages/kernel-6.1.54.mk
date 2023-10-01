@@ -9,6 +9,7 @@ P_ARCHS			= arm arm64
 P_SRCDIR		= linux-2ff65ffbdeb0c8764985af19df2a687a126136f4
 P_PROVIDES		= kernel
 P_DEPENDS		= firmware
+P_OPTIONS		= defconfig
 
 fetch:
 	cookie fetch $(P_URL) $(P_ARCHIVE)
@@ -17,7 +18,7 @@ setup:
 	cookie extract $(P_ARCHIVE) $(P_WORKDIR)
 
 compile_config:
-	cookie import $(P_BOARD_DEFCONFIG).config .config || make ARCH=$(ARCH) CROSS_COMPILE=$(HOST)- $(P_DEFCONFIG)_defconfig
+	cookie import $(P_OPTIONS_DEFCONFIG).config .config || make ARCH=$(ARCH) CROSS_COMPILE=$(HOST)- $(P_OPTIONS_DEFCONFIG)_defconfig
 
 compile_arm: compile_config
 	make -j$(NPROCS) PKG_CONFIG_SYSROOT_DIR="" ARCH=$(ARCH) CROSS_COMPILE=$(HOST)- zImage modules dtbs

@@ -39,8 +39,17 @@ class profiles:
 		def isa(self): # Instruction Set Architecture
 			return self._infos['boards'][self._board]["isa"]
 
-		def defconfig(self):
-			return self._infos['boards'][self._board]["defconfig"]
+		def options(self):
+			opts = { ('P_OPTION_%s' % k.upper()): v for k,v in self._infos["options"].items() }
+			for k,v in self._infos['boards'][self._board]["options"].items():
+					opts['P_OPTION_%s' % k.upper()] = v
+			opts['P_BOARD']		= self.board()
+			opts['P_TOOLCHAIN']	= self.toolchain()
+			opts['P_ARCH']		= self.arch()
+			opts['P_CHIPSET']	= self.chipset()
+			opts['P_CPU']		= self.cpu()
+			opts['P_ISA']		= self.isa()
+			return opts
 
 		def packages(self):
 			list = []
