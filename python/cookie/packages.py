@@ -24,6 +24,10 @@ class packages:
 			self._target		= None
 			self._profile		= None
 
+			if self._name not in [ 'kernel', 'sysroot']:
+				if 'kernel' not in self._depends: self._depends.append('kernel')
+				if 'sysroot' not in self._depends: self._depends.append('sysroot')
+
 		def selector(self):
 			return '%s-%s' % (self.name(), self.version())
 

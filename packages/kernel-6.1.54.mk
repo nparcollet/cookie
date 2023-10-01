@@ -8,7 +8,7 @@ P_LICENCES		= GPLv2
 P_ARCHS			= arm arm64
 P_SRCDIR		= linux-2ff65ffbdeb0c8764985af19df2a687a126136f4
 P_PROVIDES		= kernel
-P_DEPENDS		= firmware
+P_DEPENDS		=
 P_OPTIONS		= defconfig
 
 fetch:
