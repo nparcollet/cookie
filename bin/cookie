@@ -212,7 +212,11 @@ class cookie_cmd(cookie.command):
 			if len(args) != 0:
 				cookie.logger.abort('syntax: %s mkimage' % (self.name()))
 			elif os.getenv('COOKIE_ENV') != '1':
+				t = cookie.targets.get(cookie.targets.current())
 				cookie.docker.run('cookie mkimage')
+				cookie.logger.info('image build in %s/%s.img' % (cookie.layout.images(), t.name()))
+				cookie.logger.info('you can flash it using the official "Raspberry Pi Imager"')
+
 			else:
 				cookie.targets.get(cookie.targets.current()).mkimage()
 		except Exception as e:

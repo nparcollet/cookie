@@ -60,6 +60,13 @@ class layout:
 		return d
 
 	@classmethod
+	def images(self):
+		d = '%s/images' % self.cache()
+		if not os.path.isdir(d):
+			os.makedirs(d)
+		return d
+
+	@classmethod
 	def distfile(self, name):
 		return '%s/%s' % (self.distfiles(), name)
 
