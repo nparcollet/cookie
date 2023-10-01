@@ -105,12 +105,12 @@ class cookie_cmd(cookie.command):
 		there are no target left, then no target is selected.
 		"""
 		try:
-			if len(args) != 1:
-				cookie.logger.abort('syntax: %s destroy target_name' % (self.name()))
+			if len(args) > 1:
+				cookie.logger.abort('syntax: %s destroy [target_name]' % (self.name()))
 			elif os.getenv('COOKIE_ENV') == '1':
 				cookie.logger.abort('you cannot destroy a target from the build environment')
 			else:
-				cookie.targets.destroy(args[0])
+				cookie.targets.destroy( args[0] if len(args) == 1 else cookie.targets.current())
 		except Exception as e:
 			cookie.logger.abort('%s destroy failed: %s' % (self.name(), str(e)))
 
