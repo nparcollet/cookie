@@ -18,7 +18,7 @@ setup:
 	cookie extract $(P_ARCHIVE) $(P_WORKDIR)
 
 compile_config:
-	cookie import $(P_OPTIONS_DEFCONFIG).config .config || make ARCH=$(ARCH) CROSS_COMPILE=$(HOST)- $(P_OPTIONS_DEFCONFIG)_defconfig
+	cookie import $(P_OPTION_DEFCONFIG).config .config || make ARCH=$(ARCH) CROSS_COMPILE=$(HOST)- $(P_OPTION_DEFCONFIG)_defconfig
 
 compile_arm: compile_config
 	make -j$(NPROCS) PKG_CONFIG_SYSROOT_DIR="" ARCH=$(ARCH) CROSS_COMPILE=$(HOST)- zImage modules dtbs

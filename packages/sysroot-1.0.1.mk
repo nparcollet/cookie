@@ -33,3 +33,9 @@ install:
 	rm -rf $(P_DESTDIR)/usr/include/sound
 	rm -rf $(P_DESTDIR)/usr/include/video
 	rm -rf $(P_DESTDIR)/usr/include/xen
+
+	# This a not from kernel ...
+	mkdir -p $(P_DESTDIR)/usr/include/scsi
+	cp -a /opt/target/toolchain/$(P_TOOLCHAIN)/sysroot/usr/include/scsi/scsi.h $(P_DESTDIR)/usr/include/scsi/
+	cp -a /opt/target/toolchain/$(P_TOOLCHAIN)/sysroot/usr/include/scsi/scsi_ioctl.h $(P_DESTDIR)/usr/include/scsi/
+	cp -a /opt/target/toolchain/$(P_TOOLCHAIN)/sysroot/usr/include/scsi/sg.h $(P_DESTDIR)/usr/include/scsi/
