@@ -53,14 +53,7 @@ class profiles:
 			return opts
 
 		def packages(self):
-			list = []
-			path = '%s/%s/packages.conf' % (cookie.layout.profiles(), self._name)
-			with open(path, 'r') as handle:
-				for l in handle.readlines():
-					selector = re.split('[\t ]+', l)[0].strip()
-					if len(selector) > 0: list.append(selector)
-				handle.close()
-			return list
+			return self._infos['packages']
 
 	@classmethod
 	def boards(self, name):
