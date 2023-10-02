@@ -53,6 +53,13 @@ class layout:
 		return d
 
 	@classmethod
+	def boards(self):
+		d = '%s/boards' % self.root()
+		if not os.path.isdir(d):
+			os.makedirs(d)
+		return d
+
+	@classmethod
 	def gitsources(self):
 		d = '%s/gitsources' % self.cache()
 		if not os.path.isdir(d):
