@@ -111,7 +111,8 @@ class targets():
 
 			# Abort
 			if answer == 'n':
-				cookie.logger.abort('merge canceled')
+				cookie.logger.info('merge canceled')
+				return
 
 			# Remove packages
 			for p in remove:

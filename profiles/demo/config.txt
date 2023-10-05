@@ -1,6 +1,6 @@
 cmdline=cmdline.txt
-kernel=Image
-disable_splash=1
+kernel=zImage
+disable_splash=0
 dtparam=audio=on
 
 hdmi_group=1
