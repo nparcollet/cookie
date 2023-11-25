@@ -20,6 +20,7 @@ class packages:
 			self._licences		= [ o.strip() for o in self._meta['LICENCES'].split() ] if 'LICENCES'    in self._meta else []
 			self._archs			= [ o.strip() for o in self._meta['ARCHS'].split() ]    if 'ARCHS'       in self._meta else []
 			self._options		= [ o.strip() for o in self._meta['OPTIONS'].split() ]  if 'OPTIONS'     in self._meta else []
+			self._files			= [ o.strip() for o in self._meta['FILES'].split() ]  if 'FILES'     in self._meta else []
 			self._provides      = [ o.strip() for o in self._meta['PROVIDES'].split() ] if 'PROVIDES'    in self._meta else []
 			self._target		= None
 			self._profile		= None
@@ -96,6 +97,9 @@ class packages:
 				os.makedirs(path)
 			return path
 
+		def filesdir(self):
+			return '%s/files' % self.workdir()
+
 		def destdir(self):
 			return '%s/staging' % self.workdir()
 
@@ -112,6 +116,7 @@ class packages:
 				s.setenv('P_WORKDIR',   	self.workdir())
 				s.setenv('P_DESTDIR',   	self.destdir())
 				s.setenv('P_SYSROOT',   	self.rootfs())
+				s.setenv('P_FILESDIR',   	self.filesdir())
 				for k, v in self._profile.options().items(): s.setenv(k, v)
 				s.run('. %s && make -C %s -f %s %s' % (envfile, srcdir if os.path.isdir(srcdir) else self.workdir(), self.makefile(), rule))
 
@@ -129,14 +134,24 @@ class packages:
 			cookie.logger.debug('supported archs are %s' % str(self._archs))
 			if self._arch not in self._archs:
 				raise Exception('architecture %s is not supported by package' % self._arch)
-			else:
-				opts = self._profile.options()
-				for o in self.options():
-					if not o in opts:
-						raise Exception('option %s not defined in profile' % o)
+			opts = self._profile.options()
+			for o in self.options():
+				if not o in opts:
+					raise Exception('option %s not defined in profile' % o)
+			for i in self._files:
+				rname = i[:-1] if i.endswith('?') else i
+				rpath = '%s/%s/%s' % (cookie.layout.profiles(), self._profile.name(), rname)
+				if not i.endswith('?') and not os.path.exists(rpath):
+					raise Exception('required import "%s" not found in profile' % rname)
 			cookie.logger.debug('all check passed')
 
 		def fetch(self):
+			if len(self._files) > 0 and not os.path.isdir(self.filesdir()): os.makedirs(self.filesdir())
+			for i in self._files:
+				name  = i[:-1] if i.endswith('?') else i # '?' means optional
+				source = '%s/%s/%s' % (cookie.layout.profiles(), self._profile.name(), name)
+				target = '%s/%s' % (self.filesdir(), name)
+				if os.path.exists(source): os.symlink(source, target)
 			self.make('fetch')
 
 		def setup(self):
@@ -160,13 +175,32 @@ class packages:
 
 		def has_binpkg(self):
 			try:
-				sha1file      = '%s/%s-%s.sha1' % (self.archives(), self.name(), self.version())
-				if os.path.isfile(sha1file):
-					built_sha1	  = open(sha1file).read().strip()
-					makefile_sha1 = cookie.sha1.compute(self.makefile())
-					return True if built_sha1 == makefile_sha1 else False
-				else:
+				sha1file = '%s/%s-%s.sha1' % (self.archives(), self.name(), self.version())
+				if not os.path.isfile(sha1file):
 					return False
+
+				lines = [ l.strip() for l in open(sha1file).readlines() ]
+				entries = {}
+				for l in lines:
+					tokens = [ t.strip() for t in l.split() ]
+					if len(tokens) not in [ 1, 2 ]:
+						cookie.logger.error('Skipping invalid check sum entry "%s" for "%s"' % (l, self.name()))
+					else:
+						entries[tokens[0]] = tokens[1] if len(tokens) == 2 else ""
+
+				if 'Makefile' not in entries or entries['Makefile'] != cookie.sha1.compute(self.makefile()):
+					cookie.logger.debug('Rebuilding package "%s" as its Makefile changed' % self.name())
+					return False
+
+				for i in self._files:
+					rname = i[:-1] if i.endswith('?') else i
+					rpath = '%s/%s/%s' % (cookie.layout.profiles(), self._profile.name(), rname)
+					if rname not in entries or entries[rname] != (cookie.sha1.compute(rpath) if os.path.exists(rpath) else ""):
+						cookie.logger.debug('Rebuilding package "%s" as its import "%s" changed' % (self.name(), rname))
+						return False
+
+				return True
+
 			except Exception as e:
 				cookie.logger.debug('Call to has bin pkg failed: %s' % str(e))
 				return False
@@ -197,7 +231,11 @@ class packages:
 			if not os.path.isdir(self.archives()): os.makedirs(self.archives())
 			cookie.shell().run('tar cJf %s/%s -C %s .' % (self.archives(), archive, self.destdir()))
 			with open('%s/%s-%s.sha1' % (self.archives(), self.name(), self.version()), 'w') as handle:
-				handle.write(cookie.sha1.compute(self.makefile()))
+				handle.write('Makefile	%s\n' % cookie.sha1.compute(self.makefile()))
+				for i in self._files:
+					rname = i[:-1] if i.endswith('?') else i
+					rpath = '%s/%s/%s' % (cookie.layout.profiles(), self._profile.name(), rname)
+					handle.write('%s	%s\n' % (rname, cookie.sha1.compute(rpath) if os.path.exists(rpath) else ""))
 				handle.close()
 
 		def unmerge(self):
