@@ -10,6 +10,7 @@ P_SRCDIR		= linux-a984fda6b2c24dbf1ca21924f99c8f9418f5765e
 P_PROVIDES		= kernel
 P_DEPENDS		=
 P_OPTIONS		= defconfig
+P_FILES			= kernel.config?
 
 # Setup as defined on: https://www.raspberrypi.com/documentation/computers/linux_kernel.html#building-the-kernel
 
@@ -35,7 +36,7 @@ setup:
 compile:
 	make mrproper
 	sed -i 's/EXTRAVERSION =.*/EXTRAVERSION = +/' Makefile
-	cookie import $(P_OPTION_DEFCONFIG).config .config || make ARCH=$(ARCH) CROSS_COMPILE=$(HOST)- $(P_OPTION_DEFCONFIG)_defconfig
+	cp $(P_FILESDIR)/kernel.config .config || make ARCH=$(ARCH) CROSS_COMPILE=$(HOST)- $(P_OPTION_DEFCONFIG)_defconfig
 	make -j$(NPROCS) PKG_CONFIG_SYSROOT_DIR="" ARCH=$(ARCH) CROSS_COMPILE=$(HOST)- $(P_PRIV_IMAGE) modules dtbs
 
 install:
