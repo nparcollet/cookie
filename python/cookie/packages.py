@@ -151,7 +151,7 @@ class packages:
 				name  = i[:-1] if i.endswith('?') else i # '?' means optional
 				source = '%s/%s/%s' % (cookie.layout.profiles(), self._profile.name(), name)
 				target = '%s/%s' % (self.filesdir(), name)
-				if os.path.exists(source): os.symlink(source, target)
+				if os.path.exists(source): shutil.copyfile(source, target)
 			self.make('fetch')
 
 		def setup(self):
