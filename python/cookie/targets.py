@@ -104,6 +104,11 @@ class targets():
 			cookie.logger.info('The following packages need to be installed:')
 			for p in add: cookie.logger.debug(p)
 
+			# Nothing to do
+			if len(remove) == 0 and len(add) == 0:
+				cookie.logger.info('Target already up to date')
+				return
+
 			# Ask for confirmation
 			answer = ''
 			while answer not in ["y", "n"]:
