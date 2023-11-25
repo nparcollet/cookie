@@ -1,5 +1,5 @@
 P_NAME			= firmware
-P_VERSION		= 4.14.70.1
+P_VERSION		= 1.20180919
 P_DESCRIPTION	= Proprietary Binaries for Raspberry PI board, does not include the kernel
 P_URL   		= https://www.raspberrypi.org/documentation/firmware
 P_LICENCES		= Broadcom
