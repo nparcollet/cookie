@@ -6,6 +6,7 @@ P_GITURL		= https://github.com/nparcollet/layout.git
 P_GITREV		= HEAD
 P_ARCHS			= arm arm64
 P_SRCDIR		= layout
+P_FILES 		= config.txt cmdline.txt
 
 .PHONY: fetch setup compile install
 
@@ -25,5 +26,5 @@ install:
 	rm -rf $(P_DESTDIR)/.git
 	rm $(P_DESTDIR)/README.md
 	mkdir -p $(P_DESTDIR)/boot
-	cookie import cmdline.txt $(P_DESTDIR)/boot/cmdline.txt
-	cookie import config.txt $(P_DESTDIR)/boot/config.txt
+	cp $(P_FILESDIR)/cmdline.txt $(P_DESTDIR)/boot/cmdline.txt
+	cp $(P_FILESDIR)/config.txt $(P_DESTDIR)/boot/config.txt
