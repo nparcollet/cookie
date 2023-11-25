@@ -280,24 +280,6 @@ class cookie_cmd(cookie.command):
 		except Exception as e:
 			cookie.logger.abort('%s depends failed: %s' % (self.name(), str(e)))
 
-	def do_import(self, args):
-		"""
-		Import a file from the profile of the current target into the component buid directory. If
-		the file does not exists, this fail with 1, other it succeed (0). This mechanism is to be
-		used in package makefile using "cookie import filename dest || default_behavior".
-		"""
-		try:
-			if len(args) not in [2]:
-				raise Exception('syntax: %s import filename destname' % self.name())
-			else:
-				p = cookie.targets.get(cookie.targets.current()).profile()
-				i = '%s/%s/%s' % (cookie.layout.profiles(), p, args[0])
-				o = args[1]
-				shutil.copy(i, o)
-			sys.exit(0)
-		except Exception as e:
-			cookie.logger.abort('%s import failed: %s' % (self.name(), str(e)))
-
 	def do_fetch(self, args):
 		"""
 		Fetch a plain archive from a remote server then store it in the cache of the cookie

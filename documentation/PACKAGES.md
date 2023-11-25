@@ -122,18 +122,6 @@ Once clone, the required version can be checked out with:
 
     > cookie git checkout [repository_name] [destdir]
 
-### Working with profile content
-
-When a file need to be imported from the profile, for instance the .config of a package, the
-following command need to be used:
-
-    > cookie import [config.name] [destdir]/config.name
-
-Similarly, to apply a patch on the package sources, the following is to be used and expect the
-name of the patch to be package-name-x.y.z.patch:
-
-    > cookie patch [patchdir]
-
 ## Binary Packages
 
 As part of the cookie environment, there is a cache mechanism that allow to reuse packages that
