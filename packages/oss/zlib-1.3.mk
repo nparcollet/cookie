@@ -5,7 +5,7 @@ P_ARCHIVE		= $(P_NAME)-$(P_VERSION).tar.gz
 P_URL   		= https://zlib.net/$(P_ARCHIVE)
 P_LICENCES		= ZLIB
 P_ARCHS			= arm arm64
-P_DEPENDS		= sysroot
+P_DEPENDS		= libc
 P_SRCDIR		= zlib-1.3
 
 .PHONY: fetch setup compile install

@@ -7,6 +7,7 @@ P_LICENCES		= GPLv2
 P_ARCHS			= arm arm64
 P_SRCDIR		= busybox-1.36.1
 P_FILES 		= busybox.config?
+P_DEPENDS		= libc
 
 fetch:
 	cookie fetch $(P_URL)
