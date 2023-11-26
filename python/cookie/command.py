@@ -37,14 +37,16 @@ class command(object):
 		else:
 			action = sys.argv[1] if len(sys.argv) > 1 else self._action
 			args   = sys.argv[2:] if len(sys.argv) > 1 else []
+			exectime = False if os.getenv('COOKIE_ENV') == '1' else True
+
 			if action in self.actions():
 				try:
 					start_time = time.time()
 					self.__getattribute__('do_%s' % action)(args)
-					cookie.logger.debug("Command executed in %s seconds" % (time.time() - start_time))
+					if exectime: cookie.logger.debug("Command executed in %s seconds" % (time.time() - start_time))
 					sys.exit(0)
 				except Exception as e:
-					cookie.logger.abort('Failed after %s seconds: %s' % (time.time() - start_time, str(e)))
+					if exectime: cookie.logger.abort('Failed after %s seconds: %s' % (time.time() - start_time, str(e)))
 			else:
 				self.do_help([])
 
