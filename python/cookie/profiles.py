@@ -39,6 +39,9 @@ class profiles:
 
 		def isa(self): # Instruction Set Architecture
 			return self._boards[self._board]["isa"]
+		
+		def overlays(self):
+			return self._infos['overlay']
 
 		def options(self):
 			opts = { ('P_OPTION_%s' % k.upper()): v for k,v in self._infos["options"].items() }

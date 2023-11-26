@@ -36,7 +36,7 @@ class targets():
 			try:
 				path = '%s/installed/packages.json' % self._path
 				raw  = json.load(open(path))
-				return [ '%s-%s' % (str(k), str(v['version'])) for k, v in raw.items() ]
+				return [ '%s/%s-%s' % (str(v['overlay']), str(k), str(v['version'])) for k, v in raw.items() ]
 			except Exception as e:
 				return []
 
@@ -45,6 +45,14 @@ class targets():
 				path = '%s/installed/packages.json' % self._path
 				raw  = json.load(open(path))
 				return raw[name]['version']
+			except Exception as e:
+				return None
+		
+		def overlay(self, name):
+			try:
+				path = '%s/installed/packages.json' % self._path
+				raw  = json.load(open(path))
+				return raw[name]['overlay']
 			except Exception as e:
 				return None
 
@@ -71,8 +79,9 @@ class targets():
 		def remove(self, name):
 			cookie.logger.info('removing package %s from the target' % name)
 			version = self.version(name)
-			if version is not None:
-				pkg = cookie.packages.get(name, version)
+			overlay = self.overlay(name)
+			if version is not None and overlay is not None:
+				pkg = cookie.packages.get(overlay, name, version)
 				pkg.attach(self.name())
 				pkg.unmerge()
 			else:
@@ -82,7 +91,7 @@ class targets():
 
 			# Build list of actions
 			tpkg   = self.packages()
-			ppkg   = cookie.profiles.get(self.profile(), self.board()).packages()
+			ppkg   = [ cookie.packages.elect(x).selector() for x in cookie.profiles.get(self.profile(), self.board()).packages() ]
 			remove = [ x for x in tpkg if x not in ppkg ]
 			keep   = [ x for x in tpkg if x in ppkg ]
 			add    = [ x for x in ppkg if x not in tpkg ]
@@ -96,18 +105,40 @@ class targets():
 					add.append(p)
 					keep.remove(p)
 
+			# Nothing to do
+			if len(remove) == 0 and len(add) == 0:
+				cookie.logger.info('Target already up to date')
+				return
+
+			# Order package to add by dependencies
+			cookie.logger.info('Ordering packages by dependencies:')
+			obj  = [ cookie.packages.elect(x) for x in add ]
+			ins  = [ cookie.packages.elect(x) for x in keep ]
+			ord  = []
+			rem  = [ x for x in obj if x not in ord ]
+			while len(rem) > 0:
+				count = len(rem)
+				for r in rem:
+					ready = True
+					for d in r.depends():
+						if	not [ x for x in ord if d in x.provides() ] and not [ x for x in ins if d in x.provides() ]:
+							cookie.logger.debug('Delaying package %s until its dependencies are added' % r.name())
+							ready = False
+							break
+					if ready:
+						cookie.logger.debug('Adding package %s as all dependencies are met' % r.name())
+						ord.append(r)
+						rem.remove(r)
+				if count == len(rem):
+					cookie.logger.abort('unable to satisfy dependencies for %s' % str(['%s: %s' % (x.name(), str(x.depends())) for x in rem]))
+
 			# Summarize actions
 			cookie.logger.info('The following packages can be kept:')
 			for p in keep: cookie.logger.debug(p)
 			cookie.logger.info('The following packages need to be removed:')
 			for p in remove: cookie.logger.debug(p)
 			cookie.logger.info('The following packages need to be installed:')
-			for p in add: cookie.logger.debug(p)
-
-			# Nothing to do
-			if len(remove) == 0 and len(add) == 0:
-				cookie.logger.info('Target already up to date')
-				return
+			for p in [ x.selector() for x in ord ]: cookie.logger.debug(p)
 
 			# Ask for confirmation
 			answer = ''
@@ -125,25 +156,6 @@ class targets():
 				pkg = cookie.packages.elect(p)
 				pkg.attach(self.name())
 				pkg.unmerge()
-
-			# Order package to add by dependencies
-			obj  = [ cookie.packages.elect(x) for x in add ]
-			ins  = [ cookie.packages.elect(x) for x in keep ]
-			ord  = [ x for x in obj if x.depends() == [] ]
-			rem  = [ x for x in obj if x not in ord ]
-			while len(rem) > 0:
-				count = len(rem)
-				for r in rem:
-					ready = True
-					for d in r.depends():
-						if	not [ x for x in ord if d == x.name() or d in x.provides() ] and not [ x for x in ins if d == x.name() or d in x.provides() ]:
-							ready = False
-							break
-					if ready:
-						ord.append(r)
-						rem.remove(r)
-				if count == len(rem):
-					cookie.logger.abort('unable to satisfy dependencies for %s' % str(['%s: %s' % (x.name(), str(x.depends())) for x in rem]))
 
 			# Add packages
 			for pkg in ord:

@@ -233,8 +233,8 @@ class cookie_cmd(cookie.command):
 				cookie.logger.abort('syntax: %s search <selector>' % self.name())
 			else:
 				cookie.logger.info('list of packages matching with "%s":' % args[0])
-				for (n,v) in cookie.packages.candidates(args[0]):
-					cookie.logger.debug('%s-%s' % (n, v))
+				for (o, n,v) in cookie.packages.candidates(args[0]):
+					cookie.logger.debug('%s/%s-%s' % (o, n, v))
 		except Exception as e:
 			cookie.logger.abort('%s search failed: %s' % (self.name(), str(e)))
 

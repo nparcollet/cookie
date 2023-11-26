@@ -10,27 +10,28 @@ class packages:
 
 	class package:
 
-		def __init__(self, name, version):
+		def __init__(self, overlay, name, version):
 			self._name			= name
 			self._version		= version
-			self._makefile		= '%s/%s-%s.mk' % (cookie.layout.packages(), name, version)
+			self._overlay 		= overlay
+			self._makefile		= '%s/%s/%s-%s.mk' % (cookie.layout.packages(), overlay, name, version)
 			self._meta			= { re.split('[:?]?=', line)[0][2:].strip(): line.split('=')[1].strip() for line in tuple(open(self.makefile(), 'r')) if line[0:2] == 'P_' }
 			self._description	= self._meta['DESCRIPTION'].strip() 					if 'DESCRIPTION' in self._meta else ''
 			self._depends		= [ o.strip() for o in self._meta['DEPENDS'].split() ]  if 'DEPENDS'     in self._meta else []
 			self._licences		= [ o.strip() for o in self._meta['LICENCES'].split() ] if 'LICENCES'    in self._meta else []
 			self._archs			= [ o.strip() for o in self._meta['ARCHS'].split() ]    if 'ARCHS'       in self._meta else []
 			self._options		= [ o.strip() for o in self._meta['OPTIONS'].split() ]  if 'OPTIONS'     in self._meta else []
-			self._files			= [ o.strip() for o in self._meta['FILES'].split() ]  if 'FILES'     in self._meta else []
+			self._files			= [ o.strip() for o in self._meta['FILES'].split() ] 	if 'FILES'     	 in self._meta else []
 			self._provides      = [ o.strip() for o in self._meta['PROVIDES'].split() ] if 'PROVIDES'    in self._meta else []
 			self._target		= None
 			self._profile		= None
 
-			if self._name not in [ 'kernel', 'sysroot']:
-				if 'kernel' not in self._depends: self._depends.append('kernel')
-				if 'sysroot' not in self._depends: self._depends.append('sysroot')
+			#if self._name not in [ 'kernel', 'sysroot']:
+			#	if 'kernel' not in self._depends: self._depends.append('kernel')
+			#	if 'sysroot' not in self._depends: self._depends.append('sysroot')
 
 		def selector(self):
-			return '%s-%s' % (self.name(), self.version())
+			return '%s/%s-%s' % (self.overlay(), self.name(), self.version())
 
 		def attach(self, name):
 			self._target	= cookie.targets.get(name)
@@ -38,7 +39,7 @@ class packages:
 			self._arch		= self._profile.arch()
 
 		def provides(self):
-			return self._provides
+			return self._provides if len(self._provides) > 0 else [ self._name ]
 
 		def depends(self):
 			return self._depends
@@ -48,6 +49,9 @@ class packages:
 
 		def version(self):
 			return self._version
+
+		def overlay(self):
+			return self._overlay
 
 		def description(self):
 			return self._description
@@ -161,7 +165,7 @@ class packages:
 			cookie.logger.info('running patch on package')
 			profile = self._target.profile() if self._target else None
 			srcdir = '%s/%s' % (self.workdir(), self._meta['SRCDIR']) if 'SRCDIR' in self._meta else '%s/srcdir' % self.workdir()
-			patchfile = '%s/%s/%s-%s.patch' % (cookie.layout.profiles(), profile, self._name, self._version)
+			patchfile = '%s/%s/%s-%s-%s.patch' % (cookie.layout.profiles(), profile, self._overlay, self._name, self._version)
 			if os.path.isdir(srcdir) and os.path.isfile(patchfile):
 				cookie.shell().run('patch -d %s -p1 < %s' % (srcdir, patchfile))
 			else:
@@ -222,7 +226,7 @@ class packages:
 					meta = json.load(open(path)) if os.path.isfile(path) else {}
 				except Exception as e:
 					meta = {}
-				meta[self.name()] = { 'version': self.version() }
+				meta[self.name()] = { 'overlay':self.overlay(), 'version': self.version() }
 				json.dump(meta, open('%s/packages.json' % self.installed(), 'w'))
 
 		def mkarchive(self):
@@ -257,29 +261,33 @@ class packages:
 				os.unlink(path)
 
 	@classmethod
-	def exists(self, name, version):
+	def exists(self, overlay, name, version):
 		return os.path.isfile('%s/%s-%s.mk' % (cookie.layout.packages(), name, version))
 
 	@classmethod
-	def parse(self, selector):
-		pnv		= selector
-		name	= pnv	if pnv.rfind('-') == -1 or not pnv[pnv.rfind('-')+1].isdigit() else '-'.join(pnv.split('-')[0:-1])
-		version	= None	if pnv == name else pnv[len(name)+1:]
-		return (name, version)
+	def parse_selector(self, selector):
+		onv		= selector
+		overlay = onv.split('/')[0] if onv.find('/') != -1 else None
+		nv 		= onv.split('/')[1] if onv.find('/') != -1 else onv
+		name	= nv if nv.rfind('-') == -1 or not nv[nv.rfind('-')+1].isdigit() else '-'.join(nv.split('-')[0:-1])
+		version	= None	if nv == name else nv[len(name)+1:]
+		return (overlay, name, version)
 
 	@classmethod
 	def candidates(self, selector):
-		(name, version) = self.parse(selector)
+		(overlay, name, version) = self.parse_selector(selector)
 		candidates = []
-		if version is not None and self.exists(name, version):
-			candidates.append((name, version))
+		if version is not None and overlay is not None and self.exists(overlay, name, version):
+			candidates.append((overlay, name, version))
 		else:
-			all  = os.listdir(cookie.layout.packages())
-			for a in all:
-				candidate = self.parse(a.split('.mk')[0])
-				if candidate[0] == name:
-					candidates.append((candidate[0], candidate[1]))
-		return candidates
+			ovs = [ overlay ] if overlay else os.listdir(cookie.layout.packages())
+			for ov in ovs:
+				all  = os.listdir('%s/%s' % (cookie.layout.packages(), ov))
+				for a in all:
+					candidate = self.parse_selector(ov + '/' + a.split('.mk')[0])
+					if candidate[1] == name:
+						candidates.append((candidate[0], candidate[1], candidate[2]))
+			return candidates
 
 	@classmethod
 	def elect(self, selector):
@@ -287,12 +295,13 @@ class packages:
 		if len(candidates) == 0:
 			raise Exception('no matching package for selector %s' % selector)
 		else:
-			en, ev = candidates[0]
-			for n, v in candidates:
+			eo, en, ev = candidates[0]
+			for o, n, v in candidates:
 				if distutils.version.LooseVersion(ev) < distutils.version.LooseVersion(v):
+					eo = o
 					ev = v
-			return cookie.packages.package(en, ev)
+			return cookie.packages.package(eo, en, ev)
 
 	@classmethod
-	def get(self, name, version):
-		return self.elect('%s-%s' % (name, version))
+	def get(self, overlay, name, version):
+		return self.elect('%s/%s-%s' % (overlay, name, version))
