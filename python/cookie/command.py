@@ -43,10 +43,10 @@ class command(object):
 				try:
 					start_time = time.time()
 					self.__getattribute__('do_%s' % action)(args)
-					if exectime: cookie.logger.debug("Command executed in %s seconds" % (time.time() - start_time))
+					if exectime: cookie.logger.debug("Command executed in %.2f seconds" % (time.time() - start_time))
 					sys.exit(0)
 				except Exception as e:
-					if exectime: cookie.logger.abort('Failed after %s seconds: %s' % (time.time() - start_time, str(e)))
+					if exectime: cookie.logger.abort('Failed after %.2f seconds: %s' % (time.time() - start_time, str(e)))
 			else:
 				self.do_help([])
 
